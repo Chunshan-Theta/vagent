@@ -13,6 +13,7 @@ interface BottomToolbarProps {
   setIsEventsPaneExpanded: (val: boolean) => void;
   isAudioPlaybackEnabled: boolean;
   setIsAudioPlaybackEnabled: (val: boolean) => void;
+  hideLogs?: boolean;
 }
 
 function BottomToolbar({
@@ -27,6 +28,7 @@ function BottomToolbar({
   setIsEventsPaneExpanded,
   isAudioPlaybackEnabled,
   setIsAudioPlaybackEnabled,
+  hideLogs = false,
 }: BottomToolbarProps) {
   const isConnected = sessionStatus === "CONNECTED";
   const isConnecting = sessionStatus === "CONNECTING";
@@ -101,18 +103,20 @@ function BottomToolbar({
         </label>
       </div>
 
-      <div className="flex flex-row items-center gap-2">
-        <input
-          id="logs"
-          type="checkbox"
-          checked={isEventsPaneExpanded}
-          onChange={e => setIsEventsPaneExpanded(e.target.checked)}
-          className="w-4 h-4"
-        />
-        <label htmlFor="logs" className="flex items-center cursor-pointer">
-          Logs
-        </label>
-      </div>
+      {!hideLogs && (
+        <div className="flex flex-row items-center gap-2">
+          <input
+            id="logs"
+            type="checkbox"
+            checked={isEventsPaneExpanded}
+            onChange={e => setIsEventsPaneExpanded(e.target.checked)}
+            className="w-4 h-4"
+          />
+          <label htmlFor="logs" className="flex items-center cursor-pointer">
+            Logs
+          </label>
+        </div>
+      )}
     </div>
   );
 }

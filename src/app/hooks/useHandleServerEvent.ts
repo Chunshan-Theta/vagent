@@ -12,6 +12,7 @@ export interface UseHandleServerEventParams {
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
   setSelectedAgentName: (name: string) => void;
   shouldForceResponse?: boolean;
+  hideLogs?: boolean;
 }
 
 export function useHandleServerEvent({
@@ -20,6 +21,7 @@ export function useHandleServerEvent({
   selectedAgentConfigSet,
   sendClientEvent,
   setSelectedAgentName,
+  hideLogs = false,
 }: UseHandleServerEventParams) {
   const {
     transcriptItems,
@@ -41,15 +43,19 @@ export function useHandleServerEvent({
       (a) => a.name === selectedAgentName
     );
 
-    addTranscriptBreadcrumb(`function call: ${functionCallParams.name}`, args);
+    if (!hideLogs) {
+      addTranscriptBreadcrumb(`function call: ${functionCallParams.name}`, args);
+    }
 
     if (currentAgent?.toolLogic?.[functionCallParams.name]) {
       const fn = currentAgent.toolLogic[functionCallParams.name];
       const fnResult = await fn(args, transcriptItems);
-      addTranscriptBreadcrumb(
-        `function call result: ${functionCallParams.name}`,
-        fnResult
-      );
+      if (!hideLogs) {
+        addTranscriptBreadcrumb(
+          `function call result: ${functionCallParams.name}`,
+          fnResult
+        );
+      }
 
       sendClientEvent({
         type: "conversation.item.create",
@@ -79,16 +85,20 @@ export function useHandleServerEvent({
           output: JSON.stringify(functionCallOutput),
         },
       });
-      addTranscriptBreadcrumb(
-        `function call: ${functionCallParams.name} response`,
-        functionCallOutput
-      );
+      if (!hideLogs) {
+        addTranscriptBreadcrumb(
+          `function call: ${functionCallParams.name} response`,
+          functionCallOutput
+        );
+      }
     } else {
       const simulatedResult = { result: true };
-      addTranscriptBreadcrumb(
-        `function call fallback: ${functionCallParams.name}`,
-        simulatedResult
-      );
+      if (!hideLogs) {
+        addTranscriptBreadcrumb(
+          `function call fallback: ${functionCallParams.name}`,
+          simulatedResult
+        );
+      }
 
       sendClientEvent({
         type: "conversation.item.create",
@@ -109,11 +119,13 @@ export function useHandleServerEvent({
       case "session.created": {
         if (serverEvent.session?.id) {
           setSessionStatus("CONNECTED");
-          addTranscriptBreadcrumb(
-            `session.id: ${
-              serverEvent.session.id
-            }\nStarted at: ${new Date().toLocaleString()}`
-          );
+          if (!hideLogs) {
+            addTranscriptBreadcrumb(
+              `session.id: ${
+                serverEvent.session.id
+              }\nStarted at: ${new Date().toLocaleString()}`
+            );
+          }
         }
         break;
       }

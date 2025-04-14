@@ -11,6 +11,7 @@ export interface TranscriptProps {
   setUserText: (val: string) => void;
   onSendMessage: () => void;
   canSend: boolean;
+  hideLogs?: boolean;
 }
 
 function Transcript({
@@ -18,6 +19,7 @@ function Transcript({
   setUserText,
   onSendMessage,
   canSend,
+  hideLogs = false,
 }: TranscriptProps) {
   const { transcriptItems, toggleTranscriptItemExpand } = useTranscript();
   const transcriptRef = useRef<HTMLDivElement | null>(null);
@@ -84,6 +86,11 @@ function Transcript({
             const { itemId, type, role, data, expanded, timestamp, title = "", isHidden } = item;
 
             if (isHidden) {
+              return null;
+            }
+
+            // Hide breadcrumbs when hideLogs is true
+            if (hideLogs && type === "BREADCRUMB") {
               return null;
             }
 

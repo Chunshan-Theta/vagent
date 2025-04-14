@@ -27,12 +27,13 @@ import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 
 // Add language options
 const languageOptions = [
-  { value: "en", label: "English" },
   { value: "zh", label: "中文" },
+  { value: "en", label: "English" },
 ];
 
-function App() {
+function App({ hideLogs = false }: { hideLogs?: boolean }) {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
 
   const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
     useTranscript();
@@ -41,7 +42,7 @@ function App() {
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
     useState<AgentConfig[] | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");
 
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -80,6 +81,7 @@ function App() {
     selectedAgentConfigSet,
     sendClientEvent,
     setSelectedAgentName,
+    hideLogs,
   });
 
   useEffect(() => {
@@ -118,13 +120,15 @@ function App() {
       const currentAgent = selectedAgentConfigSet.find(
         (a) => a.name === selectedAgentName
       );
-      addTranscriptBreadcrumb(
-        `Agent: ${selectedAgentName}`,
-        currentAgent
-      );
+      if (!hideLogs) {
+        addTranscriptBreadcrumb(
+          `Agent: ${selectedAgentName}`,
+          currentAgent
+        );
+      }
       updateSession(true);
     }
-  }, [selectedAgentConfigSet, selectedAgentName, sessionStatus]);
+  }, [selectedAgentConfigSet, selectedAgentName, sessionStatus, hideLogs]);
 
   useEffect(() => {
     if (sessionStatus === "CONNECTED") {
@@ -430,6 +434,10 @@ function App() {
     }
   }, [isAudioPlaybackEnabled]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
   return (
@@ -549,9 +557,14 @@ function App() {
             sessionStatus === "CONNECTED" &&
             dcRef.current?.readyState === "open"
           }
+          hideLogs={hideLogs}
         />
 
-        <Events isExpanded={isEventsPaneExpanded} />
+        {!hideLogs && (
+          <div className="w-1/3 border-l border-gray-200">
+            {mounted ? <Events isExpanded={isEventsPaneExpanded} /> : <div className="h-full"></div>}
+          </div>
+        )}
       </div>
 
       <BottomToolbar
@@ -566,6 +579,7 @@ function App() {
         setIsEventsPaneExpanded={setIsEventsPaneExpanded}
         isAudioPlaybackEnabled={isAudioPlaybackEnabled}
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
+        hideLogs={hideLogs}
       />
     </div>
   );
