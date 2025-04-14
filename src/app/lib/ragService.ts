@@ -1,12 +1,16 @@
 // Use dynamic imports for Node.js modules to avoid client-side errors
-let fs: any;
-let path: any;
+let fs: any = null;
+let path: any = null;
 
 // Only import Node.js modules on the server side
 if (typeof window === 'undefined') {
   // We're on the server
-  fs = require('fs');
-  path = require('path');
+  Promise.all([
+    import('fs').then(module => { fs = module.default; }),
+    import('path').then(module => { path = module.default; })
+  ]).catch(error => {
+    console.error('Error loading Node.js modules:', error);
+  });
 }
 
 interface Document {
@@ -52,10 +56,15 @@ class RAGService {
     }
   }
 
-  private async getEmbedding(text: string): Promise<number[]> {
+  private async getEmbedding(content: string): Promise<number[]> {
     // This is a placeholder. In production, you would use OpenAI's embedding API
     // For now, we'll use a simple random vector for demonstration
-    return Array.from({ length: this.embeddingDimension }, () => Math.random());
+    // Use content length to seed the random number generator for consistent results
+    const seed = content.length;
+    return Array.from(
+      { length: this.embeddingDimension },
+      (_, i) => Math.random() * Math.cos(seed + i)
+    );
   }
 
   private cosineSimilarity(a: number[], b: number[]): number {
@@ -147,14 +156,33 @@ class RAGService {
       console.warn('File operations are only available on the server side');
       return;
     }
-    
+
+    // Wait for modules to be loaded
+    if (!fs || !path) {
+      await new Promise<void>((resolve) => {
+        const checkModules = () => {
+          if (fs && path) {
+            resolve();
+          } else {
+            setTimeout(checkModules, 100);
+          }
+        };
+        checkModules();
+      });
+    }
+
     try {
-      const rubricPath = path.join(process.cwd(), 'src', 'app', 'data', 'rag', 'staffRubric.json');
-      await this.loadFromFile(rubricPath);
+      const demoFilePath = path.join(process.cwd(), 'src', 'app', 'data', 'staff_rubric.txt');
+      const content = fs.readFileSync(demoFilePath, 'utf8');
+      const sections = content.split('\n\n');
+      
+      for (const section of sections) {
+        if (section.trim()) {
+          await this.addDocument(section.trim());
+        }
+      }
     } catch (error) {
       console.error('Error loading demo staff rubric:', error);
-      // Initialize with empty documents if loading fails
-      this.documents = [];
     }
   }
 
