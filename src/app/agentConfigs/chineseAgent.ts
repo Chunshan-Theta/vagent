@@ -1,5 +1,6 @@
 import { AgentConfig } from "@/app/types";
 import { injectTransferTools } from "./utils";
+import { ragSearchTool, ragSearchToolLogic } from "./ragTool";
 
 // Define Chinese agents
 const chineseGreeter: AgentConfig = {
@@ -25,12 +26,23 @@ const chineseInfoProvider: AgentConfig = {
   - 服務說明
   - 常見問題解答
   - 技術支持
+  - 員工評估標準
   
-  請確保您的回答清晰、準確，並使用適當的中文專業術語。`,
-  tools: [],
+  當用戶詢問關於員工評估標準的問題時，您應該使用 ragSearch 工具來搜索相關信息。例如：
+  - 如果用戶詢問"什麼是優秀的領導能力？"，使用 ragSearch 搜索"領導能力"
+  - 如果用戶詢問"如何評估溝通能力？"，使用 ragSearch 搜索"溝通能力"
+  - 如果用戶詢問"問題解決能力的評估標準是什麼？"，使用 ragSearch 搜索"問題解決能力"
+  - 如果用戶詢問公司相關問題，使用 ragSearch 搜索相關文件
+  搜索到結果後，請根據結果提供詳細的回答，並確保回答是自然的、流暢的，而不是簡單地列出搜索結果。
+  
+  請確保您的回答清晰、準確，並使用適當的中文專業術語。
+  當使用ragSearch工具時，請明文指出搜索的關鍵詞，例如：“我搜索關於領導能力的評估標準”
+  `,
+  tools: [ragSearchTool],
+  toolLogic: ragSearchToolLogic
 };
 
 // add the transfer tool to point to downstreamAgents
-const agents = injectTransferTools([chineseGreeter, chineseInfoProvider]);
+const agents = injectTransferTools([chineseInfoProvider, chineseGreeter]);
 
 export default agents; 
