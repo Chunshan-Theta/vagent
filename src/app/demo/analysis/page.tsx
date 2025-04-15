@@ -25,7 +25,7 @@ function AnalysisContent() {
   
   // Check for history parameter in URL
   useEffect(() => {
-    const historyParam = searchParams.get('history');
+    const historyParam = searchParams?.get('history');
     if (historyParam) {
       setMessage(decodeURIComponent(historyParam));
       // Set flag to analyze after message is updated

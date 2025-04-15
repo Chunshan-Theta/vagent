@@ -85,7 +85,7 @@ function App({ hideLogs = false }: { hideLogs?: boolean }) {
   });
 
   useEffect(() => {
-    const agentSetKey = searchParams.get("agentConfig") || defaultAgentSetKey;
+    const agentSetKey = searchParams?.get("agentConfig") || defaultAgentSetKey;
     const agentSet = allAgentSets[agentSetKey];
     
     if (agentSet) {
@@ -441,7 +441,7 @@ function App({ hideLogs = false }: { hideLogs?: boolean }) {
     setMounted(true);
   }, []);
 
-  const agentSetKey = searchParams.get("agentConfig") || "default";
+  const agentSetKey = searchParams?.get("agentConfig") || "default";
 
   return (
     <div className="text-base flex flex-col bg-gray-100 text-gray-800 relative" style={{ height: '95vh' }}>
