@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { AnalysisRequest, AnalysisResponse } from '../../api/analysis/route';
 import { useTranscript } from '../../contexts/TranscriptContext';
 import { useSearchParams } from 'next/navigation';
@@ -19,7 +19,7 @@ function AnalysisContent() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { transcriptItems } = useTranscript();
+  const { } = useTranscript();
   const searchParams = useSearchParams();
   const [shouldAnalyze, setShouldAnalyze] = useState(false);
   
@@ -203,11 +203,20 @@ function AnalysisContent() {
   );
 }
 
+// Wrapper component that uses useSearchParams inside Suspense
+function AnalysisContentWithSuspense() {
+  return (
+    <Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
+      <AnalysisContent />
+    </Suspense>
+  );
+}
+
 export default function AnalysisDemo() {
   return (
     <TranscriptProvider>
       <EventProvider>
-        <AnalysisContent />
+        <AnalysisContentWithSuspense />
       </EventProvider>
     </TranscriptProvider>
   );
