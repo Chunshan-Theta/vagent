@@ -32,17 +32,19 @@ function DemoContent() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex-1">
-        <App hideLogs={true} />
-      </div>
-      <div className="p-4 border-t border-gray-200 bg-white">
-        <button
+      <button
           className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:opacity-50"
           onClick={handleAnalyzeChatHistory}
           disabled={isAnalyzing || transcriptItems.length === 0}
         >
-          {isAnalyzing ? 'Preparing Analysis...' : 'Analyze Chat History'}
-        </button>
+          {isAnalyzing ? 'Preparing Analysis...' : 'Finish chat then Analyze'}
+      </button>
+      <div className="flex-1">
+       
+        <App hideLogs={true} />
+      </div>
+      <div className="p-4 border-t border-gray-200 bg-white">
+        
       </div>
     </div>
   );
