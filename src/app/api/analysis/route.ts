@@ -41,17 +41,18 @@ export async function POST(request: Request) {
     }
 
     // Detect the language of the conversation
-    const languageDetectionPrompt = `Detect the primary language of the following text. Respond with only the language code (e.g., "en", "zh", "ja", "ko", "es", "fr", "de"). If you're unsure, respond with "en".
+    // const languageDetectionPrompt = `Detect the primary language of the following text. Respond with only the language code (e.g., "en", "zh", "ja", "ko", "es", "fr", "de"). If you're unsure, respond with "en".
 
-    Text: "${message.substring(0, 500)}..."`;
+    // Text: "${message.substring(0, 500)}..."`;
 
-    const languageDetection = await openai.chat.completions.create({
-      messages: [{ role: "user", content: languageDetectionPrompt }],
-      model: "gpt-4-turbo-preview",
-      response_format: { type: "text" },
-    });
+    // const languageDetection = await openai.chat.completions.create({
+    //   messages: [{ role: "user", content: languageDetectionPrompt }],
+    //   model: "gpt-4-turbo-preview",
+    //   response_format: { type: "text" },
+    // });
 
-    const detectedLanguage = languageDetection.choices[0].message.content?.trim() || "en";
+    // const detectedLanguage = languageDetection.choices[0].message.content?.trim() || "en";
+    const detectedLanguage = "zh";
     
     // Create language-specific instructions
     let languageInstruction = "";
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o",
       response_format: { type: "json_object" },
     });
 

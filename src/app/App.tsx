@@ -287,7 +287,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     sendClientEvent(sessionUpdateEvent);
 
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage("hi");
+      sendSimulatedUserMessage("開始");
     }
   };
 
