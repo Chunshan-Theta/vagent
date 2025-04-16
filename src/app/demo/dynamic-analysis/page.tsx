@@ -9,15 +9,22 @@ import { useRouter } from "next/navigation";
 import { FaMicrophone, FaPhone, FaVolumeUp, FaHashtag, FaSpinner } from 'react-icons/fa';
 
 import ChatView from "@/app/components/chat/ChatView";
+import { AppProvider, useAppContext } from "@/app/contexts/AppContext";
+
+
+import { v4 as uuidv4 } from "uuid";
 
 function DynamicAnalysisContent() {
   const router = useRouter();
   const chatContext = useChat();
-  const { transcriptItems } = useTranscript();
+  const { transcriptItems, addTranscriptMessage } = useTranscript();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const appContext = useAppContext();
+  const { sendClientEvent } = appContext;
+
 
   // styles start
   const [background, setBackground] = useState("#0F2D38");
@@ -154,6 +161,28 @@ function DynamicAnalysisContent() {
       setIsAnalyzing(false);
     }
   };
+
+  const sendSimulatedUserMessage = (text: string) => {
+    const id = uuidv4().slice(0, 32);
+    addTranscriptMessage(id, "user", text, true);
+
+    sendClientEvent(
+      {
+        type: "conversation.item.create",
+        item: {
+          id,
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text }],
+        },
+      },
+      "(simulated user text message)"
+    );
+    sendClientEvent(
+      { type: "response.create" },
+      "(trigger response after simulated user text message)"
+    );
+  };
   const { messageItems, inputText, addMessageItem, updateInputText, submitInputText } = useChat();
   const useExamples = false;
   const lastInput = useRef({
@@ -283,10 +312,18 @@ function DynamicAnalysisContent() {
       lastPair: [lastUserInputIndex, lastAssistantOutputIndex],
     }
   }, [transcriptItems]);
+
+
+  const onSubmitText = () => {
+    sendSimulatedUserMessage(inputText);
+    chatContext.updateInputText('');
+  }
   return (
     <div style={{ background }}>
       <ChatView
         background="#173944"
+        onSubmit={() => onSubmitText()}
+        onClickEnd={() => handleAnalyzeChatHistory()}
       ></ChatView>
       {/* Hidden App Component */}
       <div className="hidden">
@@ -300,11 +337,13 @@ export default function Page() {
   return (
     <TranscriptProvider>
       <EventProvider>
-        <ChatProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <DynamicAnalysisContent />
-          </Suspense>
-        </ChatProvider>
+        <AppProvider>
+          <ChatProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <DynamicAnalysisContent />
+            </Suspense>
+          </ChatProvider>
+        </AppProvider>
       </EventProvider>
     </TranscriptProvider>
   );

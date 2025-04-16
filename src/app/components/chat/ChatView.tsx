@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
 
 import { useChat } from '@/app/contexts/ChatContext';
+import { useAppContext } from '@/app/contexts/AppContext';
 import ChatMessageItem from './ChatMessageItem';
 
+import { FaMicrophone } from 'react-icons/fa';
+
 import './chat.scss';
-import { useEffect } from 'react';
 
 interface ChatViewProps {
   background?: string;
+
+  onSubmit?: (text: string) => void;
+  onClickEnd?: () => void;
 }
 
-const ChatView: React.FC<ChatViewProps> = ({ background }) => {
-  const { messageItems, inputText, addMessageItem, updateInputText, submitInputText } = useChat();
+const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
+  const { background, onSubmit, onClickEnd } = props;
+  const { messageItems, inputText, addMessageItem, updateInputText } = useChat();
+  const { dataChannel } = useAppContext();
   const maxWidth = 450;
   const chatStyle = {
     maxWidth: `${maxWidth}px`,
@@ -46,13 +53,21 @@ const ChatView: React.FC<ChatViewProps> = ({ background }) => {
               placeholder="請在此輸入..."
               value={inputText}
               onChange={(e) => updateInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && submitInputText()}
+              onKeyDown={(e) => e.key === 'Enter' && onSubmit && onSubmit(inputText)}
             />
-            <button className="send-button" onClick={() => submitInputText()}>➤</button>
+            <button className={dataChannel ? "mic-icon active" : "mic-icon"}>
+              <FaMicrophone />
+            </button>
+            <button className="send-button" onClick={() => onSubmit && onSubmit(inputText)}>➤</button>
+          </div>
+          <div style={{ width: '100%' }}>
+            <button className="end-button" onClick={() => onClickEnd && onClickEnd()}>
+              結束並開始分析
+            </button>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 export default ChatView;

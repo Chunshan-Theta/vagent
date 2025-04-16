@@ -17,6 +17,7 @@ import { AgentConfig, SessionStatus } from "@/app/types";
 // Context providers & hooks
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
+import { useAppContext } from "@/app/contexts/AppContext";
 import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
 
 // Utilities
@@ -47,6 +48,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
     useState<AgentConfig[] | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");
+  const appContext = useAppContext();
 
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -91,18 +93,18 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
   useEffect(() => {
     const agentSetKey = searchParams?.get("agentConfig") || defaultAgentSetKey;
     const agentSet = allAgentSets[agentSetKey];
-    
+
     if (agentSet) {
       setSelectedAgentConfigSet(agentSet);
-      
+
       // Set the default agent name if not already set
       if (!selectedAgentName && agentSet.length > 0) {
         setSelectedAgentName(agentSet[0].name);
       }
-      
+
       // Set the language based on the agent configuration
       setSelectedLanguage("zh");
-      
+
       // If language is Chinese, ensure we're using the Chinese agent
       if (selectedLanguage === "zh" && agentSetKey !== "chineseAgent") {
         const url = new URL(window.location.toString());
@@ -183,6 +185,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
       );
       pcRef.current = pc;
       dcRef.current = dc;
+      appContext.setDataChannel(dc);
 
       dc.addEventListener("open", () => {
         logClientEvent({}, "data_channel.open");
@@ -257,12 +260,12 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     const turnDetection = isPTTActive
       ? null
       : {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 200,
-          create_response: true,
-        };
+        type: "server_vad",
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 200,
+        create_response: true,
+      };
 
     const instructions = currentAgent?.instructions || "";
     const tools = currentAgent?.tools || [];
@@ -383,7 +386,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value;
     setSelectedLanguage(newLanguage);
-    
+
     // If language is Chinese, select the Chinese agent set
     if (newLanguage === "zh") {
       const url = new URL(window.location.toString());
