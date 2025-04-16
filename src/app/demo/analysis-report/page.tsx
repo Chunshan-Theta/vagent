@@ -53,18 +53,18 @@ function AnalysisReportContent() {
 
   // Function to get color based on score
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-green-100 text-green-800 border-green-300';
-    if (score >= 60) return 'bg-blue-100 text-blue-800 border-blue-300';
-    if (score >= 40) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    return 'bg-red-100 text-red-800 border-red-300';
+    if (score >= 80) return 'bg-[#173944] text-[#FFE066] border-[#2D5A67]';
+    if (score >= 60) return 'bg-[#173944] text-[#00A3E0] border-[#2D5A67]';
+    if (score >= 40) return 'bg-[#173944] text-[#FFBD1F] border-[#2D5A67]';
+    return 'bg-[#173944] text-red-400 border-[#2D5A67]';
   };
 
   // Function to get overall score color
   const getOverallScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-blue-600';
-    if (score >= 40) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-[#FFE066]';
+    if (score >= 60) return 'text-[#00A3E0]';
+    if (score >= 40) return 'text-[#FFBD1F]';
+    return 'text-red-400';
   };
   
   // Function to get emoji based on score
@@ -77,10 +77,10 @@ function AnalysisReportContent() {
   
   // Function to get progress bar color based on score
   const getProgressBarColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-blue-500';
-    if (score >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (score >= 80) return 'bg-[#FFE066]';
+    if (score >= 60) return 'bg-[#00A3E0]';
+    if (score >= 40) return 'bg-[#FFBD1F]';
+    return 'bg-red-400';
   };
 
   // Function to get localized UI text based on language
@@ -203,15 +203,15 @@ function AnalysisReportContent() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl bg-white rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 border-b pb-2 flex items-center">
-          <FaChartBar className="mr-2 text-blue-500" />
+    <div className="container mx-auto p-4 max-w-4xl bg-[#0F2D38] rounded-[20px] shadow-[0_4px_20px_rgba(0,160,255,0.15)]">
+      <div className="flex justify-between items-center mb-6 bg-[#194A54] p-4 rounded-[12px] shadow-[inset_0_0_6px_rgba(0,255,255,0.15)]">
+        <h1 className="text-3xl font-bold text-white border-b pb-2 flex items-center">
+          <FaChartBar className="mr-2 text-[#FFE066]" />
           {getLocalizedText('title')}
         </h1>
         <button 
           onClick={handleBackToDemo}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 shadow-sm flex items-center"
+          className="bg-[#00A3E0] text-white px-4 py-2 rounded-full hover:bg-[#00A3E0]/90 transition-colors duration-200 shadow-[0_2px_4px_rgba(0,160,255,0.3)] flex items-center"
         >
           <FaArrowLeft className="mr-2" />
           {getLocalizedText('backToDemo')}
@@ -220,58 +220,58 @@ function AnalysisReportContent() {
       
       {loading ? (
         <div className="flex flex-col items-center justify-center p-12">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-xl text-gray-700">{getLocalizedText('analyzing')}</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#00A3E0] mb-4"></div>
+          <p className="text-xl text-white">{getLocalizedText('analyzing')}</p>
         </div>
       ) : error ? (
-        <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md border border-red-300">
+        <div className="mt-4 p-4 bg-[#173944] text-red-400 rounded-[20px] border border-[#2D5A67]">
           <p className="font-medium">{getLocalizedText('error')}</p>
           <p>{error}</p>
         </div>
       ) : analysis ? (
         <div className="mt-8 space-y-6">
-          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 shadow-sm">
+          <div className="p-6 bg-[#173944] rounded-[20px] border border-[#2D5A67] shadow-[0_4px_20px_rgba(0,160,255,0.15)]">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-                <FaStar className="mr-2 text-yellow-500" />
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <FaStar className="mr-2 text-[#FFE066]" />
                 {getLocalizedText('analysisResults')}
               </h2>
               <div className="flex flex-col items-end">
                 <div className={`text-4xl font-bold ${getOverallScoreColor(analysis.overallScore)} flex items-center`}>
                   {analysis.overallScore.toFixed(0)}
-                  <span className="text-2xl ml-1">/100</span>
+                  <span className="text-2xl ml-1 text-white">/100</span>
                 </div>
                 <div className="text-2xl">{getScoreEmoji(analysis.overallScore)}</div>
               </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+            <div className="w-full bg-[#2D5A67] rounded-full h-4 mb-4">
               <div 
                 className={`h-full rounded-full ${getProgressBarColor(analysis.overallScore)} transition-all duration-1000 ease-out`}
                 style={{ width: `${analysis.overallScore}%` }}
               ></div>
             </div>
-            <p className="text-gray-700 text-lg">{analysis.feedback}</p>
+            <p className="text-white text-lg">{analysis.feedback}</p>
           </div>
 
           {/* Summary Section */}
-          <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-              <FaComments className="mr-2 text-purple-500" />
+          <div className="p-6 bg-[#173944] rounded-[20px] border border-[#2D5A67] shadow-[0_4px_20px_rgba(0,160,255,0.15)]">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+              <FaComments className="mr-2 text-[#FFE066]" />
               {getLocalizedText('conversationSummary')}
             </h2>
-            <p className="text-gray-700 text-lg">{analysis.summary}</p>
+            <p className="text-white text-lg">{analysis.summary}</p>
           </div>
 
           {/* Overall Improvement Tips */}
-          <div className="p-6 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-              <FaLightbulb className="mr-2 text-yellow-500" />
+          <div className="p-6 bg-[#173944] rounded-[20px] border border-[#2D5A67] shadow-[0_4px_20px_rgba(0,160,255,0.15)]">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+              <FaLightbulb className="mr-2 text-[#FFE066]" />
               {getLocalizedText('overallImprovementTips')}
             </h2>
             <ul className="list-disc pl-5 space-y-2">
               {analysis.overallImprovementTips.map((tip, index) => (
-                <li key={index} className="text-gray-700 flex items-start">
-                  <span className="inline-block w-6 h-6 rounded-full bg-green-200 text-green-800 flex items-center justify-center mr-2 mt-0.5 text-sm font-bold">
+                <li key={index} className="text-white flex items-start">
+                  <span className="inline-block w-6 h-6 rounded-full bg-[#2D5A67] text-[#FFE066] flex items-center justify-center mr-2 mt-0.5 text-sm font-bold">
                     {index + 1}
                   </span>
                   {tip}
@@ -281,50 +281,50 @@ function AnalysisReportContent() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
-              <FaChartBar className="mr-2 text-blue-500" />
+            <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
+              <FaChartBar className="mr-2 text-[#FFE066]" />
               {getLocalizedText('detailedScores')}
             </h3>
             {analysis.scores.map((score, index) => (
-              <div key={index} className={`p-5 rounded-lg border ${getScoreColor(score.score)} shadow-sm hover:shadow-md transition-shadow duration-300`}>
+              <div key={index} className={`p-5 rounded-[20px] border border-[#2D5A67] bg-[#173944] shadow-[0_4px_20px_rgba(0,160,255,0.15)] hover:shadow-[0_4px_20px_rgba(0,160,255,0.25)] transition-shadow duration-300`}>
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-bold text-lg">{score.criterion}</h3>
+                  <h3 className="font-bold text-lg text-white">{score.criterion}</h3>
                   <div className="flex items-center">
-                    <div className="w-32 h-6 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                    <div className="w-32 h-6 bg-[#2D5A67] rounded-full mr-2 overflow-hidden">
                       <div 
                         className={`h-full ${getProgressBarColor(score.score)} transition-all duration-1000 ease-out`}
                         style={{ width: `${score.score}%` }}
                       ></div>
                     </div>
-                    <span className="text-lg font-bold">{score.score.toFixed(0)}/100</span>
+                    <span className="text-lg font-bold text-white">{score.score.toFixed(0)}/100</span>
                     <span className="ml-2 text-xl">{getScoreEmoji(score.score)}</span>
                   </div>
                 </div>
-                <p className="text-gray-800 mb-3">{score.explanation}</p>
+                <p className="text-white mb-3">{score.explanation}</p>
                 
                 {/* Examples Section */}
-                <div className="mt-3 mb-3 bg-white bg-opacity-50 p-3 rounded-md">
-                  <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
-                    <FaComments className="mr-2 text-blue-500" />
+                <div className="mt-3 mb-3 bg-[#2D5A67] bg-opacity-50 p-3 rounded-[16px]">
+                  <h4 className="font-semibold text-white mb-2 flex items-center">
+                    <FaComments className="mr-2 text-[#FFE066]" />
                     {getLocalizedText('examples')}
                   </h4>
                   <ul className="list-disc pl-5 space-y-1">
                     {score.examples.map((example, idx) => (
-                      <li key={idx} className="text-gray-700 text-sm italic">&quot;{example}&quot;</li>
+                      <li key={idx} className="text-white text-sm italic">&quot;{example}&quot;</li>
                     ))}
                   </ul>
                 </div>
                 
                 {/* Improvement Tips Section */}
-                <div className="mt-3 bg-white bg-opacity-50 p-3 rounded-md">
-                  <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
-                    <FaLightbulb className="mr-2 text-yellow-500" />
+                <div className="mt-3 bg-[#2D5A67] bg-opacity-50 p-3 rounded-[16px]">
+                  <h4 className="font-semibold text-white mb-2 flex items-center">
+                    <FaLightbulb className="mr-2 text-[#FFE066]" />
                     {getLocalizedText('improvementTips')}
                   </h4>
                   <ul className="list-disc pl-5 space-y-1">
                     {score.improvementTips.map((tip, idx) => (
-                      <li key={idx} className="text-gray-700 text-sm flex items-start">
-                        <span className="inline-block w-5 h-5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">
+                      <li key={idx} className="text-white text-sm flex items-start">
+                        <span className="inline-block w-5 h-5 rounded-full bg-[#2D5A67] text-[#FFE066] flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">
                           {idx + 1}
                         </span>
                         {tip}
@@ -336,13 +336,13 @@ function AnalysisReportContent() {
             ))}
           </div>
           
-          <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
-              <FaHistory className="mr-2 text-gray-500" />
+          <div className="mt-8 p-6 bg-[#173944] rounded-[20px] border border-[#2D5A67]">
+            <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
+              <FaHistory className="mr-2 text-[#FFE066]" />
               {getLocalizedText('conversationHistory')}
             </h3>
-            <div className="bg-white p-4 rounded-md border border-gray-200 max-h-60 overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700">{message}</pre>
+            <div className="bg-[#2D5A67] p-4 rounded-[16px] border border-[#2D5A67] max-h-60 overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm text-white">{message}</pre>
             </div>
           </div>
         </div>
