@@ -51,13 +51,6 @@ function AnalysisReportContent() {
     }
   }, []);
 
-  // Function to get color based on score
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-[#173944] text-[#FFE066] border-[#2D5A67]';
-    if (score >= 60) return 'bg-[#173944] text-[#00A3E0] border-[#2D5A67]';
-    if (score >= 40) return 'bg-[#173944] text-[#FFBD1F] border-[#2D5A67]';
-    return 'bg-[#173944] text-red-400 border-[#2D5A67]';
-  };
 
   // Function to get overall score color
   const getOverallScoreColor = (score: number) => {
