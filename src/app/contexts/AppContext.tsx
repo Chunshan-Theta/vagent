@@ -11,7 +11,7 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [dataChannel, setDataChannel] = useState<any>(null);
-  const { logClientEvent, logServerEvent } = useEvent();
+  const { logClientEvent } = useEvent();
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     if (dataChannel && dataChannel.readyState === "open") {

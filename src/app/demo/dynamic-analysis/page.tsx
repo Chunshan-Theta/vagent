@@ -6,7 +6,6 @@ import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
 import App, { AppRef } from "@/app/App";
 import { useRouter } from "next/navigation";
-import { FaMicrophone, FaPhone, FaVolumeUp, FaHashtag, FaSpinner } from 'react-icons/fa';
 
 import ChatView from "@/app/components/chat/ChatView";
 import { AppProvider, useAppContext } from "@/app/contexts/AppContext";

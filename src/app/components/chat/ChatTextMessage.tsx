@@ -106,6 +106,7 @@ const ChatTextMessage: React.FC<ChatTextMessageProps> = ({
   }, [message])
 
   const avatarRef = <div className="avatar">
+    {/* eslint-disable-next-line @next/next/no-img-element */}
     <img
       src={avatar.src!}
       alt=""

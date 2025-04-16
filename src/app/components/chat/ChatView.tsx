@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 
 import { useChat } from '@/app/contexts/ChatContext'
 import { useAppContext } from '@/app/contexts/AppContext'
@@ -20,7 +20,7 @@ interface ChatViewProps {
 
 const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const { background, onSubmit, onClickEnd } = props
-  const { messageItems, inputText, addMessageItem, updateInputText } = useChat()
+  const { messageItems, inputText, updateInputText } = useChat()
 
   const disableInteraction = useMemo(() => {
     return props.isEnd || props.isLoading
