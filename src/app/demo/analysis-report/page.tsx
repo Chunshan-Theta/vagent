@@ -7,6 +7,8 @@ import { useSearchParams } from 'next/navigation';
 import { TranscriptProvider } from '../../contexts/TranscriptContext';
 import { EventProvider } from '../../contexts/EventContext';
 import { useRouter } from 'next/navigation';
+import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar, FaThumbsUp, FaRegSmile, FaRegMeh, FaRegFrown } from 'react-icons/fa';
+import confetti from 'canvas-confetti';
 
 function AnalysisReportContent() {
   const [message, setMessage] = useState('');
@@ -29,6 +31,17 @@ function AnalysisReportContent() {
         setAnalysis(parsedAnalysis);
         setMessage(storedChatHistory);
         setLoading(false);
+        
+        // Trigger confetti if score is high
+        if (parsedAnalysis.overallScore >= 80) {
+          setTimeout(() => {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          }, 1000);
+        }
       } catch (err) {
         console.error('Error parsing stored analysis:', err);
         setError('Error loading analysis results');
@@ -42,18 +55,34 @@ function AnalysisReportContent() {
 
   // Function to get color based on score
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'bg-green-100 text-green-800 border-green-300';
-    if (score >= 6) return 'bg-blue-100 text-blue-800 border-blue-300';
-    if (score >= 4) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    if (score >= 80) return 'bg-green-100 text-green-800 border-green-300';
+    if (score >= 60) return 'bg-blue-100 text-blue-800 border-blue-300';
+    if (score >= 40) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
     return 'bg-red-100 text-red-800 border-red-300';
   };
 
   // Function to get overall score color
   const getOverallScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600';
-    if (score >= 6) return 'text-blue-600';
-    if (score >= 4) return 'text-yellow-600';
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-blue-600';
+    if (score >= 40) return 'text-yellow-600';
     return 'text-red-600';
+  };
+  
+  // Function to get emoji based on score
+  const getScoreEmoji = (score: number) => {
+    if (score >= 80) return '🌟';
+    if (score >= 60) return '👍';
+    if (score >= 40) return '😐';
+    return '😕';
+  };
+  
+  // Function to get progress bar color based on score
+  const getProgressBarColor = (score: number) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-blue-500';
+    if (score >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   // Function to get localized UI text based on language
@@ -178,11 +207,15 @@ function AnalysisReportContent() {
   return (
     <div className="container mx-auto p-4 max-w-4xl bg-white rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 border-b pb-2">{getLocalizedText('title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-800 border-b pb-2 flex items-center">
+          <FaChartBar className="mr-2 text-blue-500" />
+          {getLocalizedText('title')}
+        </h1>
         <button 
           onClick={handleBackToDemo}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 shadow-sm flex items-center"
         >
+          <FaArrowLeft className="mr-2" />
           {getLocalizedText('backToDemo')}
         </button>
       </div>
@@ -201,51 +234,82 @@ function AnalysisReportContent() {
         <div className="mt-8 space-y-6">
           <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">{getLocalizedText('analysisResults')}</h2>
-              <div className={`text-3xl font-bold ${getOverallScoreColor(analysis.overallScore)}`}>
-                {analysis.overallScore.toFixed(1)}/10
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                <FaStar className="mr-2 text-yellow-500" />
+                {getLocalizedText('analysisResults')}
+              </h2>
+              <div className="flex flex-col items-end">
+                <div className={`text-4xl font-bold ${getOverallScoreColor(analysis.overallScore)} flex items-center`}>
+                  {analysis.overallScore.toFixed(0)}
+                  <span className="text-2xl ml-1">/100</span>
+                </div>
+                <div className="text-2xl">{getScoreEmoji(analysis.overallScore)}</div>
               </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+              <div 
+                className={`h-full rounded-full ${getProgressBarColor(analysis.overallScore)} transition-all duration-1000 ease-out`}
+                style={{ width: `${analysis.overallScore}%` }}
+              ></div>
             </div>
             <p className="text-gray-700 text-lg">{analysis.feedback}</p>
           </div>
 
           {/* Summary Section */}
           <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">{getLocalizedText('conversationSummary')}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+              <FaComments className="mr-2 text-purple-500" />
+              {getLocalizedText('conversationSummary')}
+            </h2>
             <p className="text-gray-700 text-lg">{analysis.summary}</p>
           </div>
 
           {/* Overall Improvement Tips */}
           <div className="p-6 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">{getLocalizedText('overallImprovementTips')}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+              <FaLightbulb className="mr-2 text-yellow-500" />
+              {getLocalizedText('overallImprovementTips')}
+            </h2>
             <ul className="list-disc pl-5 space-y-2">
               {analysis.overallImprovementTips.map((tip, index) => (
-                <li key={index} className="text-gray-700">{tip}</li>
+                <li key={index} className="text-gray-700 flex items-start">
+                  <span className="inline-block w-6 h-6 rounded-full bg-green-200 text-green-800 flex items-center justify-center mr-2 mt-0.5 text-sm font-bold">
+                    {index + 1}
+                  </span>
+                  {tip}
+                </li>
               ))}
             </ul>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">{getLocalizedText('detailedScores')}</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+              <FaChartBar className="mr-2 text-blue-500" />
+              {getLocalizedText('detailedScores')}
+            </h3>
             {analysis.scores.map((score, index) => (
-              <div key={index} className={`p-5 rounded-lg border ${getScoreColor(score.score)} shadow-sm`}>
+              <div key={index} className={`p-5 rounded-lg border ${getScoreColor(score.score)} shadow-sm hover:shadow-md transition-shadow duration-300`}>
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-bold text-lg">{score.criterion}</h3>
                   <div className="flex items-center">
-                    <div className="w-24 h-6 bg-gray-200 rounded-full mr-2 overflow-hidden">
+                    <div className="w-32 h-6 bg-gray-200 rounded-full mr-2 overflow-hidden">
                       <div 
-                        className={`h-full ${score.score >= 8 ? 'bg-green-500' : score.score >= 6 ? 'bg-blue-500' : score.score >= 4 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                        style={{ width: `${score.score * 10}%` }}
+                        className={`h-full ${getProgressBarColor(score.score)} transition-all duration-1000 ease-out`}
+                        style={{ width: `${score.score}%` }}
                       ></div>
                     </div>
-                    <span className="text-lg font-bold">{score.score}/10</span>
+                    <span className="text-lg font-bold">{score.score.toFixed(0)}/100</span>
+                    <span className="ml-2 text-xl">{getScoreEmoji(score.score)}</span>
                   </div>
                 </div>
                 <p className="text-gray-800 mb-3">{score.explanation}</p>
                 
                 {/* Examples Section */}
-                <div className="mt-3 mb-3">
-                  <h4 className="font-semibold text-gray-700 mb-2">{getLocalizedText('examples')}</h4>
+                <div className="mt-3 mb-3 bg-white bg-opacity-50 p-3 rounded-md">
+                  <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
+                    <FaComments className="mr-2 text-blue-500" />
+                    {getLocalizedText('examples')}
+                  </h4>
                   <ul className="list-disc pl-5 space-y-1">
                     {score.examples.map((example, idx) => (
                       <li key={idx} className="text-gray-700 text-sm italic">"{example}"</li>
@@ -254,11 +318,19 @@ function AnalysisReportContent() {
                 </div>
                 
                 {/* Improvement Tips Section */}
-                <div className="mt-3">
-                  <h4 className="font-semibold text-gray-700 mb-2">{getLocalizedText('improvementTips')}</h4>
+                <div className="mt-3 bg-white bg-opacity-50 p-3 rounded-md">
+                  <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
+                    <FaLightbulb className="mr-2 text-yellow-500" />
+                    {getLocalizedText('improvementTips')}
+                  </h4>
                   <ul className="list-disc pl-5 space-y-1">
                     {score.improvementTips.map((tip, idx) => (
-                      <li key={idx} className="text-gray-700 text-sm">{tip}</li>
+                      <li key={idx} className="text-gray-700 text-sm flex items-start">
+                        <span className="inline-block w-5 h-5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">
+                          {idx + 1}
+                        </span>
+                        {tip}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -267,7 +339,10 @@ function AnalysisReportContent() {
           </div>
           
           <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">{getLocalizedText('conversationHistory')}</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+              <FaHistory className="mr-2 text-gray-500" />
+              {getLocalizedText('conversationHistory')}
+            </h3>
             <div className="bg-white p-4 rounded-md border border-gray-200 max-h-60 overflow-y-auto">
               <pre className="whitespace-pre-wrap text-sm text-gray-700">{message}</pre>
             </div>

@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
     const prompt = `Analyze the following message according to these criteria: ${rubric.criteria.join(', ')}.
     For each criterion, provide:
-    1. A score from 1-10
+    1. A score from 1-100 (where 100 is perfect and 1 is the lowest)
     2. A brief explanation of the score
     3. Specific examples from the text that support your evaluation
     4. 2-3 specific improvement tips for this criterion

@@ -49,7 +49,7 @@ function DemoContent() {
       setAnalysisProgress(prev => {
         // Cap at 95% until we get the actual result
         if (prev < 95) {
-          return prev + 1;
+          return prev + 0.3;
         }
         return prev;
       });
