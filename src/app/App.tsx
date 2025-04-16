@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
@@ -31,7 +31,11 @@ const languageOptions = [
   { value: "en", label: "English" },
 ];
 
-function App({ hideLogs = false }: { hideLogs?: boolean }) {
+export interface AppRef {
+  disconnectFromRealtime: () => void;
+}
+
+const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, ref) => {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
@@ -443,6 +447,10 @@ function App({ hideLogs = false }: { hideLogs?: boolean }) {
 
   const agentSetKey = searchParams?.get("agentConfig") || "default";
 
+  useImperativeHandle(ref, () => ({
+    disconnectFromRealtime
+  }));
+
   return (
     <div className="text-base flex flex-col bg-gray-100 text-gray-800 relative" style={{ height: '95vh' }}>
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
@@ -590,6 +598,8 @@ function App({ hideLogs = false }: { hideLogs?: boolean }) {
       />
     </div>
   );
-}
+});
+
+App.displayName = 'App';
 
 export default App;
