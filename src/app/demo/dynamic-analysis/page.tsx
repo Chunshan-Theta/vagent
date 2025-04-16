@@ -322,6 +322,8 @@ function DynamicAnalysisContent() {
     <div style={{ background }}>
       <ChatView
         background="#173944"
+        isEnd={isCallEnded}
+        isLoading={isAnalyzing}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
       ></ChatView>
