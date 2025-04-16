@@ -3,11 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { AnalysisResponse } from '../../api/analysis/route';
 import { useTranscript } from '../../contexts/TranscriptContext';
-import { useSearchParams } from 'next/navigation';
 import { TranscriptProvider } from '../../contexts/TranscriptContext';
 import { EventProvider } from '../../contexts/EventContext';
 import { useRouter } from 'next/navigation';
-import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar, FaThumbsUp, FaRegSmile, FaRegMeh, FaRegFrown } from 'react-icons/fa';
+import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
 
 function AnalysisReportContent() {
@@ -16,7 +15,6 @@ function AnalysisReportContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { } = useTranscript();
-  const searchParams = useSearchParams();
   const router = useRouter();
   
   // Check for history parameter in URL and retrieve analysis from localStorage
@@ -312,7 +310,7 @@ function AnalysisReportContent() {
                   </h4>
                   <ul className="list-disc pl-5 space-y-1">
                     {score.examples.map((example, idx) => (
-                      <li key={idx} className="text-gray-700 text-sm italic">"{example}"</li>
+                      <li key={idx} className="text-gray-700 text-sm italic">&quot;{example}&quot;</li>
                     ))}
                   </ul>
                 </div>
