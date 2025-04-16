@@ -100,6 +100,24 @@ function DemoContent() {
 
       const analysisResult = await response.json();
       
+      // Ensure the analysis result has the expected structure
+      if (!analysisResult.scores || !analysisResult.overallScore || !analysisResult.feedback) {
+        throw new Error('Invalid analysis result format');
+      }
+      
+      // Ensure each score has the required fields
+      analysisResult.scores.forEach((score: any) => {
+        if (!score.examples) score.examples = [];
+        if (!score.improvementTips) score.improvementTips = [];
+      });
+      
+      // Ensure summary and overallImprovementTips exist
+      if (!analysisResult.summary) analysisResult.summary = "No summary available.";
+      if (!analysisResult.overallImprovementTips) analysisResult.overallImprovementTips = ["No improvement tips available."];
+      
+      // Ensure language field exists
+      if (!analysisResult.language) analysisResult.language = "en";
+      
       // Clear the progress timer
       if (progressTimerRef.current) {
         clearInterval(progressTimerRef.current);

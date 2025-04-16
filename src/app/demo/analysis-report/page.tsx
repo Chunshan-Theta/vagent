@@ -56,6 +56,121 @@ function AnalysisReportContent() {
     return 'text-red-600';
   };
 
+  // Function to get localized UI text based on language
+  const getLocalizedText = (key: string) => {
+    const language = analysis?.language || 'en';
+    
+    const localizedTexts: Record<string, Record<string, string>> = {
+      en: {
+        title: 'Conversation Analysis Report',
+        backToDemo: 'Back to Demo',
+        analyzing: 'Analyzing conversation...',
+        error: 'Error',
+        analysisResults: 'Analysis Results',
+        conversationSummary: 'Conversation Summary',
+        overallImprovementTips: 'Overall Improvement Tips',
+        detailedScores: 'Detailed Scores',
+        examples: 'Examples from the conversation:',
+        improvementTips: 'Improvement Tips:',
+        conversationHistory: 'Conversation History',
+        noAnalysisResults: 'No analysis results or chat history found',
+        errorLoadingResults: 'Error loading analysis results'
+      },
+      zh: {
+        title: '對話分析報告',
+        backToDemo: '重新對話',
+        analyzing: '正在分析...',
+        error: '錯誤',
+        analysisResults: '分析結果',
+        conversationSummary: '對話摘要',
+        overallImprovementTips: '整體改進建議',
+        detailedScores: '評分細節',
+        examples: '對話中提到:',
+        improvementTips: '改進建議:',
+        conversationHistory: '對話紀錄',
+        noAnalysisResults: '未找到分析结果或對話歷史',
+        errorLoadingResults: '加载分析结果錯誤'
+      },
+      ja: {
+        title: '会話分析レポート',
+        backToDemo: 'デモに戻る',
+        analyzing: '会話を分析中...',
+        error: 'エラー',
+        analysisResults: '分析結果',
+        conversationSummary: '会話の要約',
+        overallImprovementTips: '全体的な改善のヒント',
+        detailedScores: '詳細スコア',
+        examples: '会話からの例:',
+        improvementTips: '改善のヒント:',
+        conversationHistory: '会話履歴',
+        noAnalysisResults: '分析結果または会話履歴が見つかりません',
+        errorLoadingResults: '分析結果の読み込み中にエラーが発生しました'
+      },
+      ko: {
+        title: '대화 분석 보고서',
+        backToDemo: '데모로 돌아가기',
+        analyzing: '대화 분석 중...',
+        error: '오류',
+        analysisResults: '분석 결과',
+        conversationSummary: '대화 요약',
+        overallImprovementTips: '전체 개선 팁',
+        detailedScores: '상세 점수',
+        examples: '대화에서의 예시:',
+        improvementTips: '개선 팁:',
+        conversationHistory: '대화 기록',
+        noAnalysisResults: '분석 결과 또는 대화 기록이 없습니다',
+        errorLoadingResults: '분석 결과를 로드하는 중 오류가 발생했습니다'
+      },
+      es: {
+        title: 'Informe de Análisis de Conversación',
+        backToDemo: 'Volver a la Demostración',
+        analyzing: 'Analizando conversación...',
+        error: 'Error',
+        analysisResults: 'Resultados del Análisis',
+        conversationSummary: 'Resumen de la Conversación',
+        overallImprovementTips: 'Consejos Generales de Mejora',
+        detailedScores: 'Puntuaciones Detalladas',
+        examples: 'Ejemplos de la conversación:',
+        improvementTips: 'Consejos de Mejora:',
+        conversationHistory: 'Historial de Conversación',
+        noAnalysisResults: 'No se encontraron resultados de análisis o historial de conversación',
+        errorLoadingResults: 'Error al cargar los resultados del análisis'
+      },
+      fr: {
+        title: 'Rapport d\'Analyse de Conversation',
+        backToDemo: 'Retour à la Démo',
+        analyzing: 'Analyse de la conversation...',
+        error: 'Erreur',
+        analysisResults: 'Résultats de l\'Analyse',
+        conversationSummary: 'Résumé de la Conversation',
+        overallImprovementTips: 'Conseils d\'Amélioration Généraux',
+        detailedScores: 'Scores Détaillés',
+        examples: 'Exemples de la conversation:',
+        improvementTips: 'Conseils d\'Amélioration:',
+        conversationHistory: 'Historique de Conversation',
+        noAnalysisResults: 'Aucun résultat d\'analyse ou historique de conversation trouvé',
+        errorLoadingResults: 'Erreur lors du chargement des résultats d\'analyse'
+      },
+      de: {
+        title: 'Konversationsanalysebericht',
+        backToDemo: 'Zurück zur Demo',
+        analyzing: 'Konversation wird analysiert...',
+        error: 'Fehler',
+        analysisResults: 'Analyseergebnisse',
+        conversationSummary: 'Konversationszusammenfassung',
+        overallImprovementTips: 'Allgemeine Verbesserungstipps',
+        detailedScores: 'Detaillierte Bewertungen',
+        examples: 'Beispiele aus der Konversation:',
+        improvementTips: 'Verbesserungstipps:',
+        conversationHistory: 'Konversationsverlauf',
+        noAnalysisResults: 'Keine Analyseergebnisse oder Konversationsverlauf gefunden',
+        errorLoadingResults: 'Fehler beim Laden der Analyseergebnisse'
+      }
+    };
+    
+    return localizedTexts[language]?.[key] || localizedTexts['en'][key];
+  };
+
   const handleBackToDemo = () => {
     router.push('/demo');
   };
@@ -63,30 +178,30 @@ function AnalysisReportContent() {
   return (
     <div className="container mx-auto p-4 max-w-4xl bg-white rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 border-b pb-2">Conversation Analysis Report</h1>
+        <h1 className="text-3xl font-bold text-gray-800 border-b pb-2">{getLocalizedText('title')}</h1>
         <button 
           onClick={handleBackToDemo}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 shadow-sm"
         >
-          Back to Demo
+          {getLocalizedText('backToDemo')}
         </button>
       </div>
       
       {loading ? (
         <div className="flex flex-col items-center justify-center p-12">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-xl text-gray-700">Analyzing conversation...</p>
+          <p className="text-xl text-gray-700">{getLocalizedText('analyzing')}</p>
         </div>
       ) : error ? (
         <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-md border border-red-300">
-          <p className="font-medium">Error</p>
+          <p className="font-medium">{getLocalizedText('error')}</p>
           <p>{error}</p>
         </div>
       ) : analysis ? (
         <div className="mt-8 space-y-6">
           <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Analysis Results</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{getLocalizedText('analysisResults')}</h2>
               <div className={`text-3xl font-bold ${getOverallScoreColor(analysis.overallScore)}`}>
                 {analysis.overallScore.toFixed(1)}/10
               </div>
@@ -94,8 +209,24 @@ function AnalysisReportContent() {
             <p className="text-gray-700 text-lg">{analysis.feedback}</p>
           </div>
 
+          {/* Summary Section */}
+          <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">{getLocalizedText('conversationSummary')}</h2>
+            <p className="text-gray-700 text-lg">{analysis.summary}</p>
+          </div>
+
+          {/* Overall Improvement Tips */}
+          <div className="p-6 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border border-green-200 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">{getLocalizedText('overallImprovementTips')}</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              {analysis.overallImprovementTips.map((tip, index) => (
+                <li key={index} className="text-gray-700">{tip}</li>
+              ))}
+            </ul>
+          </div>
+
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">Detailed Scores</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">{getLocalizedText('detailedScores')}</h3>
             {analysis.scores.map((score, index) => (
               <div key={index} className={`p-5 rounded-lg border ${getScoreColor(score.score)} shadow-sm`}>
                 <div className="flex justify-between items-center mb-3">
@@ -110,13 +241,33 @@ function AnalysisReportContent() {
                     <span className="text-lg font-bold">{score.score}/10</span>
                   </div>
                 </div>
-                <p className="text-gray-800">{score.explanation}</p>
+                <p className="text-gray-800 mb-3">{score.explanation}</p>
+                
+                {/* Examples Section */}
+                <div className="mt-3 mb-3">
+                  <h4 className="font-semibold text-gray-700 mb-2">{getLocalizedText('examples')}</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {score.examples.map((example, idx) => (
+                      <li key={idx} className="text-gray-700 text-sm italic">"{example}"</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                {/* Improvement Tips Section */}
+                <div className="mt-3">
+                  <h4 className="font-semibold text-gray-700 mb-2">{getLocalizedText('improvementTips')}</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {score.improvementTips.map((tip, idx) => (
+                      <li key={idx} className="text-gray-700 text-sm">{tip}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             ))}
           </div>
           
           <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3">Conversation History</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">{getLocalizedText('conversationHistory')}</h3>
             <div className="bg-white p-4 rounded-md border border-gray-200 max-h-60 overflow-y-auto">
               <pre className="whitespace-pre-wrap text-sm text-gray-700">{message}</pre>
             </div>
