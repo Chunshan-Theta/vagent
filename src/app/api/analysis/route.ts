@@ -83,6 +83,8 @@ export async function POST(request: Request) {
     5. A concise summary of the overall conversation (2-3 sentences)
     6. 3-5 overall improvement tips for the entire conversation
 
+    註：所有的分析都以 "user" 為對象，主要方向為分析 user 在當前對話中的表現。
+
     ${languageInstruction}
 
     Message to analyze: "${message}"
@@ -100,7 +102,7 @@ export async function POST(request: Request) {
       ],
       "overallScore": number,
       "feedback": "overall feedback",
-      "summary": "concise summary of the conversation",
+      "summary": "concise summary of the user's behavior or performance",
       "overallImprovementTips": ["tip 1", "tip 2", "tip 3"]
     }`;
 

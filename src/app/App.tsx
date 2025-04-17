@@ -275,7 +275,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
       session: {
         modalities: ["text", "audio"],
         instructions,
-        voice: "onyx",
+        voice: "echo",
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: { model: "whisper-1" },
@@ -287,7 +287,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     sendClientEvent(sessionUpdateEvent);
 
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage("開始");
+      sendSimulatedUserMessage("接下來請用中文回答進行對答。\n可以開始扮演角色了。");
     }
   };
 
