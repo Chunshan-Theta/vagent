@@ -41,17 +41,18 @@ export async function POST(request: Request) {
     }
 
     // Detect the language of the conversation
-    const languageDetectionPrompt = `Detect the primary language of the following text. Respond with only the language code (e.g., "en", "zh", "ja", "ko", "es", "fr", "de"). If you're unsure, respond with "en".
+    // const languageDetectionPrompt = `Detect the primary language of the following text. Respond with only the language code (e.g., "en", "zh", "ja", "ko", "es", "fr", "de"). If you're unsure, respond with "en".
 
-    Text: "${message.substring(0, 500)}..."`;
+    // Text: "${message.substring(0, 500)}..."`;
 
-    const languageDetection = await openai.chat.completions.create({
-      messages: [{ role: "user", content: languageDetectionPrompt }],
-      model: "gpt-4-turbo-preview",
-      response_format: { type: "text" },
-    });
+    // const languageDetection = await openai.chat.completions.create({
+    //   messages: [{ role: "user", content: languageDetectionPrompt }],
+    //   model: "gpt-4-turbo-preview",
+    //   response_format: { type: "text" },
+    // });
 
-    const detectedLanguage = languageDetection.choices[0].message.content?.trim() || "en";
+    // const detectedLanguage = languageDetection.choices[0].message.content?.trim() || "en";
+    const detectedLanguage = "zh";
     
     // Create language-specific instructions
     let languageInstruction = "";
@@ -82,6 +83,8 @@ export async function POST(request: Request) {
     5. A concise summary of the overall conversation (2-3 sentences)
     6. 3-5 overall improvement tips for the entire conversation
 
+    註：所有的分析都以 "user" 為對象，主要方向為分析 user 在當前對話中的表現。
+
     ${languageInstruction}
 
     Message to analyze: "${message}"
@@ -99,13 +102,13 @@ export async function POST(request: Request) {
       ],
       "overallScore": number,
       "feedback": "overall feedback",
-      "summary": "concise summary of the conversation",
+      "summary": "concise summary of the user's behavior or performance",
       "overallImprovementTips": ["tip 1", "tip 2", "tip 3"]
     }`;
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o",
       response_format: { type: "json_object" },
     });
 
