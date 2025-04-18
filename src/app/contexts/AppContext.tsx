@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useEvent } from "@/app/contexts/EventContext";
 
@@ -11,7 +13,18 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [dataChannel, setDataChannel] = useState<any>(null);
-  const { logClientEvent } = useEvent();
+  
+  // Use a try-catch to handle the case when EventContext is not available
+  let logClientEvent;
+  try {
+    const eventContext = useEvent();
+    logClientEvent = eventContext.logClientEvent;
+  } catch (error) {
+    console.warn("EventContext not available, using default values");
+    logClientEvent = (eventObj: any, eventNameSuffix = "") => {
+      console.log(`[Client Event] ${eventNameSuffix}:`, eventObj);
+    };
+  }
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     if (dataChannel && dataChannel.readyState === "open") {

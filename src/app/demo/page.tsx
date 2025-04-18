@@ -7,6 +7,7 @@ import App, { AppRef } from "../App";
 import { useRouter } from "next/navigation";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { FaMicrophone, FaPhone, FaVolumeUp, FaHashtag, FaSpinner } from 'react-icons/fa';
+import { AppProvider } from "@/app/contexts/AppContext";
 
 function DemoContent() {
   const router = useRouter();
@@ -223,12 +224,14 @@ function DemoContent() {
 
 export default function Page() {
   return (
-    <TranscriptProvider>
-      <EventProvider>
-        <Suspense fallback={<div>Loading...</div>}>
-          <DemoContent />
-        </Suspense>
-      </EventProvider>
-    </TranscriptProvider>
+    <AppProvider>
+      <TranscriptProvider>
+        <EventProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <DemoContent />
+          </Suspense>
+        </EventProvider>
+      </TranscriptProvider>
+    </AppProvider>
   );
 } 
