@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     // Create language-specific instructions
     let languageInstruction = "";
     if (detectedLanguage === "zh") {
-      languageInstruction = "請用中文回答分析結果。";
+      languageInstruction = "請用台灣繁體中文回答分析結果。";
     } else if (detectedLanguage === "ja") {
       languageInstruction = "分析結果を日本語で回答してください。";
     } else if (detectedLanguage === "ko") {
@@ -76,14 +76,53 @@ export async function POST(request: Request) {
     For each criterion, provide:
     1. A score from 1-100 (where 100 is perfect and 1 is the lowest)
     2. A brief explanation of the score
-    3. Specific examples from the text that support your evaluation
+    3. Specific examples from the user's text (not from the assistant and rubric) that support your scoring and reasoning.
     4. 2-3 specific improvement tips for this criterion
-
-    Also provide:
     5. A concise summary of the overall conversation (2-3 sentences)
     6. 3-5 overall improvement tips for the entire conversation
 
-    註：所有的分析都以 "user" 為對象，主要方向為分析 user 在當前對話中的表現。
+    Important Note: 
+      1. All analysis should be based on the "user's text" (ignore the assistant's text), with the main focus being on analyzing the user's performance in the current conversation.
+      2. Do not include the assistant's text in your analysis and examples. if there are no good examples in the user's text, just say "No relevant examples found" and give a low score.
+
+    Analysis should be based on the following concepts:
+    ## 🧠 Rogers Dialogue Analysis 
+    analyze the following dialogue using the principles of Carl Rogers’ communication method. 
+    Go through each step carefully and provide a thoughtful, empathy-centered evaluation.
+
+    ### 1. Read and Understand the Full Dialogue
+    - Carefully read the entire conversation.
+    - Identify the context and the main topic(s) being discussed.
+
+    ### 2. Identify Each Person’s Core Perspectives
+    - Summarize the main ideas, beliefs, and emotions expressed by each participant.
+    - What are their underlying concerns or motivations?
+
+    ### 3. Look for Common Ground or Potential Consensus
+    - Are there any shared goals, values, or perspectives between the participants?
+    - Highlight any implicit agreements or aligned interests.
+
+    ### 4. Analyze Expressions of Understanding and Acknowledgment
+    - Did each person show understanding or acknowledgment of the other’s point of view?
+    - Even if they disagree, did they demonstrate empathy or emotional awareness in their language?
+
+    ### 5. Examine How the Issue Was Framed
+    - How was the topic or conflict introduced and discussed?
+    - Was it framed neutrally, or did it carry bias, blame, or adversarial tones?
+    - Suggest how the issue could be reframed more constructively if needed.
+
+    ### 6. Evaluate Willingness to Collaborate
+    - Was there a genuine effort to find a mutual solution or to deepen understanding?
+    - Did participants express openness to different perspectives or compromise?
+
+    ### 7. Summarize Key Insights
+    - Provide a concise summary of each person's views, level of mutual understanding, and any areas of agreement.
+    - Assess how well the dialogue aligns with Rogers’ principles of empathy, authenticity, and respect.
+
+    ### 8. Offer Suggestions for Improvement
+    - Based on the analysis, suggest specific ways to enhance the dialogue.
+    - Focus on promoting empathy, mutual understanding, and collaborative problem-solving (e.g., use of reflective listening, asking clarifying questions, avoiding judgmental language).
+
 
     ${languageInstruction}
 
