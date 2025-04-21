@@ -332,13 +332,9 @@ function DynamicAnalysisContent() {
         onClickEnd={() => handleAnalyzeChatHistory()}
       ></ChatView>
       {/* Hidden App Component - only render on client side */}
-      {isClient && (
-        <div className="hidden">
-          <AppProvider>
-            <App hideLogs={false} ref={appRef} />
-          </AppProvider>
-        </div>
-      )}
+      <div className="hidden">
+        <App />
+      </div>
     </div>
   );
 }
