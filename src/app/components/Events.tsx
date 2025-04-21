@@ -12,7 +12,17 @@ function Events({ isExpanded }: EventsProps) {
   const [prevEventLogs, setPrevEventLogs] = useState<LoggedEvent[]>([]);
   const eventLogsContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const { loggedEvents, toggleExpand } = useEvent();
+  // Use a try-catch to handle the case when EventContext is not available
+  let loggedEvents: LoggedEvent[] = [];
+  let toggleExpand: (id: number | string) => void = () => {};
+  
+  try {
+    const eventContext = useEvent();
+    loggedEvents = eventContext.loggedEvents;
+    toggleExpand = eventContext.toggleExpand;
+  } catch (error) {
+    console.warn("EventContext not available, using default values");
+  }
 
   const getDirectionArrow = (direction: string) => {
     if (direction === "client") return { symbol: "▲", color: "#7f5af0" };

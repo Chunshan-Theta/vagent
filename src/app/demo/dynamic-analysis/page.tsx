@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import ChatView from "@/app/components/chat/ChatView";
 import { AppProvider, useAppContext } from "@/app/contexts/AppContext";
 
-
 import { v4 as uuidv4 } from "uuid";
 
 function DynamicAnalysisContent() {
@@ -24,13 +23,18 @@ function DynamicAnalysisContent() {
   const appContext = useAppContext();
   const { sendClientEvent } = appContext;
 
-
   // styles start
   const [background, setBackground] = useState("#0F2D38");
   // styles end
 
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const appRef = useRef<AppRef>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set isClient to true after component mounts (client-side only)
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!isCallEnded) {
@@ -195,19 +199,20 @@ function DynamicAnalysisContent() {
     if (!useExamples) return;
     // 添加範例資料
     for (let i = 0; i < 3; i += 1) {
+      const timestamp = Date.now() + i * 1000;
       addMessageItem({
         id: `S-${i}`,
         type: 'text',
         role: 'system',
         data: { content: `您的目標是透過 專業溝通與異議處理技巧，讓客戶理解房貸壽險的保障價值，找到適合他的規劃方式，並提升購買意願。\n\n透過 實戰模擬與即時回饋，讓我們一起提升您的房貸壽險銷售能力！:rocket:` },
-        createdAtMs: Date.now() + i * 1000,
+        createdAtMs: timestamp,
       });
       addMessageItem({
         id: `U-${i}`,
         type: 'text',
         role: 'user',
         data: { content: `你好` },
-        createdAtMs: Date.now() + i * 1000,
+        createdAtMs: timestamp,
         // avatar: '/images/avatar.png',
       });
       addMessageItem({
@@ -215,7 +220,7 @@ function DynamicAnalysisContent() {
         type: 'text',
         role: 'assistant',
         data: { content: `你好啊，我今天是想了解一下房貸的事情。不過我聽說你們那個房貸壽險要30萬？這也太貴了吧！！我家每個月就剩2.5萬可以存，這樣一家拿出30萬，等於我們全家要存一整年耶！而且我還有兩個小孩要養，每個月教育費就要2萬，哪有多餘的錢買這個啊？` },
-        createdAtMs: Date.now() + (i + 10) * 1000,
+        createdAtMs: timestamp + 10000,
         avatar: '/images/avatar.png',
       });
     }
@@ -326,26 +331,31 @@ function DynamicAnalysisContent() {
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
       ></ChatView>
-      {/* Hidden App Component */}
-      <div className="hidden">
-        <App hideLogs={false} ref={appRef} />
-      </div>
+      {/* Hidden App Component - only render on client side */}
+      {isClient && (
+        <div className="hidden">
+          <AppProvider>
+            <App hideLogs={false} ref={appRef} />
+          </AppProvider>
+        </div>
+      )}
     </div>
   );
 }
 
+// Use a client-only component to avoid hydration errors
 export default function Page() {
   return (
-    <TranscriptProvider>
-      <EventProvider>
-        <AppProvider>
-          <ChatProvider>
+    <AppProvider>
+      <TranscriptProvider>
+        <ChatProvider>
+          <EventProvider>
             <Suspense fallback={<div>Loading...</div>}>
               <DynamicAnalysisContent />
             </Suspense>
-          </ChatProvider>
-        </AppProvider>
-      </EventProvider>
-    </TranscriptProvider>
+          </EventProvider>
+        </ChatProvider>
+      </TranscriptProvider>
+    </AppProvider>
   );
 } 

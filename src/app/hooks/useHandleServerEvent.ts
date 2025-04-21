@@ -31,7 +31,17 @@ export function useHandleServerEvent({
     updateTranscriptItemStatus,
   } = useTranscript();
 
-  const { logServerEvent } = useEvent();
+  // Use a try-catch to handle the case when EventContext is not available
+  let logServerEvent;
+  try {
+    const eventContext = useEvent();
+    logServerEvent = eventContext.logServerEvent;
+  } catch (error) {
+    console.warn("EventContext not available, using default values");
+    logServerEvent = (eventObj: any, eventNameSuffix = "") => {
+      console.log(`[Server Event] ${eventNameSuffix}:`, eventObj);
+    };
+  }
 
   const handleFunctionCall = async (functionCallParams: {
     name: string;

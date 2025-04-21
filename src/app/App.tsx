@@ -42,13 +42,37 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
 
   const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
     useTranscript();
-  const { logClientEvent, logServerEvent } = useEvent();
+  
+  // Use a try-catch to handle the case when EventContext is not available
+  let logClientEvent, logServerEvent;
+  try {
+    const eventContext = useEvent();
+    logClientEvent = eventContext.logClientEvent;
+    logServerEvent = eventContext.logServerEvent;
+  } catch (error) {
+    console.warn("EventContext not available, using default values");
+    logClientEvent = (eventObj: any, eventNameSuffix = "") => {
+      console.log(`[Client Event] ${eventNameSuffix}:`, eventObj);
+    };
+    logServerEvent = (eventObj: any, eventNameSuffix = "") => {
+      console.log(`[Server Event] ${eventNameSuffix}:`, eventObj);
+    };
+  }
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
     useState<AgentConfig[] | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");
+  
+  // Always call useAppContext unconditionally
   const appContext = useAppContext();
+  
+  // Create a safe version of appContext that won't throw errors
+  const safeAppContext = {
+    dataChannel: appContext?.dataChannel || null,
+    setDataChannel: appContext?.setDataChannel || (() => {}),
+    sendClientEvent: appContext?.sendClientEvent || (() => {}),
+  };
 
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -185,7 +209,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
       );
       pcRef.current = pc;
       dcRef.current = dc;
-      appContext.setDataChannel(dc);
+      safeAppContext.setDataChannel(dc);
 
       dc.addEventListener("open", () => {
         logClientEvent({}, "data_channel.open");
