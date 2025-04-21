@@ -73,22 +73,27 @@ export async function POST(request: Request) {
     }
 
     const prompt = `
-    # 根據這些標準(criteria)分析以下訊息：${rubric.criteria.join(', ')}。
+    # 任務目標
+    根據這些標準(criteria)分析以下訊息：
     對於每個標準(criteria)，請提供：
     1. 1-100 分（100 分代表滿分，1 分代表最低分）
-    2. 關於給分的簡要原因說明
-    3. 針對來自使用者文字（而不是來自nassistant和criteria）的具體範例，支援您的評分和推理。
-    4. 針對此標準提出2-3個具體的改進建議
+    2. 關於給分的簡要原因說明，必須針對user的文字（而不是來自nassistant和criteria）。
+    3. examples要引用來自user的文字（而不是來自nassistant和criteria）來作為具體例子，支援您的評分和推理。
+    4. 針對此標準提出2-3個具體的改進建議，改進建議要包含引導例句。
     5. 簡單概括整個對話（2-3 句）
-    6. 3-5條針對整個對話的整體改進建議
-
+    6. 3-5條針對整個對話的整體改進建議，改進建議要包含引導例句。
+    
+    # criteria
+    ${rubric.criteria.join(', ')}。
+    
+   
     # 重要提示：
-    1. 一切分析都應該以「user的文本」為基礎（忽略nassistant的文字），主要著重分析使用者在當前對話中的表現。
-    2. 不要在你的分析和例子中包含assistant的文字。如果user的文字中沒有好的例子，就說「沒有找到相關的例子」並給出低分。
+    1. 一切分析都應該以「user的文本」為基礎（忽略assistant的文字），主要著重分析使用者在當前對話中的表現。
+    2. examples中只包含user的文字。如果user的文字中沒有好的例子，就說「沒有找到相關的例子」並給出低分。
     3. 所有內容都會使用繁體中文撰寫
-    4. 在建議與分析時，會盡量參照並引用你提到的 user 的相關內容
-    5. 若有提供建議，我會加上具體的對話範例句子，讓內容更實用不籠統
-    6. 分析應基於以下概念：
+    4. 在建議與分析時，必須參照並引用 user 説的相關內容。
+    5. 若有提供建議，要加上具體的對話範例句子，讓內容更實用不籠統。
+    6. 分析應基於以下概念（以下概念是對話歷程之理解與思考分析的步驟，用來協助分析使用者內容，並不是criteria）：
       ## 羅傑斯對話分析
       運用卡爾羅傑斯溝通方法的原則分析以下對話。
       仔細執行每個步驟並提供深思熟慮的、以同理心為中心的評估。
@@ -138,7 +143,7 @@ export async function POST(request: Request) {
           "criterion": "criterion name",
           "score": number,
           "explanation": "explanation",
-          "examples": ["example 1", "example 2"],
+          "examples": ["user: example 1", "user: example 2"],
           "improvementTips": ["tip 1", "tip 2"]
         }
       ],
