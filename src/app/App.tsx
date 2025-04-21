@@ -311,7 +311,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     sendClientEvent(sessionUpdateEvent);
 
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage("接下來請用中文回答進行對答。\n可以開始扮演角色了。");
+      sendSimulatedUserMessage("你好");
     }
   };
 
