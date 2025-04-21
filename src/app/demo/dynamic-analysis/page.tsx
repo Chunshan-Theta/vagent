@@ -346,16 +346,16 @@ function DynamicAnalysisContent() {
 // Use a client-only component to avoid hydration errors
 export default function Page() {
   return (
-    <AppProvider>
-      <TranscriptProvider>
-        <ChatProvider>
-          <EventProvider>
+    <EventProvider>
+      <AppProvider>
+        <TranscriptProvider>
+          <ChatProvider>
             <Suspense fallback={<div>Loading...</div>}>
               <DynamicAnalysisContent />
             </Suspense>
-          </EventProvider>
-        </ChatProvider>
-      </TranscriptProvider>
-    </AppProvider>
+          </ChatProvider>
+        </TranscriptProvider>
+      </AppProvider>
+    </EventProvider>
   );
 } 
