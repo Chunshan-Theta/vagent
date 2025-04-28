@@ -72,70 +72,78 @@ export async function POST(request: Request) {
       languageInstruction = "Respond in English.";
     }
 
-    const prompt = `Analyze the following message according to these criteria: ${rubric.criteria.join(', ')}.
-    For each criterion, provide:
-    1. A score from 1-100 (where 100 is perfect and 1 is the lowest)
-    2. A brief explanation of the score
-    3. Specific examples from the user's text (not from the assistant and rubric) that support your scoring and reasoning.
-    4. 2-3 specific improvement tips for this criterion
-    5. A concise summary of the overall conversation (2-3 sentences)
-    6. 3-5 overall improvement tips for the entire conversation
+    const prompt = `
+    # 任務目標
+    根據這些標準(criteria)分析以下訊息：
+    對於每個標準(criteria)，請提供：
+    1. 1-100 分（100 分代表滿分，1 分代表最低分）
+    2. 關於給分的簡要原因說明，必須針對user的文字（而不是來自nassistant和criteria）。
+    3. examples要引用來自user的文字（而不是來自nassistant和criteria）來作為具體例子，支援您的評分和推理。
+    4. 針對此標準提出2-3個具體的改進建議，改進建議要包含引導例句。
+    5. 簡單概括整個對話（2-3 句）
+    6. 3-5條針對整個對話的整體改進建議，改進建議要包含引導例句。
+    
+    # criteria
+    ${rubric.criteria.join(', ')}。
+    
+   
+    # 重要提示：
+    1. 一切分析都應該以「user的文本」為基礎（忽略assistant的文字），主要著重分析使用者在當前對話中的表現。
+    2. examples中只包含user的文字。如果user的文字中沒有好的例子，就說「沒有找到相關的例子」並給出低分。
+    3. 所有內容都會使用繁體中文撰寫
+    4. 在建議與分析時，必須參照並引用 user 説的相關內容。
+    5. 若有提供建議，要加上具體的對話範例句子，讓內容更實用不籠統。
+    6. 分析應基於以下概念（以下概念是對話歷程之理解與思考分析的步驟，用來協助分析使用者內容，並不是criteria）：
+      ## 羅傑斯對話分析
+      運用卡爾羅傑斯溝通方法的原則分析以下對話。
+      仔細執行每個步驟並提供深思熟慮的、以同理心為中心的評估。
 
-    Important Note: 
-      1. All analysis should be based on the "user's text" (ignore the assistant's text), with the main focus being on analyzing the user's performance in the current conversation.
-      2. Do not include the assistant's text in your analysis and examples. if there are no good examples in the user's text, just say "No relevant examples found" and give a low score.
+      ### a. 閱讀並瞭解完整的對話
+      - 仔細閱讀整個對話。
+      - 確定背景和正在討論的主要主題。
 
-    Analysis should be based on the following concepts:
-    ## 🧠 Rogers Dialogue Analysis 
-    analyze the following dialogue using the principles of Carl Rogers’ communication method. 
-    Go through each step carefully and provide a thoughtful, empathy-centered evaluation.
+      ### b. 確定每個人的核心觀點
+      - 總結每個參與者表達的主要想法、信念和情感。
+      - 他們潛在的擔憂或動機是什麼？
 
-    ### 1. Read and Understand the Full Dialogue
-    - Carefully read the entire conversation.
-    - Identify the context and the main topic(s) being discussed.
+      ### c. 尋找共同點或潛在共識
+      - 參與者之間是否有共同的目標、價值觀或觀點？
+      - 強調任何隱含的協議或一致的利益。
 
-    ### 2. Identify Each Person’s Core Perspectives
-    - Summarize the main ideas, beliefs, and emotions expressed by each participant.
-    - What are their underlying concerns or motivations?
+      ### d. 分析理解與認同的表達
+      - 每個人是否都理解或認同對方的觀點？
+      - 即使他們不同意，他們是否在語言中表現出同理心或情感意識？
 
-    ### 3. Look for Common Ground or Potential Consensus
-    - Are there any shared goals, values, or perspectives between the participants?
-    - Highlight any implicit agreements or aligned interests.
+      ### e. 檢視問題是如何被提出的
+      - 該主題或衝突是如何被引入和討論的？
+      - 它是中立的嗎？還是帶有偏見、責備或對抗的語氣？
+      - 如果需要，建議如何更有建設性地重新闡述這個問題。
 
-    ### 4. Analyze Expressions of Understanding and Acknowledgment
-    - Did each person show understanding or acknowledgment of the other’s point of view?
-    - Even if they disagree, did they demonstrate empathy or emotional awareness in their language?
+      ### f.評估合作意願
+      - 是否真誠地努力尋求共同的解決方案或加深理解？
+      - 參與者是否對不同觀點表示開放或妥協？
 
-    ### 5. Examine How the Issue Was Framed
-    - How was the topic or conflict introduced and discussed?
-    - Was it framed neutrally, or did it carry bias, blame, or adversarial tones?
-    - Suggest how the issue could be reframed more constructively if needed.
+      ### g. 總結關鍵見解
+      - 簡要總結每個人的觀點、相互理解的程度以及任何一致的領域。
+      - 評估對話與羅傑斯的同理心、真實性和尊重原則的契合程度。
 
-    ### 6. Evaluate Willingness to Collaborate
-    - Was there a genuine effort to find a mutual solution or to deepen understanding?
-    - Did participants express openness to different perspectives or compromise?
-
-    ### 7. Summarize Key Insights
-    - Provide a concise summary of each person's views, level of mutual understanding, and any areas of agreement.
-    - Assess how well the dialogue aligns with Rogers’ principles of empathy, authenticity, and respect.
-
-    ### 8. Offer Suggestions for Improvement
-    - Based on the analysis, suggest specific ways to enhance the dialogue.
-    - Focus on promoting empathy, mutual understanding, and collaborative problem-solving (e.g., use of reflective listening, asking clarifying questions, avoiding judgmental language).
+      ### h. 提出改進建議
+      - 根據分析，提出加強對話的具體方法。
+      - 專注於促進同理心、相互理解和協作解決問題（例如，使用反思性傾聽、提出澄清問題、避免使用評判性語言）。
 
 
-    ${languageInstruction}
+    # ${languageInstruction}
 
-    Message to analyze: "${message}"
+    # 需要分析的訊息：“${message}”
 
-    Respond in JSON format with the following structure:
+    # 以 JSON 格式回應，結構如下：
     {
       "scores": [
         {
           "criterion": "criterion name",
           "score": number,
           "explanation": "explanation",
-          "examples": ["example 1", "example 2"],
+          "examples": ["user: example 1", "user: example 2"],
           "improvementTips": ["tip 1", "tip 2"]
         }
       ],
