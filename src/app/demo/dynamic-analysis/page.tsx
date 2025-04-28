@@ -30,11 +30,30 @@ function DynamicAnalysisContent() {
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const appRef = useRef<AppRef>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isSessionStarted, setIsSessionStarted] = useState(false);
 
   // Set isClient to true after component mounts (client-side only)
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleMicrophoneClick = async () => {
+    if (!isSessionStarted && appRef.current) {
+      try {
+        await appRef.current?.connectToRealtime();
+        setIsSessionStarted(true);
+      } catch (error) {
+        console.error('Failed to initialize session:', error);
+      }
+    } else if (isSessionStarted && appRef.current) {
+      try {
+        appRef.current?.disconnectFromRealtime();
+        setIsSessionStarted(false);
+      } catch (error) {
+        console.error('Failed to disconnect session:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!isCallEnded) {
@@ -330,10 +349,11 @@ function DynamicAnalysisContent() {
         isLoading={isAnalyzing}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
+        onMicrophoneClick={handleMicrophoneClick}
       ></ChatView>
-      {/* Hidden App Component - only render on client side */}
-      <div className="hidden">
-        <App />
+      {/* App Component - properly initialized */}
+      <div style={{ display: 'none' }}>
+        <App ref={appRef} />
       </div>
     </div>
   );

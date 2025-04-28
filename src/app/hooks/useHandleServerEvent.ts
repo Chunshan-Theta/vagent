@@ -43,6 +43,30 @@ export function useHandleServerEvent({
     };
   }
 
+  const cancelAssistantSpeech = () => {
+    const mostRecentAssistantMessage = [...transcriptItems]
+      .reverse()
+      .find((item) => item.role === "assistant");
+
+    if (!mostRecentAssistantMessage) {
+      return;
+    }
+    if (mostRecentAssistantMessage.status === "DONE") {
+      return;
+    }
+
+    sendClientEvent({
+      type: "conversation.item.truncate",
+      item_id: mostRecentAssistantMessage?.itemId,
+      content_index: 0,
+      audio_end_ms: Date.now() - mostRecentAssistantMessage.createdAtMs,
+    });
+    sendClientEvent(
+      { type: "response.cancel" },
+      "(cancel due to new response)"
+    );
+  };
+
   const handleFunctionCall = async (functionCallParams: {
     name: string;
     call_id?: string;
@@ -158,6 +182,12 @@ export function useHandleServerEvent({
           }
           addTranscriptMessage(itemId, role, text);
         }
+        break;
+      }
+
+      case "response.created": {
+        // Cancel any ongoing assistant speech when a new response starts
+        cancelAssistantSpeech();
         break;
       }
 

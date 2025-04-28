@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { useChat } from '@/app/contexts/ChatContext'
 import { useAppContext } from '@/app/contexts/AppContext'
 import ChatMessageItem from './ChatMessageItem'
 
-import { FaMicrophone } from 'react-icons/fa'
+import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
 
 import './chat.scss'
 
@@ -16,11 +16,13 @@ interface ChatViewProps {
 
   onSubmit?: (text: string) => void
   onClickEnd?: () => void
+  onMicrophoneClick?: () => void
 }
 
 const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
-  const { background, onSubmit, onClickEnd } = props
+  const { background, onSubmit, onClickEnd, onMicrophoneClick } = props
   const { messageItems, inputText, updateInputText } = useChat()
+  const [isMicActive, setIsMicActive] = useState(false)
 
   const disableInteraction = useMemo(() => {
     return props.isEnd || props.isLoading
@@ -36,6 +38,16 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
     boxShadow: '0 4px 20px rgba(0, 160, 255, 0.15)',
   }
   const msgOpts = {}
+
+  const handleMicClick = () => {
+    if (!disableInteraction && onMicrophoneClick) {
+      setIsMicActive(!isMicActive)
+      onMicrophoneClick()
+    }
+  }
+
+  // Determine if input and submit button should be disabled
+  const isInputDisabled = disableInteraction || !dataChannel || isMicActive
 
   return (
     <div className="chat" style={chatStyle}>
@@ -64,21 +76,39 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
           <div className="input-box">
             <input
               type="text"
-              placeholder="請在此輸入..."
+              placeholder={!isMicActive ? "通話未開始" : "請在此輸入..."}
               value={inputText}
-              disabled={disableInteraction}
+              disabled={!isInputDisabled}
               onChange={(e) => updateInputText(e.target.value)}
               onKeyDown={(e) =>
-                e.key === 'Enter' && !disableInteraction && onSubmit && onSubmit(inputText)
+                e.key === 'Enter' && isMicActive && onSubmit && onSubmit(inputText)
               }
+              style={{
+                opacity: !isInputDisabled ? 0.6 : 1,
+                cursor: !isInputDisabled ? 'not-allowed' : 'text'
+              }}
             />
-            <button className={dataChannel ? 'mic-icon active' : 'mic-icon'} disabled={disableInteraction}>
-              <FaMicrophone />
+            <button 
+              className={`mic-icon ${isMicActive ? 'active' : ''} ${disableInteraction ? 'disabled' : ''}`}
+              disabled={disableInteraction}
+              onClick={handleMicClick}
+              style={{ 
+                color: 'white',
+                opacity: dataChannel ? 1 : 0.8
+              }}
+            >
+              {isMicActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
             </button>
             <button
               className="send-button"
-              disabled={disableInteraction}
-              onClick={() => !disableInteraction && onSubmit && onSubmit(inputText)}
+              disabled={!isMicActive}
+              onClick={() => onSubmit && onSubmit(inputText)}
+              style={{ 
+                backgroundColor: !isMicActive ? '#9e9e9e' : '#00a3e0',
+                color: 'white',
+                opacity: !isMicActive ? 0.6 : 1,
+                cursor: !isMicActive ? 'not-allowed' : 'pointer'
+              }}
             >
               ➤
             </button>
