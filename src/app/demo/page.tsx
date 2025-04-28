@@ -6,7 +6,7 @@ import { EventProvider } from "@/app/contexts/EventContext";
 import App, { AppRef } from "../App";
 import { useRouter } from "next/navigation";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
-import { FaMicrophone, FaPhone, FaVolumeUp, FaHashtag, FaSpinner } from 'react-icons/fa';
+import { FaMicrophone, FaPhone, FaVolumeUp, FaHashtag, FaSpinner, FaUser } from 'react-icons/fa';
 import { AppProvider } from "@/app/contexts/AppContext";
 
 function DemoContent() {
@@ -16,18 +16,21 @@ function DemoContent() {
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isCallStarted, setIsCallStarted] = useState(false);
+  const [isLogVisible, setIsLogVisible] = useState(false);
+  const [isPersonInfoVisible, setIsPersonInfoVisible] = useState(false);
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const appRef = useRef<AppRef>(null);
 
   useEffect(() => {
-    if (!isCallEnded) {
+    if (isCallStarted && !isCallEnded) {
       const timer = setInterval(() => {
         setCallDuration(prev => prev + 1);
       }, 1000);
 
       return () => clearInterval(timer);
     }
-  }, [isCallEnded]);
+  }, [isCallStarted, isCallEnded]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -148,38 +151,77 @@ function DemoContent() {
     }
   };
 
+  const handleStartCall = async () => {
+    if (isCallStarted) {
+      // If call is already started, stop it
+      setIsCallStarted(false);
+      setIsCallEnded(true);
+      if (appRef.current) {
+        appRef.current.disconnectFromRealtime();
+      }
+    } else {
+      // Start a new call
+      setIsCallStarted(true);
+      setIsCallEnded(false);
+      setCallDuration(0); // Reset call duration
+      // Start the call session
+      if (appRef.current) {
+        await appRef.current.connectToRealtime();
+      }
+    }
+  };
+
+  const handleToggleLog = () => {
+    setIsLogVisible(!isLogVisible);
+  };
+
+  const handleTogglePersonInfo = () => {
+    setIsPersonInfoVisible(!isPersonInfoVisible);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* Call Header */}
       <div className={`flex-1 flex flex-col items-center justify-center p-8 ${isCallEnded ? 'bg-gray-950' : ''}`}>
-        <div className={`w-32 h-32 rounded-full ${isCallEnded ? 'bg-gray-800' : 'bg-gray-700'} mb-6 flex items-center justify-center`}>
+        <div className={`w-32 h-32 rounded-full ${isCallEnded ? 'bg-gray-800' : isCallStarted ? 'bg-green-700' : 'bg-gray-700'} mb-6 flex items-center justify-center`}>
           <span className="text-4xl">👤</span>
         </div>
         <h1 className="text-2xl font-semibold mb-2">AI Assistant</h1>
-        <p className="text-gray-400 mb-1">{isCallEnded ? 'Call ended' : 'Call in progress'}</p>
-        <p className="text-gray-400">{formatDuration(callDuration)}</p>
+        <p className="text-gray-400 mb-1">
+          {isCallEnded ? 'Call ended' : isCallStarted ? 'Call in progress' : 'Ready to call'}
+        </p>
+        {isCallStarted && !isCallEnded && <p className="text-gray-400">{formatDuration(callDuration)}</p>}
       </div>
 
       {/* Call Controls */}
       <div className="p-8">
         <div className="grid grid-cols-3 gap-6 mb-8">
-          <button className="flex flex-col items-center p-4 rounded-full bg-gray-800 hover:bg-gray-700">
-            <FaMicrophone className="text-2xl mb-2" />
-            <span className="text-sm">Mute</span>
+          <button 
+            className={`flex flex-col items-center p-4 rounded-full ${isCallStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-500'}`}
+            onClick={handleStartCall}
+          >
+            <FaPhone className="text-2xl mb-2" />
+            <span className="text-sm">{isCallStarted ? 'End Call' : 'Call'}</span>
           </button>
-          <button className="flex flex-col items-center p-4 rounded-full bg-gray-800 hover:bg-gray-700">
+          <button 
+            className={`flex flex-col items-center p-4 rounded-full ${isLogVisible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-800 hover:bg-gray-700'}`}
+            onClick={handleToggleLog}
+          >
             <FaHashtag className="text-2xl mb-2" />
-            <span className="text-sm">Keypad</span>
+            <span className="text-sm">{isLogVisible ? 'Hide Log' : 'Show Log'}</span>
           </button>
-          <button className="flex flex-col items-center p-4 rounded-full bg-gray-800 hover:bg-gray-700">
-            <FaVolumeUp className="text-2xl mb-2" />
-            <span className="text-sm">Speaker</span>
+          <button 
+            className={`flex flex-col items-center p-4 rounded-full ${isPersonInfoVisible ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-800 hover:bg-gray-700'}`}
+            onClick={handleTogglePersonInfo}
+          >
+            <FaUser className="text-2xl mb-2" />
+            <span className="text-sm">Person Info</span>
           </button>
         </div>
 
         <button
           onClick={handleAnalyzeChatHistory}
-          disabled={isAnalyzing || transcriptItems.length === 0}
+          disabled={isAnalyzing || transcriptItems.length === 0 || !isCallEnded}
           className="w-full bg-red-500 text-white p-4 rounded-full flex items-center justify-center hover:bg-red-600 disabled:opacity-50"
         >
           <FaPhone className="transform rotate-135 mr-2" />
@@ -193,7 +235,7 @@ function DemoContent() {
                 <span className="animate-bounce animation-delay-400">.</span>
               </span>
             </span>
-          ) : 'End Call & Analyze'}
+          ) : 'Analyze Chat History'}
         </button>
 
         {isAnalyzing && (
@@ -218,6 +260,87 @@ function DemoContent() {
       <div className="hidden">
         <App hideLogs={true} ref={appRef} />
       </div>
+
+      {/* Conversation Log */}
+      {isLogVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Conversation Log</h2>
+              <button 
+                onClick={handleToggleLog}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              {transcriptItems.length === 0 ? (
+                <p className="text-gray-400 text-center">No conversation yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {transcriptItems.map((item, index) => (
+                    <div 
+                      key={index} 
+                      className={`p-3 rounded-lg ${
+                        item.role === 'user' ? 'bg-blue-900 ml-8' : 'bg-gray-700 mr-8'
+                      }`}
+                    >
+                      <div className="font-semibold mb-1">
+                        {item.role === 'user' ? 'You' : 'AI Assistant'}
+                      </div>
+                      <div>{item.title}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Person Info Modal */}
+      {isPersonInfoVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Person Information</h2>
+              <button 
+                onClick={handleTogglePersonInfo}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mr-4">
+                  <span className="text-3xl">👤</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold">小陳</h3>
+                  <p className="text-gray-400">資深研發工程師</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400">Department</h4>
+                  <p>電子動力系統事業部</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400">Languages</h4>
+                  <p>English, Japanese, Chinese</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400">Summary</h4>
+                  <p className="text-sm">近期負責的專案時程多次延誤，雖然技術方案可行，但在與採購部門和生產製造部門的協作上頻繁出現摩擦與衝突...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

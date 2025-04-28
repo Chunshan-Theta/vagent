@@ -34,6 +34,7 @@ const languageOptions = [
 
 export interface AppRef {
   disconnectFromRealtime: () => void;
+  connectToRealtime: () => Promise<void>;
 }
 
 const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, ref) => {
@@ -122,12 +123,6 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
       }
     }
   }, [searchParams, selectedAgentName, selectedLanguage]);
-
-  useEffect(() => {
-    if (selectedAgentName && sessionStatus === "DISCONNECTED") {
-      connectToRealtime();
-    }
-  }, [selectedAgentName]);
 
   useEffect(() => {
     if (
@@ -460,7 +455,8 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
   const agentSetKey = searchParams?.get("agentConfig") || "default";
 
   useImperativeHandle(ref, () => ({
-    disconnectFromRealtime
+    disconnectFromRealtime,
+    connectToRealtime
   }));
 
   return (
