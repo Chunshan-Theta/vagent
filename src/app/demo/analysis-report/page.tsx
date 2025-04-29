@@ -5,7 +5,7 @@ import { AnalysisResponse } from '../../api/analysis/route';
 import { useTranscript } from '../../contexts/TranscriptContext';
 import { TranscriptProvider } from '../../contexts/TranscriptContext';
 import { EventProvider } from '../../contexts/EventContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
 
@@ -16,6 +16,7 @@ function AnalysisReportContent() {
   const [error, setError] = useState('');
   const { } = useTranscript();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   // Check for history parameter in URL and retrieve analysis from localStorage
   useEffect(() => {
@@ -192,7 +193,8 @@ function AnalysisReportContent() {
   };
 
   const handleBackToDemo = () => {
-    router.push('/demo');
+    const backUrl = searchParams.get('back') || '/demo';
+    router.push(backUrl);
   };
 
   return (

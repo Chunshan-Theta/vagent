@@ -170,7 +170,8 @@ function DynamicAnalysisContent() {
       setAnalysisProgress(100);
 
       // Redirect to the analysis report page
-      router.push('/demo/analysis-report');
+      const back = encodeURIComponent('/demo/analysis-report');
+      router.push(`/demo/analysis-report?back=${back}`);
     } catch (error) {
       // Clear the progress timer on error
       if (progressTimerRef.current) {
