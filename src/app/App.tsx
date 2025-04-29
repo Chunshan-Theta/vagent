@@ -284,7 +284,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         output_audio_format: "pcm16",
         input_audio_transcription: { 
           model: "whisper-1",
-          prompt: "Please transcribe the user's message in Chinese Tranditional. Do not include any other text in your response.",
+          prompt: "Please transcribe the user's message in Traditional Chinese (Taiwan) if you want to reply in Chinese.",
         },
         turn_detection: turnDetection,
         tools,
