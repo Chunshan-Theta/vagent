@@ -137,7 +137,7 @@ function DemoContent() {
       setAnalysisProgress(100);
 
       // Redirect to the analysis report page
-      const back = encodeURIComponent('/demo/analysis-report');
+      const back = encodeURIComponent('/demo');
       router.push(`/demo/analysis-report?back=${back}`);
     } catch (error) {
       // Clear the progress timer on error
