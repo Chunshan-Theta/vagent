@@ -17,20 +17,20 @@ function AnalysisReportContent() {
   const { } = useTranscript();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Check for history parameter in URL and retrieve analysis from localStorage
   useEffect(() => {
     // Get the analysis result and chat history from localStorage
     const storedAnalysis = localStorage.getItem('analysisResult');
     const storedChatHistory = localStorage.getItem('chatHistory');
-    
+
     if (storedAnalysis && storedChatHistory) {
       try {
         const parsedAnalysis = JSON.parse(storedAnalysis);
         setAnalysis(parsedAnalysis);
         setMessage(storedChatHistory);
         setLoading(false);
-        
+
         // Trigger confetti if score is high
         if (parsedAnalysis.overallScore >= 80) {
           setTimeout(() => {
@@ -60,7 +60,7 @@ function AnalysisReportContent() {
     if (score >= 40) return 'text-[#FFBD1F]';
     return 'text-red-400';
   };
-  
+
   // Function to get emoji based on score
   const getScoreEmoji = (score: number) => {
     if (score >= 80) return '🌟';
@@ -68,7 +68,7 @@ function AnalysisReportContent() {
     if (score >= 40) return '😐';
     return '😕';
   };
-  
+
   // Function to get progress bar color based on score
   const getProgressBarColor = (score: number) => {
     if (score >= 80) return 'bg-[#FFE066]';
@@ -80,7 +80,7 @@ function AnalysisReportContent() {
   // Function to get localized UI text based on language
   const getLocalizedText = (key: string) => {
     const language = analysis?.language || 'en';
-    
+
     const localizedTexts: Record<string, Record<string, string>> = {
       en: {
         title: 'Conversation Analysis Report',
@@ -188,13 +188,17 @@ function AnalysisReportContent() {
         errorLoadingResults: 'Fehler beim Laden der Analyseergebnisse'
       }
     };
-    
+
     return localizedTexts[language]?.[key] || localizedTexts['en'][key];
   };
 
   const handleBackToDemo = () => {
-    const backUrl = searchParams.get('back') || '/demo';
-    router.push(backUrl);
+    if (searchParams.has('back')) {
+      const backUrl = searchParams.get('back') || '/demo';
+      router.push(backUrl);
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -204,7 +208,7 @@ function AnalysisReportContent() {
           <FaChartBar className="mr-2 text-[#FFE066]" />
           {getLocalizedText('title')}
         </h1>
-        <button 
+        <button
           onClick={handleBackToDemo}
           className="bg-[#00A3E0] text-white px-4 py-2 rounded-full hover:bg-[#00A3E0]/90 transition-colors duration-200 shadow-[0_2px_4px_rgba(0,160,255,0.3)] flex items-center"
         >
@@ -212,7 +216,7 @@ function AnalysisReportContent() {
           {getLocalizedText('backToDemo')}
         </button>
       </div>
-      
+
       {loading ? (
         <div className="flex flex-col items-center justify-center p-12">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#00A3E0] mb-4"></div>
@@ -240,7 +244,7 @@ function AnalysisReportContent() {
               </div>
             </div>
             <div className="w-full bg-[#2D5A67] rounded-full h-4 mb-4">
-              <div 
+              <div
                 className={`h-full rounded-full ${getProgressBarColor(analysis.overallScore)} transition-all duration-1000 ease-out`}
                 style={{ width: `${analysis.overallScore}%` }}
               ></div>
@@ -286,7 +290,7 @@ function AnalysisReportContent() {
                   <h3 className="font-bold text-lg text-white">{score.criterion}</h3>
                   <div className="flex items-center">
                     <div className="w-32 h-6 bg-[#2D5A67] rounded-full mr-2 overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full ${getProgressBarColor(score.score)} transition-all duration-1000 ease-out`}
                         style={{ width: `${score.score}%` }}
                       ></div>
@@ -296,7 +300,7 @@ function AnalysisReportContent() {
                   </div>
                 </div>
                 <p className="text-white mb-3">{score.explanation}</p>
-                
+
                 {/* Examples Section */}
                 <div className="mt-3 mb-3 bg-[#2D5A67] bg-opacity-50 p-3 rounded-[16px]">
                   <h4 className="font-semibold text-white mb-2 flex items-center">
@@ -309,7 +313,7 @@ function AnalysisReportContent() {
                     ))}
                   </ul>
                 </div>
-                
+
                 {/* Improvement Tips Section */}
                 <div className="mt-3 bg-[#2D5A67] bg-opacity-50 p-3 rounded-[16px]">
                   <h4 className="font-semibold text-white mb-2 flex items-center">
@@ -330,7 +334,7 @@ function AnalysisReportContent() {
               </div>
             ))}
           </div>
-          
+
           <div className="mt-8 p-6 bg-[#173944] rounded-[20px] border border-[#2D5A67]">
             <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
               <FaHistory className="mr-2 text-[#FFE066]" />
