@@ -192,7 +192,7 @@ function AnalysisReportContent() {
   };
 
   const handleBackToDemo = () => {
-    router.push('/demo');
+    router.back();
   };
 
   return (

@@ -282,9 +282,13 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         voice: "echo",
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
-        input_audio_transcription: { model: "whisper-1" },
+        input_audio_transcription: { 
+          model: "whisper-1",
+          prompt: "Please transcribe the user's message in Chinese Tranditional. Do not include any other text in your response.",
+        },
         turn_detection: turnDetection,
         tools,
+        
       },
     };
 
