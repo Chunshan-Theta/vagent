@@ -284,6 +284,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         output_audio_format: "pcm16",
         input_audio_transcription: { 
           model: "whisper-1",
+          language: "zh",
         },
         turn_detection: turnDetection,
         tools,
