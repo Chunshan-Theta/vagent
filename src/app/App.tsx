@@ -284,7 +284,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         output_audio_format: "pcm16",
         input_audio_transcription: { 
           model: "whisper-1",
-          prompt: "Please transcribe the user's message using Traditional Chinese (Taiwan) when the language is Chinese. Avoid using Simplified Chinese. English transcription is also acceptable when appropriate. Prioritize Traditional Chinese and English. Support multilingual input.",
+          prompt: "Please transcribe the user's message using Traditional Chinese (Taiwan) when the language is Chinese, avoiding to use Simplified Chinese. English transcription is also acceptable when appropriate. Prioritize Traditional Chinese.",
         },
         turn_detection: turnDetection,
         tools,
