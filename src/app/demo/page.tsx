@@ -66,6 +66,15 @@ function DemoContent() {
 
     const chatHistory = transcriptItems
       .filter(item => item.type === 'MESSAGE')
+      .filter(item => {
+        // Skip messages that should be hidden
+        const content = item.title || '';
+        return !(
+          content === "接著繼續" || 
+          content === "以下是來自於台灣人的對話" ||
+          content.length < 1
+        );
+      })
       .map(item => `${item.role}: ${item.title}`)
       .join('\n\n');
 
