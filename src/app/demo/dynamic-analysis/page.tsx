@@ -38,40 +38,16 @@ function DynamicAnalysisContent() {
     clearTranscript();
   }, []);
 
-  const handleTalkButtonDown = () => {
-    alert("handleTalkButtonDown");
+  const handleTalkOn = async () => {
+    alert("handleTalkOn");
     setIsPTTUserSpeaking(true);
 
     if (appRef.current) {
-      appRef.current.connectToRealtime();
+      await appRef.current.connectToRealtime();
       setIsSessionStarted(true);
-
-    }
-
-    try {
-      // Send chat history to realtime API server before connecting
-      if (transcriptItems && transcriptItems.length > 0) {
-        const chatHistory = transcriptItems
-          .filter(item => item && item.type === 'MESSAGE' && item.role && item.title)
-          .map(item => `${item.role}: ${item.title}`)
-          .join('\n\n');
-        
-        if (chatHistory) {
-          sendClientEvent({
-            type: "conversation.history",
-            history: chatHistory
-          });
-        } else {
-          console.warn('No valid chat history to send');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to initialize session:', error);
-      // Optionally show a user-friendly error message
-      alert('Failed to initialize chat session. Please try again.');
     }
     sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
-    
+
   };
 
   const cancelAssistantSpeech = () => {
@@ -98,8 +74,8 @@ function DynamicAnalysisContent() {
     );
   };
 
-  const handleTalkButtonUp = () => {
-    alert("handleTalkButtonUp");
+  const handleTalkOff = async () => {
+    alert("handleTalkOff");
     setIsPTTUserSpeaking(false);
 
 
@@ -107,7 +83,7 @@ function DynamicAnalysisContent() {
     cancelAssistantSpeech();
     // Stop audio playback and disconnect
     if (appRef.current) {
-      appRef.current.disconnectFromRealtime();
+      await appRef.current.disconnectFromRealtime();
       setIsSessionStarted(false);
       // Send cancel event to ensure assistant stops speaking
       sendClientEvent({ type: "response.cancel" }, "cancel assistant speech");
@@ -116,9 +92,9 @@ function DynamicAnalysisContent() {
 
   const handleMicrophoneClick = () => {
     if (isPTTUserSpeaking) {
-      handleTalkButtonUp();  // 掛斷電話
+      handleTalkOff();  // 掛斷電話
     } else {
-      handleTalkButtonDown();  // 開始講話
+      handleTalkOn();  // 開始講話
     }
   };
 
@@ -296,11 +272,12 @@ function DynamicAnalysisContent() {
   };
   useEffect(() => {
     const updateUserMsg = () => {
-
       const lastUserInputIndex = transcriptItems.findLastIndex(item => item?.role === 'user');
       // 這邊忽略 lastUserInputIndex === 2 的訊息，不讓它出現在畫面上
       if (lastUserInputIndex !== -1 && lastUserInputIndex !== lastInput.current.lastUserInputIndex) {
         if (lastUserInputIndex === 2) { return; }
+        // 忽略內容為"接著繼續"的消息
+        if (transcriptItems[lastUserInputIndex].title === "接著繼續") { return; }
         onNewMessage(lastUserInputIndex);
         lastInput.current = {
           ...lastInput.current,
@@ -309,14 +286,17 @@ function DynamicAnalysisContent() {
       }
       if (lastUserInputIndex >= 0) {
         if (lastUserInputIndex === 2) { return; }
+        // 忽略內容為"接著繼續"的消息
+        if (transcriptItems[lastUserInputIndex].title === "接著繼續") { return; }
         const item = transcriptItems[lastUserInputIndex]
         chatContext.updateMessageContent(item.itemId, item.title!);
       }
     }
     const updateAssistantMsg = () => {
-
       const lastAssistantOutputIndex = transcriptItems.findLastIndex(item => item?.role === 'assistant');
       if (lastAssistantOutputIndex !== -1 && lastAssistantOutputIndex !== lastInput.current.lastAssistantOutputIndex) {
+        // 忽略內容長度小於1的消息
+        if (transcriptItems[lastAssistantOutputIndex].title && transcriptItems[lastAssistantOutputIndex].title!.length < 1) { return; }
         onNewMessage(lastAssistantOutputIndex);
         lastInput.current = {
           ...lastInput.current,
@@ -324,6 +304,8 @@ function DynamicAnalysisContent() {
         };
       }
       if (lastAssistantOutputIndex >= 0) {
+        // 忽略內容長度小於1的消息
+        if (transcriptItems[lastAssistantOutputIndex].title && transcriptItems[lastAssistantOutputIndex].title!.length < 1) { return; }
         const item = transcriptItems[lastAssistantOutputIndex]
         chatContext.updateMessageContent(item.itemId, item.title!);
       }
