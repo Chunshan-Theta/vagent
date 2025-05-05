@@ -39,7 +39,7 @@ function DynamicAnalysisContent() {
   }, []);
 
   const handleTalkOn = async () => {
-    alert("handleTalkOn");
+    // alert("handleTalkOn");
     setIsPTTUserSpeaking(true);
 
     if (appRef.current) {
@@ -75,7 +75,7 @@ function DynamicAnalysisContent() {
   };
 
   const handleTalkOff = async () => {
-    alert("handleTalkOff");
+    // alert("handleTalkOff");
     setIsPTTUserSpeaking(false);
 
 

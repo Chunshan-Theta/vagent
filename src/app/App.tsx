@@ -283,8 +283,9 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: { 
-          model: "whisper-1",
+          model: "gpt-4o-transcribe",
           language: "zh",
+          prompt: "以下是來自於台灣人的對話"
         },
         turn_detection: turnDetection,
         tools,
