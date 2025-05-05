@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 function DynamicAnalysisContent() {
   const router = useRouter();
   const chatContext = useChat();
-  const { transcriptItems, addTranscriptMessage } = useTranscript();
+  const { transcriptItems, addTranscriptMessage, clearTranscript } = useTranscript();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
@@ -31,29 +31,101 @@ function DynamicAnalysisContent() {
   const appRef = useRef<AppRef>(null);
   const [isClient, setIsClient] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false);
+  const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
+
+  // Clear transcript on page refresh
+  useEffect(() => {
+    clearTranscript();
+  }, []);
+
+  const handleTalkButtonDown = () => {
+    alert("handleTalkButtonDown");
+    setIsPTTUserSpeaking(true);
+
+    if (appRef.current) {
+      appRef.current.connectToRealtime();
+      setIsSessionStarted(true);
+
+    }
+
+    try {
+      // Send chat history to realtime API server before connecting
+      if (transcriptItems && transcriptItems.length > 0) {
+        const chatHistory = transcriptItems
+          .filter(item => item && item.type === 'MESSAGE' && item.role && item.title)
+          .map(item => `${item.role}: ${item.title}`)
+          .join('\n\n');
+        
+        if (chatHistory) {
+          sendClientEvent({
+            type: "conversation.history",
+            history: chatHistory
+          });
+        } else {
+          console.warn('No valid chat history to send');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initialize session:', error);
+      // Optionally show a user-friendly error message
+      alert('Failed to initialize chat session. Please try again.');
+    }
+    sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
+    
+  };
+
+  const cancelAssistantSpeech = () => {
+    const mostRecentAssistantMessage = [...transcriptItems]
+      .reverse()
+      .find((item) => item.role === "assistant");
+
+    if (!mostRecentAssistantMessage) {
+      return;
+    }
+    if (mostRecentAssistantMessage.status === "DONE") {
+      return;
+    }
+
+    sendClientEvent({
+      type: "conversation.item.truncate",
+      item_id: mostRecentAssistantMessage?.itemId,
+      content_index: 0,
+      audio_end_ms: Date.now() - mostRecentAssistantMessage.createdAtMs,
+    });
+    sendClientEvent(
+      { type: "response.cancel" },
+      "(cancel due to new response)"
+    );
+  };
+
+  const handleTalkButtonUp = () => {
+    alert("handleTalkButtonUp");
+    setIsPTTUserSpeaking(false);
+
+
+    sendClientEvent({ type: "input_audio_buffer.commit" }, "commit PTT");
+    cancelAssistantSpeech();
+    // Stop audio playback and disconnect
+    if (appRef.current) {
+      appRef.current.disconnectFromRealtime();
+      setIsSessionStarted(false);
+      // Send cancel event to ensure assistant stops speaking
+      sendClientEvent({ type: "response.cancel" }, "cancel assistant speech");
+    }
+  };
+
+  const handleMicrophoneClick = () => {
+    if (isPTTUserSpeaking) {
+      handleTalkButtonUp();  // 掛斷電話
+    } else {
+      handleTalkButtonDown();  // 開始講話
+    }
+  };
 
   // Set isClient to true after component mounts (client-side only)
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  const handleMicrophoneClick = async () => {
-    if (!isSessionStarted && appRef.current) {
-      try {
-        await appRef.current?.connectToRealtime();
-        setIsSessionStarted(true);
-      } catch (error) {
-        console.error('Failed to initialize session:', error);
-      }
-    } else if (isSessionStarted && appRef.current) {
-      try {
-        appRef.current?.disconnectFromRealtime();
-        setIsSessionStarted(false);
-      } catch (error) {
-        console.error('Failed to disconnect session:', error);
-      }
-    }
-  };
 
   useEffect(() => {
     if (!isCallEnded) {
@@ -65,11 +137,6 @@ function DynamicAnalysisContent() {
     }
   }, [isCallEnded]);
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
   // 分析並移動到報告頁面
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
@@ -215,36 +282,7 @@ function DynamicAnalysisContent() {
   })
 
 
-  useEffect(() => {
-    if (!useExamples) return;
-    // 添加範例資料
-    for (let i = 0; i < 3; i += 1) {
-      const timestamp = Date.now() + i * 1000;
-      addMessageItem({
-        id: `S-${i}`,
-        type: 'text',
-        role: 'system',
-        data: { content: `您的目標是透過 專業溝通與異議處理技巧，讓客戶理解房貸壽險的保障價值，找到適合他的規劃方式，並提升購買意願。\n\n透過 實戰模擬與即時回饋，讓我們一起提升您的房貸壽險銷售能力！:rocket:` },
-        createdAtMs: timestamp,
-      });
-      addMessageItem({
-        id: `U-${i}`,
-        type: 'text',
-        role: 'user',
-        data: { content: `你好` },
-        createdAtMs: timestamp,
-        // avatar: '/images/avatar.png',
-      });
-      addMessageItem({
-        id: `A-${i}`,
-        type: 'text',
-        role: 'assistant',
-        data: { content: `你好啊，我今天是想了解一下房貸的事情。不過我聽說你們那個房貸壽險要30萬？這也太貴了吧！！我家每個月就剩2.5萬可以存，這樣一家拿出30萬，等於我們全家要存一整年耶！而且我還有兩個小孩要養，每個月教育費就要2萬，哪有多餘的錢買這個啊？` },
-        createdAtMs: timestamp + 10000,
-        avatar: '/images/avatar.png',
-      });
-    }
-  }, []);
+
   // transcriptItems 有新東西時呼叫這個，同步添加到 chatContext 內
   const onNewMessage = (index: number) => {
     const transcriptItem = transcriptItems[index];
