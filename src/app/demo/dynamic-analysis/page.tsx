@@ -276,8 +276,9 @@ function DynamicAnalysisContent() {
       // 這邊忽略 lastUserInputIndex === 2 的訊息，不讓它出現在畫面上
       if (lastUserInputIndex !== -1 && lastUserInputIndex !== lastInput.current.lastUserInputIndex) {
         if (lastUserInputIndex === 2) { return; }
-        // 忽略內容為"接著繼續"的消息
-        if (transcriptItems[lastUserInputIndex].title === "接著繼續") { return; }
+        // 忽略特定內容的消息
+        const messageContent = transcriptItems[lastUserInputIndex].title;
+        if (messageContent === "接著繼續" || messageContent === "以下是來自於台灣人的對話") { return; }
         onNewMessage(lastUserInputIndex);
         lastInput.current = {
           ...lastInput.current,
@@ -286,8 +287,9 @@ function DynamicAnalysisContent() {
       }
       if (lastUserInputIndex >= 0) {
         if (lastUserInputIndex === 2) { return; }
-        // 忽略內容為"接著繼續"的消息
-        if (transcriptItems[lastUserInputIndex].title === "接著繼續") { return; }
+        // 忽略特定內容的消息
+        const messageContent = transcriptItems[lastUserInputIndex].title;
+        if (messageContent === "接著繼續" || messageContent === "以下是來自於台灣人的對話") { return; }
         const item = transcriptItems[lastUserInputIndex]
         chatContext.updateMessageContent(item.itemId, item.title!);
       }
