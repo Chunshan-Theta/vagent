@@ -11,6 +11,7 @@ type TranscriptContextValue = {
   addTranscriptBreadcrumb: (title: string, data?: Record<string, any>) => void;
   toggleTranscriptItemExpand: (itemId: string) => void;
   updateTranscriptItemStatus: (itemId: string, newStatus: "IN_PROGRESS" | "DONE") => void;
+  clearTranscript: () => void;
 };
 
 const TranscriptContext = createContext<TranscriptContextValue | undefined>(undefined);
@@ -97,6 +98,10 @@ export const TranscriptProvider: FC<PropsWithChildren> = ({ children }) => {
     );
   };
 
+  const clearTranscript: TranscriptContextValue["clearTranscript"] = () => {
+    setTranscriptItems([]);
+  };
+
   return (
     <TranscriptContext.Provider
       value={{
@@ -106,6 +111,7 @@ export const TranscriptProvider: FC<PropsWithChildren> = ({ children }) => {
         addTranscriptBreadcrumb,
         toggleTranscriptItemExpand,
         updateTranscriptItemStatus,
+        clearTranscript,
       }}
     >
       {children}

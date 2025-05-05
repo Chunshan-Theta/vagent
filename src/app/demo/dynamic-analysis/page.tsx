@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 function DynamicAnalysisContent() {
   const router = useRouter();
   const chatContext = useChat();
-  const { transcriptItems, addTranscriptMessage } = useTranscript();
+  const { transcriptItems, addTranscriptMessage, clearTranscript } = useTranscript();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
@@ -31,29 +31,86 @@ function DynamicAnalysisContent() {
   const appRef = useRef<AppRef>(null);
   const [isClient, setIsClient] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false);
+  const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
+
+  // Clear transcript on page refresh
+  useEffect(() => {
+    clearTranscript();
+  }, []);
+
+  const handleTalkOn = async () => {
+    // alert("handleTalkOn");
+    setIsPTTUserSpeaking(true);
+
+    if (appRef.current) {
+      await appRef.current.connectToRealtime();
+      setIsSessionStarted(true);
+    }
+    sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
+
+  };
+
+  const cancelAssistantSpeech = () => {
+    const mostRecentAssistantMessage = [...transcriptItems]
+      .reverse()
+      .find((item) => item.role === "assistant");
+
+    if (!mostRecentAssistantMessage) {
+      return;
+    }
+    if (mostRecentAssistantMessage.status === "DONE") {
+      return;
+    }
+
+    sendClientEvent({
+      type: "conversation.item.truncate",
+      item_id: mostRecentAssistantMessage?.itemId,
+      content_index: 0,
+      audio_end_ms: Date.now() - mostRecentAssistantMessage.createdAtMs,
+    });
+    sendClientEvent(
+      { type: "response.cancel" },
+      "(cancel due to new response)"
+    );
+  };
+
+  const handleTalkOff = async () => {
+    // alert("handleTalkOff");
+    setIsPTTUserSpeaking(false);
+
+
+    sendClientEvent({ type: "input_audio_buffer.commit" }, "commit PTT");
+    cancelAssistantSpeech();
+    // Stop audio playback and disconnect
+    if (appRef.current) {
+      await appRef.current.disconnectFromRealtime();
+      setIsSessionStarted(false);
+      // Send cancel event to ensure assistant stops speaking
+      sendClientEvent({ type: "response.cancel" }, "cancel assistant speech");
+    }
+
+    const end_id = uuidv4().slice(0, 32);
+    chatContext.addMessageItem({
+      id: end_id,
+      type: 'text',
+      role: 'user',
+      data: { content: "通話已結束" },
+      createdAtMs: Date.now(),
+    });
+  };
+
+  const handleMicrophoneClick = () => {
+    if (isPTTUserSpeaking) {
+      handleTalkOff();  // 掛斷電話
+    } else {
+      handleTalkOn();  // 開始講話
+    }
+  };
 
   // Set isClient to true after component mounts (client-side only)
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  const handleMicrophoneClick = async () => {
-    if (!isSessionStarted && appRef.current) {
-      try {
-        await appRef.current?.connectToRealtime();
-        setIsSessionStarted(true);
-      } catch (error) {
-        console.error('Failed to initialize session:', error);
-      }
-    } else if (isSessionStarted && appRef.current) {
-      try {
-        appRef.current?.disconnectFromRealtime();
-        setIsSessionStarted(false);
-      } catch (error) {
-        console.error('Failed to disconnect session:', error);
-      }
-    }
-  };
 
   useEffect(() => {
     if (!isCallEnded) {
@@ -65,11 +122,6 @@ function DynamicAnalysisContent() {
     }
   }, [isCallEnded]);
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
   // 分析並移動到報告頁面
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
@@ -215,36 +267,7 @@ function DynamicAnalysisContent() {
   })
 
 
-  useEffect(() => {
-    if (!useExamples) return;
-    // 添加範例資料
-    for (let i = 0; i < 3; i += 1) {
-      const timestamp = Date.now() + i * 1000;
-      addMessageItem({
-        id: `S-${i}`,
-        type: 'text',
-        role: 'system',
-        data: { content: `您的目標是透過 專業溝通與異議處理技巧，讓客戶理解房貸壽險的保障價值，找到適合他的規劃方式，並提升購買意願。\n\n透過 實戰模擬與即時回饋，讓我們一起提升您的房貸壽險銷售能力！:rocket:` },
-        createdAtMs: timestamp,
-      });
-      addMessageItem({
-        id: `U-${i}`,
-        type: 'text',
-        role: 'user',
-        data: { content: `你好` },
-        createdAtMs: timestamp,
-        // avatar: '/images/avatar.png',
-      });
-      addMessageItem({
-        id: `A-${i}`,
-        type: 'text',
-        role: 'assistant',
-        data: { content: `你好啊，我今天是想了解一下房貸的事情。不過我聽說你們那個房貸壽險要30萬？這也太貴了吧！！我家每個月就剩2.5萬可以存，這樣一家拿出30萬，等於我們全家要存一整年耶！而且我還有兩個小孩要養，每個月教育費就要2萬，哪有多餘的錢買這個啊？` },
-        createdAtMs: timestamp + 10000,
-        avatar: '/images/avatar.png',
-      });
-    }
-  }, []);
+
   // transcriptItems 有新東西時呼叫這個，同步添加到 chatContext 內
   const onNewMessage = (index: number) => {
     const transcriptItem = transcriptItems[index];
@@ -258,11 +281,13 @@ function DynamicAnalysisContent() {
   };
   useEffect(() => {
     const updateUserMsg = () => {
-
       const lastUserInputIndex = transcriptItems.findLastIndex(item => item?.role === 'user');
       // 這邊忽略 lastUserInputIndex === 2 的訊息，不讓它出現在畫面上
       if (lastUserInputIndex !== -1 && lastUserInputIndex !== lastInput.current.lastUserInputIndex) {
         if (lastUserInputIndex === 2) { return; }
+        // 忽略特定內容的消息
+        const messageContent = transcriptItems[lastUserInputIndex].title;
+        if (messageContent === "接著繼續" || messageContent === "以下是來自於台灣人的對話") { return; }
         onNewMessage(lastUserInputIndex);
         lastInput.current = {
           ...lastInput.current,
@@ -271,14 +296,18 @@ function DynamicAnalysisContent() {
       }
       if (lastUserInputIndex >= 0) {
         if (lastUserInputIndex === 2) { return; }
+        // 忽略特定內容的消息
+        const messageContent = transcriptItems[lastUserInputIndex].title;
+        if (messageContent === "接著繼續" || messageContent === "以下是來自於台灣人的對話") { return; }
         const item = transcriptItems[lastUserInputIndex]
         chatContext.updateMessageContent(item.itemId, item.title!);
       }
     }
     const updateAssistantMsg = () => {
-
       const lastAssistantOutputIndex = transcriptItems.findLastIndex(item => item?.role === 'assistant');
       if (lastAssistantOutputIndex !== -1 && lastAssistantOutputIndex !== lastInput.current.lastAssistantOutputIndex) {
+        // 忽略內容長度小於1的消息
+        if (transcriptItems[lastAssistantOutputIndex].title && transcriptItems[lastAssistantOutputIndex].title!.length < 1) { return; }
         onNewMessage(lastAssistantOutputIndex);
         lastInput.current = {
           ...lastInput.current,
@@ -286,6 +315,8 @@ function DynamicAnalysisContent() {
         };
       }
       if (lastAssistantOutputIndex >= 0) {
+        // 忽略內容長度小於1的消息
+        if (transcriptItems[lastAssistantOutputIndex].title && transcriptItems[lastAssistantOutputIndex].title!.length < 1) { return; }
         const item = transcriptItems[lastAssistantOutputIndex]
         chatContext.updateMessageContent(item.itemId, item.title!);
       }

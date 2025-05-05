@@ -283,8 +283,9 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: { 
-          model: "whisper-1",
+          model: "gpt-4o-transcribe",
           language: "zh",
+          prompt: "以下是來自於台灣人的對話"
         },
         turn_detection: turnDetection,
         tools,
@@ -295,7 +296,25 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     sendClientEvent(sessionUpdateEvent);
 
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage("你好");
+      // Format transcriptItems into readable chat history
+      const chatHistory = transcriptItems
+        .filter(item => item && item.type === 'MESSAGE' && item.role && item.title)
+        .map(item => `${item.role}: ${item.title}`)
+        .join('\n\n');
+
+      sendClientEvent(
+        {
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "system",
+            content: [{ type: "input_text", text: `之前的對話紀錄:\n${chatHistory}` }],
+          },
+        },
+        "(simulated history message)"
+      );
+      console.log(`之前的對話紀錄:\n${chatHistory}`);
+      sendSimulatedUserMessage("接著繼續");
     }
   };
 
