@@ -88,6 +88,15 @@ function DynamicAnalysisContent() {
       // Send cancel event to ensure assistant stops speaking
       sendClientEvent({ type: "response.cancel" }, "cancel assistant speech");
     }
+
+    const end_id = uuidv4().slice(0, 32);
+    chatContext.addMessageItem({
+      id: end_id,
+      type: 'text',
+      role: 'user',
+      data: { content: "通話已結束" },
+      createdAtMs: Date.now(),
+    });
   };
 
   const handleMicrophoneClick = () => {
