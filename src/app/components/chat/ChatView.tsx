@@ -9,7 +9,9 @@ import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
 import './chat.scss'
 
 interface ChatViewProps {
+  boxShadow?: string
   background?: string
+  classNames?: string[]
 
   isEnd?: boolean
   isLoading?: boolean
@@ -20,10 +22,14 @@ interface ChatViewProps {
 }
 
 const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
+  const classNames = props.classNames || []
   const { background, onSubmit, onClickEnd, onMicrophoneClick } = props
   const { messageItems, inputText, updateInputText } = useChat()
   const [isMicActive, setIsMicActive] = useState(false)
 
+  const mClassNames = useMemo(() => {
+    return ['chat', ...classNames]
+  }, [classNames])
   const disableInteraction = useMemo(() => {
     return props.isEnd || props.isLoading
   }, [props.isEnd, props.isLoading])
@@ -33,9 +39,8 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const chatStyle = {
     maxWidth: `${maxWidth}px`,
     margin: '0px auto',
-    background: background || '#173944',
+    background: background ?? '#173944',
     borderRadius: '20px',
-    boxShadow: '0 4px 20px rgba(0, 160, 255, 0.15)',
   }
   const msgOpts = {}
 
@@ -50,7 +55,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const isInputDisabled = disableInteraction || !dataChannel || isMicActive
 
   return (
-    <div className="chat" style={chatStyle}>
+    <div className={mClassNames.join(' ')} style={chatStyle}>
       <div className="chat-view">
         <div className="chat-header"></div>
         <div className="chat-content">

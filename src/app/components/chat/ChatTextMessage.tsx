@@ -37,6 +37,11 @@ const ChatTextMessage: React.FC<ChatTextMessageProps> = ({
     }
     return ''
   }, [message])
+  
+
+  const classNames = useMemo(() => {
+    return ['simple-message', `msg-${role}`]
+  }, [message])
 
   const textColor = useMemo(() => {
     if (role === 'user') {
@@ -96,8 +101,8 @@ const ChatTextMessage: React.FC<ChatTextMessageProps> = ({
   const msgStyle = useMemo(() => {
     return {
       padding: '14px 16px',
-      background: background,
-      borderRadius: borderRadius,
+      // background: background,
+      // borderRadius: borderRadius,
       boxShadow: '0 2px 10px rgba(0, 255, 255, 0.1)',
       fontSize: '14px',
       lineHeight: '1.6',
@@ -120,7 +125,7 @@ const ChatTextMessage: React.FC<ChatTextMessageProps> = ({
   </div>
 
   return (
-    <div className="simple-message" style={{ textAlign: align }}>
+    <div className={classNames.join(' ')} style={{ textAlign: align }}>
       {avatar.show && avatar.type === 'image' && role === 'assistant' && avatarRef}
       <div className="content-wrap">
         <div className="message-text" style={msgStyle}>

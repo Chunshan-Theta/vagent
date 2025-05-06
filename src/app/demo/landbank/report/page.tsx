@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { AnalysisResponse } from '../../api/analysis/route';
-import { useTranscript } from '../../contexts/TranscriptContext';
-import { TranscriptProvider } from '../../contexts/TranscriptContext';
-import { EventProvider } from '../../contexts/EventContext';
+import { AnalysisResponse } from '../../../api/analysis/route';
+import { useTranscript } from '../../../contexts/TranscriptContext';
+import { TranscriptProvider } from '../../../contexts/TranscriptContext';
+import { EventProvider } from '../../../contexts/EventContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
@@ -200,8 +200,12 @@ export function AnalysisReportContent() {
     }
   };
 
+  // 原本顏色是 #0F2D38 ，現在要是修改成 #1a2a34
+  const background = 'rgb(26, 42, 52)'
+  // 根據新配色，調整以下整頁的相關顏色
+
   return (
-    <div className="analysis-page container mx-auto p-4 max-w-4xl bg-[#0F2D38] rounded-[20px] shadow-[0_4px_20px_rgba(0,160,255,0.15)]">
+    <div className="analysis-page container mx-auto p-4 max-w-4xl bg-[#1a2a34] rounded-[20px] shadow-[0_4px_20px_rgba(0,160,255,0.15)]">
       <div className="flex justify-between items-center mb-6 bg-[#194A54] p-4 rounded-[12px] shadow-[inset_0_0_6px_rgba(0,255,255,0.15)]">
         <h1 className="text-3xl font-bold text-white border-b pb-2 flex items-center">
           <FaChartBar className="mr-2 text-[#FFE066]" />

@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
-function DynamicAnalysisContent() {
+function LandbankChatPage() {
   const {
     router,
 
@@ -30,12 +30,17 @@ function DynamicAnalysisContent() {
     isAnalyzing,
     setAnalysisProgress,
     appRef,
-    background,
 
     progressTimerRef,
 
     endConversation
   } = useAiChat();
+
+  // styles start
+  const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
+  const [chatBackground] = useState("linear-gradient(rgb(46, 74, 63) 0%, rgb(26, 42, 52) 100%)")
+
+
   // 分析並移動到報告頁面
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
@@ -74,12 +79,63 @@ function DynamicAnalysisContent() {
       setAnalysisProgress(30);
 
       // Perform analysis here before redirecting
-      const criteria = [
-        '1. G（Goal）目標設定 -評分目的：引導部屬描述希望達成的具體成果樣貌，避免籠統空泛。 運用開放式提問，以部屬為中心，引導其自主探索並表達自己真正想達成的目標。 -評分標準1： > 目標具體清晰 (Goal Specificity & Clarity)：引導部屬描述希望達成的具體成果樣貌，避免籠統空泛。 非常貼切： 目標描述非常具體，成果樣貌清晰可想像，且可驗證。 貼切： 目標大致具體，但部分描述仍有些模糊或不易驗證。 一點貼切： 目標描述籠統、空泛、不切實際。 -評分標準2： > 引導自主目標設定 (Guiding Self-Set Goals) ：運用開放式提問，以部屬為中心，引導其自主探索並表達自己真正想達成的目標。 非常貼切： 透過有效的開放式提問，成功引導部屬清晰表達出內心認同、自主設定的目標。 貼切： 嘗試使用開放式提問，部屬表達了目標，但自主性或清晰度稍弱，或受到主管較多暗示。 一點貼切： 主要由主管給定目標、使用封閉式提問，或未能引導部屬表達其真實想法。',
-        '2. R（Reality）現況分析 -評分目的： 引導部屬釐清當前的具體狀況、已知資訊、已嘗試方法，並適時補充主管的客觀觀察/數據。協助部屬盤點目前遇到的困難、干擾因素，並探索可能的盲點或未被注意的面向。 -評分標準1： > 現況釐清與事實盤點 (Situation Clarification & Fact Inventory)： 引導部屬釐清當前的具體狀況、已知資訊、已嘗試方法，並適時補充主管的客觀觀察/數據。 非常貼切： 部屬充分陳述事實，主管有效補充關鍵資訊，雙方對客觀現況有清晰共識。 貼切： 部屬陳述了部分事實，主管有補充，但對整體狀況的掌握不夠全面。 一點貼切： 陳述不清、避重就輕，或參雜過多主觀臆測，未能釐清客觀事實。 -評分標準2： > 挑戰探索與盲點覺察 (Challenge Exploration & Blind Spot Awareness)：協助部屬盤點目前遇到的困難、干擾因素，並探索可能的盲點或未被注意的面向。 非常貼切：深入探討了核心困難與干擾因素，並成功引導部屬覺察到至少一個先前未意識到的盲點。 貼切：討論了表面困難，但對根本原因或潛在盲點的探索不夠深入。 一點貼切：未能有效引導部屬面對困難，或完全忽略了對盲點的探索。',
-        '3. O（Options）方案選擇 -評分目的： 鼓勵部屬主動發想出多種不同的可行行動方案，避免陷入單一思維。 引導部屬思考選項時能連結相關經驗、資源（他人建議、外部資源等），並適時融入主管經驗共同探討。 -評分標準1： > 選項發想的廣度 (Breadth of Option Generation)： 鼓勵部屬主動發想出多種不同的可行行動方案，避免陷入單一思維。 非常貼切： 引導部屬主動提出 2個或以上 來自不同角度或思路的選項。 貼切：引導部屬提出 至少1個 選項，或選項同質性高、不夠多元。 一點貼切：未引導部屬思考，直接給答案，或只停留在單一、顯而易見的選項。 -評分標準2： > 選項探索的深度與資源連結 (Depth of Option Exploration & Resource Linking)：引導部屬思考選項時能連結相關經驗、資源（他人建議、外部資源等），並適時融入主管經驗共同探討。 非常貼切：能引導部屬從多元角度（經驗/資源/他人）思考，並結合主管經驗深入探討選項的可行性。 貼切：有嘗試引導從不同角度思考，但連結不夠深入，或主管經驗分享變成單向指導。 一點貼切： 選項思考侷限於部屬自身經驗，未引導連結其他資源或經驗。',
-        '4. W（Will/ Way Forward）意願與行動 -評分目的： 引導部屬制定具體、可執行的下一步行動，包含「何時做」、「做什麼」。 確認部屬對行動計畫的執行承諾度，並建立清晰的追蹤方式。 -評分標準1： >  行動計畫的清晰度 (Clarity of Action Plan)：引導部屬制定具體、可執行的下一步行動，包含「何時做」、「做什麼」。 非常貼切：行動計畫非常具體（含人/事/時），步驟清晰、可操作性強。 貼切：行動計畫大致可行，但部分步驟或時間點不夠明確。 一點貼切：行動計畫模糊不清、缺乏具體步驟或時間規劃。 -評分標準2： > 執行承諾與追蹤 (Commitment & Follow-up)：確認部屬對行動計畫的執行承諾度，並建立清晰的追蹤方式。 非常貼切：部屬明確表達高承諾度（例如：意願分數高、語氣肯定），並共同約定具體的追蹤時間與方式。 貼切： 部屬口頭承諾，但意願感受不明顯或有猶豫，追蹤方式不夠具體。 一點貼切： 部屬意願低落或迴避承諾，未建立追蹤機制。'
-      ];
+      const criteria = `
+評分標準標題 1：用淺白語言闡述財富價值
+非常好：使用強烈視覺化的比喻（如「財務安全氣囊」），具體描述保險如何在意外時吸收房貸壓力，並提及保護對象（如家人），情境鮮明且具象。
+好：使用簡單比喻（如「安全氣囊」），點出保險的關鍵作用，但描述稍簡略，未展開細節。
+普通：文字平淡，僅泛泛提及保障功能，缺乏具體畫面或吸引力。
+不太好：語言抽象（如「避免風險」），未提供具體情境，難以引發客戶共鳴。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 2：梳理對話邏輯提升客戶信心
+非常好：先確認客戶疑慮（如「保費太高」），接著解釋原因並連結實際情境（房貸壓力），最後提出具體且彈性的解決方案，邏輯流暢。
+好：回應疑慮並提供解決方案，但解釋環節較簡略，未能充分鋪陳。
+普通：回應直接但缺乏層次感，僅提及方案調整，未展現完整邏輯。
+不太好：回應零散，無明確結構，甚至顯得敷衍，難以建立專業感。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 3：回應客戶情緒建立信任關係
+非常好：具體點出客戶生活壓力（如「房貸、學費」），展現深度理解，並自然過渡到保障建議，情緒共鳴強。
+好：認同客戶情緒（如「精打細算」），但未展開具體情境，理解感稍弱。
+普通：泛泛回應客戶想法，缺乏針對性細節，情緒連結不足。
+不太好：忽視或輕視客戶情緒（如「不算什麼」），可能引發反感。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 4：針對客戶疑慮提供精準解方
+非常好：針對疑慮（如「短期財務壓力」）提出具體方案（如「保費遞增型」），包含數字細節並徵詢意見，解決力強。
+好：回應疑慮並給出方向（如「基本保障」），但細節不夠具體。
+普通：泛泛建議調整方案，缺乏針對性細節，解決力有限。
+不太好：回應空洞或過於自信（如「不會有更低的」），未能有效解惑。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 5：用數據佐證凸顯財富效益
+非常好：用具體數字（如「每天 40 元」對比「500 萬房貸」），並以生活化單位（如「便當錢」）解釋，效益清晰且吸引人。
+好：提供數字（如「1.5 萬 vs. 500 萬」），但未細化到日常層面，說服力稍弱。
+普通：提及保費與保障關係，但數字模糊，缺乏震撼力。
+不太好：數字空泛（如「幾千塊」），未能有效凸顯效益。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 6：闡述風險對比凸顯保障優勢
+非常好：詳細對比無保險的風險（「500 萬房貸，每月 2.5 萬」）與有保險的安心，數字明確且具衝擊力。
+好：點出風險與保障差異，但細節不夠具體，力度稍弱。
+普通：泛泛提及保障作用，風險描述模糊，難以打動客戶。
+不太好：風險與保障關係不清，表達空洞，缺乏說服力。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 7：分享成功案例增強說服力
+非常好：講述具體案例（「三年前投保，400 萬房貸還清」），細節豐富且具情感共鳴。
+好：提及案例並點出效果，但缺乏細節，故事性稍弱。
+普通：泛泛提及他人經驗，無具體內容，說服力不足。
+不太好：僅空洞推薦，無案例支撐，難以建立信任。
+無法判斷：未提及或無法判斷。
+---
+評分標準標題 8：順勢探詢意願促進財富規劃
+非常好：以具體調整（如「每天 40 元」）為基礎，自然徵詢意見（如「這樣符合您的規劃嗎？」），過渡流暢。
+好：提出調整後簡單詢問意願，語氣自然但吸引力稍弱。
+普通：直接問看法，缺乏引導鋪陳，略顯突兀。
+不太好：語氣急促或推銷感強（如「要不要試試」），易讓客戶抗拒。
+無法判斷：未提及或無法判斷。
+`.trim().split('---').map(item => item.trim());
 
       const weights = [0.5, 0.5, 0.5, 0.5];
 
@@ -138,8 +194,8 @@ function DynamicAnalysisContent() {
       setAnalysisProgress(100);
 
       // Redirect to the analysis report page
-      const back = encodeURIComponent('/demo/dynamic-analysis');
-      router.push(`/demo/analysis-report?back=${back}`);
+      const back = encodeURIComponent('/demo/landbank');
+      router.push(`/demo/landbank/report?back=${back}`);
     } catch (error) {
       // Clear the progress timer on error
       if (progressTimerRef.current) {
@@ -158,9 +214,10 @@ function DynamicAnalysisContent() {
     updateInputText('');
   }
   return (
-    <div style={{ background }}>
+    <div style={{ background: pageBackground }}>
       <ChatView
-        background="#173944"
+        classNames={['landbank']}
+        background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
         onSubmit={() => onSubmitText()}
@@ -169,7 +226,7 @@ function DynamicAnalysisContent() {
       ></ChatView>
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="landbankAgent"/>
+        <App ref={appRef} agentSetKey="landbankAgent" />
       </div>
     </div>
   );
@@ -179,7 +236,7 @@ function DynamicAnalysisContent() {
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <DynamicAnalysisContent />
+      <LandbankChatPage />
     </Suspense>
   );
 } 

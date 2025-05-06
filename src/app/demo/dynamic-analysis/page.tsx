@@ -30,12 +30,15 @@ function DynamicAnalysisContent() {
     isAnalyzing,
     setAnalysisProgress,
     appRef,
-    background,
 
     progressTimerRef,
 
     endConversation
   } = useAiChat();
+
+  const [pageBackground] = useState("#0F2D38");
+  const [chatBackground] = useState("#173944")
+
   // 分析並移動到報告頁面
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
@@ -158,9 +161,10 @@ function DynamicAnalysisContent() {
     updateInputText('');
   }
   return (
-    <div style={{ background }}>
+    <div style={{ background: pageBackground }}>
       <ChatView
-        background="#173944"
+        classNames={['default']}
+        background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
         onSubmit={() => onSubmitText()}
@@ -169,7 +173,7 @@ function DynamicAnalysisContent() {
       ></ChatView>
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="chineseAgent"/>
+        <App ref={appRef} agentSetKey="chineseAgent" />
       </div>
     </div>
   );

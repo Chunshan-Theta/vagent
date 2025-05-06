@@ -28,8 +28,6 @@ export function useAiChat(){
   const appContext = useAppContext();
   const { sendClientEvent } = appContext;
 
-  // styles start
-  const [background, setBackground] = useState("#0F2D38");
   // styles end
 
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -218,9 +216,6 @@ export function useAiChat(){
 
     analysisProgress,
     setAnalysisProgress,
-
-    background,
-    setBackground,
 
     isSessionStarted,
     setIsSessionStarted,
