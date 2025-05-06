@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
 
-export function AnalysisReportContent() {
+function AnalysisReportContent() {
   const [message, setMessage] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);

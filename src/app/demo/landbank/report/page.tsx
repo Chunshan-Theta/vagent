@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
 
-export function AnalysisReportContent() {
+function LandbankReportPage() {
   const [message, setMessage] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -354,16 +354,16 @@ export function AnalysisReportContent() {
 }
 
 // Wrapper component that uses useSearchParams inside Suspense
-function AnalysisReportContentWithSuspense() {
+function LandbankReportPageWithSuspense() {
   return (
     <Suspense fallback={<div className="p-4 text-center">Loading...</div>}>
-      <AnalysisReportContent />
+      <LandbankReportPage />
     </Suspense>
   );
 }
 
-export default function AnalysisReportDemo() {
+export default function Page() {
   return (
-    <AnalysisReportContentWithSuspense />
+    <LandbankReportPageWithSuspense />
   );
 } 
