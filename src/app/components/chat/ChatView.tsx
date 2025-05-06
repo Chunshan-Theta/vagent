@@ -54,7 +54,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
       <div className="chat-view">
         <div className="chat-header"></div>
         <div className="chat-content">
-          {messageItems.map((message, index) => (
+          {messageItems.filter((m) => !m.hide).map((message, index) => (
             <ChatMessageItem
               messages={messageItems}
               message={message}
@@ -88,11 +88,11 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
                 cursor: !isInputDisabled ? 'not-allowed' : 'text'
               }}
             />
-            <button 
+            <button
               className={`mic-icon ${isMicActive ? 'active' : ''} ${disableInteraction ? 'disabled' : ''}`}
               disabled={disableInteraction}
               onClick={handleMicClick}
-              style={{ 
+              style={{
                 color: 'white',
                 opacity: dataChannel ? 1 : 0.8
               }}
@@ -103,7 +103,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
               className="send-button"
               disabled={!isMicActive}
               onClick={() => onSubmit && onSubmit(inputText)}
-              style={{ 
+              style={{
                 backgroundColor: !isMicActive ? '#9e9e9e' : '#00a3e0',
                 color: 'white',
                 opacity: !isMicActive ? 0.6 : 1,

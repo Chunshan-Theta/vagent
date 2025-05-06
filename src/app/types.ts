@@ -34,6 +34,8 @@ export interface AgentConfig {
     string,
     (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any
   >;
+  sttPrompt?: string;
+  startAsk?: string;
   downstreamAgents?: AgentConfig[] | { name: string; publicDescription: string }[];
 }
 
@@ -42,7 +44,7 @@ export type AllAgentConfigsType = Record<string, AgentConfig[]>;
 export interface TranscriptItem {
   itemId: string;
   type: "MESSAGE" | "BREADCRUMB";
-  role?: "user" | "assistant";
+  role?: "user" | "assistant" | "system";
   title?: string;
   data?: Record<string, any>;
   expanded: boolean;

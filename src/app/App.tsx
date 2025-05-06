@@ -37,13 +37,19 @@ export interface AppRef {
   connectToRealtime: () => Promise<void>;
 }
 
-const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, ref) => {
+export type AppProps = {
+  hideLogs?: boolean;
+  agentSetKey?: string;
+};
+
+const App = forwardRef<AppRef, AppProps>((props, ref) => {
+  const hideLogs = props.hideLogs || false;
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
   const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
     useTranscript();
-  
+
   // Use a try-catch to handle the case when EventContext is not available
   const eventContext = useEvent();
   const logClientEvent = eventContext.logClientEvent;
@@ -53,10 +59,10 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
     useState<AgentConfig[] | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");
-  
+
   // Always call useAppContext unconditionally
   const appContext = useAppContext();
-  
+
   // Create a safe version of appContext that won't throw errors
   const safeAppContext = appContext
 
@@ -101,7 +107,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
   });
 
   useEffect(() => {
-    const agentSetKey = searchParams?.get("agentConfig") || defaultAgentSetKey;
+    const agentSetKey = props.agentSetKey || searchParams?.get("agentConfig") || defaultAgentSetKey;
     const agentSet = allAgentSets[agentSetKey];
 
     if (agentSet) {
@@ -116,7 +122,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
       setSelectedLanguage("zh");
 
       // If language is Chinese, ensure we're using the Chinese agent
-      if (selectedLanguage === "zh" && agentSetKey !== "chineseAgent") {
+      if (selectedLanguage === "zh" && !allAgentSets[agentSetKey]) {
         const url = new URL(window.location.toString());
         url.searchParams.set("agentConfig", "chineseAgent");
         window.location.replace(url.toString());
@@ -228,10 +234,21 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
 
     logClientEvent({}, "disconnected");
   };
+  type sendSimulatedUserMessageOpts = {
+    hide?: boolean;
+    role?: 'user' | 'assistant' | 'system';
 
-  const sendSimulatedUserMessage = (text: string) => {
+    noAppendToTranscript?: boolean;
+
+    triggerResponse?: boolean;
+  }
+  const sendSimulatedUserMessage = (text: string, opts: sendSimulatedUserMessageOpts) => {
     const id = uuidv4().slice(0, 32);
-    addTranscriptMessage(id, "user", text, true);
+    const role = opts.role || "user";
+
+    if (!opts.noAppendToTranscript) {
+      addTranscriptMessage(id, role as any, text, !!opts.hide);
+    }
 
     sendClientEvent(
       {
@@ -239,16 +256,18 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         item: {
           id,
           type: "message",
-          role: "user",
+          role: role,
           content: [{ type: "input_text", text }],
         },
       },
       "(simulated user text message)"
     );
-    sendClientEvent(
-      { type: "response.create" },
-      "(trigger response after simulated user text message)"
-    );
+    if (opts.triggerResponse) {
+      sendClientEvent(
+        { type: "response.create" },
+        "(trigger response after simulated user text message)"
+      );
+    }
   };
 
   const updateSession = (shouldTriggerResponse: boolean = false) => {
@@ -274,6 +293,11 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     const instructions = currentAgent?.instructions || "";
     const tools = currentAgent?.tools || [];
 
+    const sttPrompt = currentAgent?.sttPrompt || "以下語音的說話者是台灣人，請將語音轉換為文字。";
+    if (currentAgent?.sttPrompt) {
+      console.log("STT Prompt:", sttPrompt);
+    }
+
     const sessionUpdateEvent = {
       type: "session.update",
       session: {
@@ -282,14 +306,14 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         voice: "echo",
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
-        input_audio_transcription: { 
+        input_audio_transcription: {
           model: "gpt-4o-transcribe",
           language: "zh",
-          prompt: "以下是來自於台灣人的對話"
+          prompt: sttPrompt,
         },
         turn_detection: turnDetection,
         tools,
-        
+
       },
     };
 
@@ -302,6 +326,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         .map(item => `${item.role}: ${item.title}`)
         .join('\n\n');
 
+      // if (chatHistory) {
       sendClientEvent(
         {
           type: "conversation.item.create",
@@ -313,8 +338,14 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
         },
         "(simulated history message)"
       );
+      sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}`, {
+        hide: true,
+        role: "system",
+      })
       console.log(`之前的對話紀錄:\n${chatHistory}`);
-      sendSimulatedUserMessage("接著繼續");
+      const startAsk = currentAgent?.startAsk || "接著繼續";
+      console.log(startAsk);
+      sendSimulatedUserMessage(startAsk, { hide: true, triggerResponse: true, });
     }
   };
 
@@ -475,7 +506,7 @@ const App = forwardRef<AppRef, { hideLogs?: boolean }>(({ hideLogs = false }, re
     setMounted(true);
   }, []);
 
-  const agentSetKey = searchParams?.get("agentConfig") || "default";
+  const agentSetKey = props.agentSetKey || searchParams?.get("agentConfig") || "default";
 
   useImperativeHandle(ref, () => ({
     disconnectFromRealtime,

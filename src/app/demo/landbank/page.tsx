@@ -169,7 +169,7 @@ function DynamicAnalysisContent() {
       ></ChatView>
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="chineseAgent"/>
+        <App ref={appRef} agentSetKey="landbankAgent"/>
       </div>
     </div>
   );

@@ -178,7 +178,8 @@ export function useHandleServerEvent({
 
         if (itemId && role) {
           if (role === "user" && !text) {
-            text = "[Transcribing...]";
+            // 這個字如果修改，updateTranscriptMessage 裡面的自動取代也要修改
+            text = "[Transcribing...]\n";
           }
           addTranscriptMessage(itemId, role, text);
         }
@@ -191,14 +192,22 @@ export function useHandleServerEvent({
         break;
       }
 
+      // STT 文字 update
+      case "conversation.item.input_audio_transcription.delta": {
+        const itemId = serverEvent.item_id;
+        const deltaText = serverEvent.delta || "";
+        if (itemId) {
+          updateTranscriptMessage(itemId, deltaText, true);
+        }
+        break;
+      }
       case "conversation.item.input_audio_transcription.completed": {
         const itemId = serverEvent.item_id;
-        const finalTranscript =
-          !serverEvent.transcript || serverEvent.transcript === "\n"
-            ? "[inaudible]"
-            : serverEvent.transcript;
+        const text = (serverEvent.transcript || "").trim();
+        const finalTranscript = !text ? "[inaudible]" : text;
         if (itemId) {
           updateTranscriptMessage(itemId, finalTranscript, false);
+          updateTranscriptItemStatus(itemId, "DONE");
         }
         break;
       }

@@ -14,7 +14,6 @@ function AnalysisReportContent() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { } = useTranscript();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -361,10 +360,6 @@ function AnalysisReportContentWithSuspense() {
 
 export default function AnalysisReportDemo() {
   return (
-    <TranscriptProvider>
-      <EventProvider>
-        <AnalysisReportContentWithSuspense />
-      </EventProvider>
-    </TranscriptProvider>
+    <AnalysisReportContentWithSuspense />
   );
 } 

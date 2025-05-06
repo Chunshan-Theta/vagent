@@ -13,9 +13,13 @@ export type BaseMessage = {
   createdAtMs: number;
   data?: any;
 
+  /** 是否隱藏這個訊息，Message 為了避免同步問題，一律只能隱藏不能刪除 */
   hide?: boolean;
 }
 
+/**
+ * 基本的文字訊息
+ */
 export type TextMessage = BaseMessage & {
   type: 'text';
   data: {
@@ -23,6 +27,10 @@ export type TextMessage = BaseMessage & {
   }
 }
 
+/**
+ * 範例的 chat message
+ * 但實際並沒有實作
+ */
 export type PopupMessage = BaseMessage & {
   type: 'popup';
   data: {
@@ -38,6 +46,9 @@ export type MessagesContextValue = {
   addMessageItem: (msg: MessageItem) => void;
   insertMessageItem: (msgId: string, place: 'before' | 'after', msg: MessageItem) => void;
   updateMessageContent: (msgId: string, newContent: string) => void;
+  updateMessageData: (msgId: string, patch: Partial<MessageItem['data']>) => void;
+  updateMessage: (msgId: string, patch: Partial<MessageItem>) => void;
+  hideMessage: (msgId: string) => void;
   /** 更新輸入框的文字 */
   updateInputText: (text: string) => void;
   submitInputText: (input?: string) => void;
@@ -87,7 +98,7 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   };
 
-  const updateMessageContent = (msgId: string, newContent: string) => {
+  const updateMessage = (msgId: string, patch: Partial<MessageItem>) => {
     setMessages((messages) => {
       const index = messages.findIndex((message) => message.id === msgId);
       if (index === -1) {
@@ -96,11 +107,26 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
       }
 
       const newMessages = [...messages];
-      newMessages[index] = { ...newMessages[index], data: { ...newMessages[index].data, content: newContent } };
+      newMessages[index] = { ...newMessages[index], ...patch };
 
       return newMessages;
     });
   }
+
+  const updateMessageContent = (msgId: string, newContent: string) => {
+    updateMessageData(msgId, { content: newContent });
+  }
+
+  const updateMessageData = (msgId: string, patch: Partial<MessageItem['data']>) => {
+    updateMessage(msgId, { data: { ...patch } });
+  }
+
+  const hideMessage = (msgId: string) => {
+    updateMessage(msgId, { hide: true });
+  }
+
+
+
   const updateInputText = (text: string) => {
     setInputText(text);
   };
@@ -109,7 +135,6 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
     if (input == null) [
       input = inputText
     ]
-    console.log('submitInputText', input)
   }
 
   return (
@@ -120,6 +145,9 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
         addMessageItem,
         insertMessageItem,
         updateMessageContent,
+        updateMessageData,
+        updateMessage,
+        hideMessage,
         updateInputText,
         submitInputText,
       }}

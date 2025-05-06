@@ -70,7 +70,7 @@ function DemoContent() {
         // Skip messages that should be hidden
         const content = item.title || '';
         return !(
-          content === "接著繼續" || 
+          content === "接著繼續" ||
           content === "以下是來自於台灣人的對話" ||
           content.length < 1
         );
@@ -206,21 +206,21 @@ function DemoContent() {
       {/* Call Controls */}
       <div className="p-8">
         <div className="grid grid-cols-3 gap-6 mb-8">
-          <button 
+          <button
             className={`flex flex-col items-center p-4 rounded-full ${isCallStarted ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-500'}`}
             onClick={handleStartCall}
           >
             <FaPhone className="text-2xl mb-2" />
             <span className="text-sm">{isCallStarted ? 'End Call' : 'Call'}</span>
           </button>
-          <button 
+          <button
             className={`flex flex-col items-center p-4 rounded-full ${isLogVisible ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-800 hover:bg-gray-700'}`}
             onClick={handleToggleLog}
           >
             <FaHashtag className="text-2xl mb-2" />
             <span className="text-sm">{isLogVisible ? 'Hide Log' : 'Show Log'}</span>
           </button>
-          <button 
+          <button
             className={`flex flex-col items-center p-4 rounded-full ${isPersonInfoVisible ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-800 hover:bg-gray-700'}`}
             onClick={handleTogglePersonInfo}
           >
@@ -277,7 +277,7 @@ function DemoContent() {
           <div className="bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-700 flex justify-between items-center">
               <h2 className="text-xl font-semibold">Conversation Log</h2>
-              <button 
+              <button
                 onClick={handleToggleLog}
                 className="text-gray-400 hover:text-white"
               >
@@ -290,11 +290,10 @@ function DemoContent() {
               ) : (
                 <div className="space-y-4">
                   {transcriptItems.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className={`p-3 rounded-lg ${
-                        item.role === 'user' ? 'bg-blue-900 ml-8' : 'bg-gray-700 mr-8'
-                      }`}
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg ${item.role === 'user' ? 'bg-blue-900 ml-8' : 'bg-gray-700 mr-8'
+                        }`}
                     >
                       <div className="font-semibold mb-1">
                         {item.role === 'user' ? 'You' : 'AI Assistant'}
@@ -315,7 +314,7 @@ function DemoContent() {
           <div className="bg-gray-800 rounded-lg w-full max-w-md overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-700 flex justify-between items-center">
               <h2 className="text-xl font-semibold">Person Information</h2>
-              <button 
+              <button
                 onClick={handleTogglePersonInfo}
                 className="text-gray-400 hover:text-white"
               >
@@ -332,7 +331,7 @@ function DemoContent() {
                   <p className="text-gray-400">資深研發工程師</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <h4 className="text-sm font-medium text-gray-400">Department</h4>
@@ -357,14 +356,8 @@ function DemoContent() {
 
 export default function Page() {
   return (
-    <EventProvider>
-      <AppProvider>
-        <TranscriptProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-            <DemoContent />
-          </Suspense>
-        </TranscriptProvider>
-      </AppProvider>
-    </EventProvider>
+    <Suspense fallback={<div>Loading...</div>}>
+      <DemoContent />
+    </Suspense>
   );
 } 

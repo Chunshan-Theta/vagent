@@ -20,6 +20,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const eventContext = useEvent();
     logClientEvent = eventContext.logClientEvent;
   } catch (error) {
+    // 出現這個狀況，代表 Provider 的順序有問題需要調整
+    // 用替代方案送出的訊息只會出現在 console 中
     console.warn("EventContext not available, using default values");
     logClientEvent = (eventObj: any, eventNameSuffix = "") => {
       console.log(`[Client Event] ${eventNameSuffix}:`, eventObj);
