@@ -11,6 +11,10 @@ import { AppProvider, useAppContext } from "@/app/contexts/AppContext";
 
 import { v4 as uuidv4 } from "uuid";
 
+import { sharedConfig } from "@/app/agentConfigs";
+
+
+
 /**
  * 聊天介面基本需要的狀態
  * @returns 
@@ -27,6 +31,8 @@ export function useAiChat(){
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const appContext = useAppContext();
   const { sendClientEvent } = appContext;
+  
+  const { sttPrompt, startAsk } = sharedConfig;
 
   // styles end
 
@@ -122,6 +128,15 @@ export function useAiChat(){
     }
   };
 
+  const sttTextValid = (text:string)=>{
+    const invalid =       text === "接著繼續" ||
+      text === "以下是來自於台灣人的對話" ||
+      text === startAsk ||
+      text === sttPrompt || 
+      text.length < 1;
+    return !invalid;
+  }
+
   // Set isClient to true after component mounts (client-side only)
   useEffect(() => {
     setIsClient(true);
@@ -160,7 +175,12 @@ export function useAiChat(){
       const { action, index, item, items } = data;
       if (action === 'update_title') {
         const { itemId, title } = item;
-        chatContext.updateMessageContent(itemId, title!);
+        if(!sttTextValid(title!)){
+          chatContext.updateMessageContent(itemId, '');
+        }else{
+          chatContext.updateMessageContent(itemId, title!);
+        }
+          
       } else if (action === 'update_status') {
         // console.log('update_status', data);
       } else if (action === 'toggle_expand') {
@@ -206,6 +226,20 @@ export function useAiChat(){
     }
   }
 
+  const getChatHistoryText = ()=>{
+    
+    const chatHistory = transcriptItems
+      .filter(item => item.type === 'MESSAGE')
+      .filter(item => {
+        // Skip messages that should be hidden
+        const content = item.title || '';
+        return sttTextValid(content);
+      })
+      .map(item => `${item.role}: ${item.title}`)
+      .join('\n\n');
+      return chatHistory;
+  }
+
 
   return {
     router,
@@ -236,6 +270,8 @@ export function useAiChat(){
     setIsPTTUserSpeaking,
 
     sendSimulatedUserMessage,
+
+    getChatHistoryText,
 
     handleTalkOn,
     handleTalkOff,

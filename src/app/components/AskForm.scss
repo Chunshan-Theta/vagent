@@ -78,10 +78,11 @@
   }
 }
 
+// 以下是針對特定主題的樣式覆蓋
+// == landbank ==
 .ask-form {
   &.ask-form--landbank {
     background: linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%);
-
     .ask-form__input {
       &:focus {
         border-color: #80cbc4;
@@ -94,6 +95,40 @@
       color: #263238;
       &:hover {
         background-color: #4db6ac;
+      }
+    }
+  }
+}
+
+// == deltaww ==
+.ask-form {
+  &.ask-form--deltaww {
+    background: linear-gradient(135deg, #0F2D38 0%, #1E4A56 100%); // 漸層背景色
+    color: #ffffff; // 文字顏色
+
+    .ask-form__label {
+      color: #b0e0e6; // 淡藍色，與背景形成對比
+    }
+
+    .ask-form__input {
+      background-color: rgba(255, 255, 255, 0.1); // 淡白色背景
+      border-color: rgba(255, 255, 255, 0.3); // 淡白色邊框
+      color: #ffffff; // 白色文字
+      &:focus {
+        border-color: #4db6e6; // 聚焦時的藍色邊框
+        box-shadow: 0 0 4px rgba(77, 182, 230, 0.8); // 聚焦時的藍色陰影
+      }
+    }
+
+    .ask-form__description {
+      color: #b0e0e6; // 淡藍色，與背景形成對比
+    }
+
+    .ask-form__submit-button {
+      background-color: #4db6e6; // 按鈕背景色
+      color: #0F2D38; // 按鈕文字顏色
+      &:hover {
+        background-color: #80d4f0; // 按鈕懸停時的背景色
       }
     }
   }

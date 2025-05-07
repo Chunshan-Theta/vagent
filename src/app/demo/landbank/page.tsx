@@ -24,6 +24,7 @@ function LandbankChatPage() {
     updateInputText,
 
     sendSimulatedUserMessage,
+    isPTTUserSpeaking,
     handleMicrophoneClick,
     handleTalkOn,
     transcriptItems,
@@ -36,7 +37,9 @@ function LandbankChatPage() {
 
     progressTimerRef,
 
-    endConversation
+    endConversation,
+
+    getChatHistoryText
   } = useAiChat();
 
   // styles start
@@ -74,19 +77,7 @@ function LandbankChatPage() {
     }, 300); // Increment every 300ms
 
 
-    const chatHistory = transcriptItems
-      .filter(item => item.type === 'MESSAGE')
-      .filter(item => {
-        // Skip messages that should be hidden
-        const content = item.title || '';
-        return !(
-          content === "接著繼續" ||
-          content === "以下是來自於台灣人的對話" ||
-          content.length < 1
-        );
-      })
-      .map(item => `${item.role}: ${item.title}`)
-      .join('\n\n');
+    const chatHistory = getChatHistoryText()
 
     try {
       setAnalysisProgress(30);
@@ -252,7 +243,7 @@ function LandbankChatPage() {
       minHeight: '100dvh',
       display: 'flex',
       justifyContent: 'center',
-      paddingTop: '20%',
+      paddingTop: '20vh',
     }
     return (
       <div style={bgStyles}>
@@ -275,6 +266,7 @@ function LandbankChatPage() {
         background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
+        isMicActive={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}

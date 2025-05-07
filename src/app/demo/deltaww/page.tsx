@@ -8,11 +8,10 @@ import App, { AppRef } from "@/app/App";
 import { useRouter } from "next/navigation";
 
 import ChatView from "@/app/components/chat/ChatView";
-import { AppProvider, useAppContext } from "@/app/contexts/AppContext";
-
-import { v4 as uuidv4 } from "uuid";
 
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
+
+import AskForm from "@/app/components/AskForm";
 
 function DynamicAnalysisContent() {
   const {
@@ -23,9 +22,11 @@ function DynamicAnalysisContent() {
 
     sendSimulatedUserMessage,
     handleMicrophoneClick,
+    isPTTUserSpeaking,
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
+    handleTalkOn,
     isCallEnded,
     isAnalyzing,
     setAnalysisProgress,
@@ -33,11 +34,28 @@ function DynamicAnalysisContent() {
 
     progressTimerRef,
 
-    endConversation
+    endConversation,
+    getChatHistoryText
   } = useAiChat();
 
   const [pageBackground] = useState("#0F2D38");
-  const [chatBackground] = useState("#173944")
+  const [chatBackground] = useState("#173944");
+
+  const [scene, setScene] = useState("init");
+  const askItems = useRef([
+    {
+      type: 'text' as const,
+      title: '帳號',
+      name: 'account',
+      defaultValue: '',
+    },
+    {
+      type: 'password' as const,
+      title: '密碼',
+      name: 'password',
+      defaultValue: '',
+    },
+  ])
 
   // 分析並移動到報告頁面
   const handleAnalyzeChatHistory = async () => {
@@ -58,20 +76,7 @@ function DynamicAnalysisContent() {
       });
     }, 300); // Increment every 300ms
 
-
-    const chatHistory = transcriptItems
-      .filter(item => item.type === 'MESSAGE')
-      .filter(item => {
-        // Skip messages that should be hidden
-        const content = item.title || '';
-        return !(
-          content === "接著繼續" ||
-          content === "以下是來自於台灣人的對話" ||
-          content.length < 1
-        );
-      })
-      .map(item => `${item.role}: ${item.title}`)
-      .join('\n\n');
+    const chatHistory = getChatHistoryText()
 
     try {
       setAnalysisProgress(30);
@@ -141,7 +146,7 @@ function DynamicAnalysisContent() {
       setAnalysisProgress(100);
 
       // Redirect to the analysis report page
-      const back = encodeURIComponent('/demo/dynamic-analysis');
+      const back = encodeURIComponent('/demo/deltaww');
       router.push(`/demo/analysis-report?back=${back}`);
     } catch (error) {
       // Clear the progress timer on error
@@ -156,24 +161,86 @@ function DynamicAnalysisContent() {
     }
   };
 
+  const onSubmitAskForm = (form: any) => {
+    const datas = form.datas
+    const account = (datas.account || '').trim()
+    const password = (datas.password || '').trim()
+    if (!account) {
+      form.emitError('account', '請填入正確的帳號')
+      return
+    }
+    if (!password) {
+      form.emitError('password', '缺少密碼')
+      return
+    }
+    if (password.length > 20) {
+      form.emitError('password', '密碼長度過長')
+      return
+    }
+
+    setScene('chat');
+  }
+  // 等切換到 chat 之後要自動開 mic
+  useEffect(() => {
+    if (scene === 'chat') {
+      handleTalkOn();
+    }
+  }, [scene])
+
   const onSubmitText = () => {
     sendSimulatedUserMessage(inputText);
     updateInputText('');
   }
-  return (
-    <div style={{ background: pageBackground }}>
+
+
+  function formScene() {
+    const bgStyles = {
+      background: 'linear-gradient(135deg, #0F2D38 0%, #1E4A56 100%)',
+      minHeight: '100dvh',
+      display: 'flex',
+      justifyContent: 'center',
+      paddingTop: '20vh',
+    }
+    return (
+      <div style={bgStyles}>
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <AskForm
+            items={askItems.current}
+            submitText="送出並開始"
+            onSubmit={onSubmitAskForm}
+            theme="deltaww"
+          ></AskForm>
+        </div>
+      </div>
+    )
+  }
+
+  function chatScene() {
+    return (
       <ChatView
         classNames={['default']}
         background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
+        isMicActive={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
       ></ChatView>
+    )
+  }
+
+  return (
+    <div style={{ background: pageBackground }}>
+      {
+        scene === 'init' ? formScene()! :
+          scene === 'chat' ? chatScene()! :
+            <div>Unknown scene</div>
+      }
+
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="chineseAgent" />
+        <App ref={appRef} agentSetKey="landbankAgent" />
       </div>
     </div>
   );

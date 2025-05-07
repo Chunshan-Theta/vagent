@@ -3,7 +3,7 @@ import type { MessageItem, TextMessage } from '@/app/contexts/ChatContext'
 import './AskForm.scss'
 
 type AskFormItem = {
-  type: 'text' | 'number' | 'description'
+  type: 'text' | 'number' | 'password' | 'description'
   title?: string
   description?: string
   name: string
@@ -23,12 +23,12 @@ type SubmitForm = {
 type AskFormProps = {
   items: AskFormItem[]
   /** 對應不同風格樣式和配色 */
-  theme?: 'default' | 'landbank'
+  theme?: 'default' | 'landbank' | 'deltaww'
   submitText?: string
   onSubmit?: (data: SubmitForm) => void
 }
 
-const inputTypes = new Set(['text', 'number'] as const)
+const inputTypes = new Set(['text', 'number', 'password'] as const)
 
 const AskForm: React.FC<AskFormProps> = (props) => {
   const { items, theme = 'default', onSubmit = () => { }, submitText = '送出' } = props

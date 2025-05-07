@@ -324,22 +324,12 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         .map(item => `${item.role}: ${item.title}`)
         .join('\n\n');
 
-      // if (chatHistory) {
-      sendClientEvent(
-        {
-          type: "conversation.item.create",
-          item: {
-            type: "message",
-            role: "system",
-            content: [{ type: "input_text", text: `之前的對話紀錄:\n${chatHistory}` }],
-          },
-        },
-        "(simulated history message)"
-      );
-      sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}`, {
-        hide: true,
-        role: "system",
-      })
+      if (chatHistory) {
+        sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}`, {
+          hide: true,
+          role: "system",
+        })
+      }
       console.log(`之前的對話紀錄:\n${chatHistory}`);
       // Use shared config for startAsk
       const { startAsk } = sharedConfig;

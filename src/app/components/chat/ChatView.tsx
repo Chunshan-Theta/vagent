@@ -4,7 +4,9 @@ import { useChat } from '@/app/contexts/ChatContext'
 import { useAppContext } from '@/app/contexts/AppContext'
 import ChatMessageItem from './ChatMessageItem'
 
-import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
+import { FaMicrophone, FaMicrophoneSlash, FaStop } from 'react-icons/fa'
+
+import { useEffect } from 'react'
 
 import './chat.scss'
 
@@ -15,6 +17,7 @@ interface ChatViewProps {
 
   isEnd?: boolean
   isLoading?: boolean
+  isMicActive?: boolean
 
   onSubmit?: (text: string) => void
   onClickEnd?: () => void
@@ -25,7 +28,15 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const classNames = props.classNames || []
   const { background, onSubmit, onClickEnd, onMicrophoneClick } = props
   const { messageItems, inputText, updateInputText } = useChat()
-  const [isMicActive, setIsMicActive] = useState(false)
+  const isMicActive = useMemo(() => {
+    return props.isMicActive || false
+  }, [props.isMicActive])
+
+  useEffect(() => {
+    console.log('[DDD] isMicActive', isMicActive)
+  }, [isMicActive])
+
+  // const [isMicActive, setIsMicActive] = useState(false)
 
   const mClassNames = useMemo(() => {
     return ['chat', ...classNames]
@@ -46,7 +57,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
 
   const handleMicClick = () => {
     if (!disableInteraction && onMicrophoneClick) {
-      setIsMicActive(!isMicActive)
+      // setIsMicActive(!isMicActive)
       onMicrophoneClick()
     }
   }
@@ -94,7 +105,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
               }}
             />
             <button
-              className={`mic-icon ${isMicActive ? 'active' : ''} ${disableInteraction ? 'disabled' : ''}`}
+              className={`mic-icon ${isMicActive ? 'active' : 'disabled'}`}
               disabled={disableInteraction}
               onClick={handleMicClick}
               style={{
@@ -102,7 +113,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
                 opacity: dataChannel ? 1 : 0.8
               }}
             >
-              {isMicActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
+              {isMicActive ? <FaMicrophone /> : <FaStop />}
             </button>
             <button
               className="send-button"
