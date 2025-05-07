@@ -14,6 +14,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
+import AskForm from "@/app/components/AskForm";
+
 function LandbankChatPage() {
   const {
     router,
@@ -23,6 +25,7 @@ function LandbankChatPage() {
 
     sendSimulatedUserMessage,
     handleMicrophoneClick,
+    handleTalkOn,
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
@@ -39,6 +42,16 @@ function LandbankChatPage() {
   // styles start
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [chatBackground] = useState("linear-gradient(rgb(46, 74, 63) 0%, rgb(26, 42, 52) 100%)")
+
+  const [scene, setScene] = useState("init");
+  const askItems = useRef([
+    {
+      type: 'text' as const,
+      title: '請輸入您的名字',
+      name: 'name',
+      defaultValue: '',
+    },
+  ])
 
 
   // 分析並移動到報告頁面
@@ -209,12 +222,54 @@ function LandbankChatPage() {
     }
   };
 
+
+  const onSubmitAskForm = (form: any) => {
+    const datas = form.datas
+    console.log('name:', datas.name)
+    const name = (datas.name || '').trim()
+    if(!name){
+      form.emitError('name', '請務必輸入名字')
+      return
+    }
+
+    setScene('chat');
+  }
+  // 等切換到 chat 之後要自動開 mic
+  useEffect(()=>{
+    if (scene === 'chat') {
+      handleTalkOn();
+    }
+  }, [scene])
+
   const onSubmitText = () => {
     sendSimulatedUserMessage(inputText);
     updateInputText('');
   }
-  return (
-    <div style={{ background: pageBackground }}>
+
+  function formScene() {
+    const bgStyles = {
+      background: 'linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)',
+      minHeight: '100dvh',
+      display: 'flex',
+      justifyContent: 'center',
+      paddingTop: '20%',
+    }
+    return (
+      <div style={bgStyles}>
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <AskForm
+            items={askItems.current}
+            submitText="送出並開始"
+            onSubmit={onSubmitAskForm}
+            theme="landbank"
+          ></AskForm>
+        </div>
+      </div>
+    )
+  }
+
+  function chatScene() {
+    return (
       <ChatView
         classNames={['landbank']}
         background={chatBackground}
@@ -224,6 +279,17 @@ function LandbankChatPage() {
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
       ></ChatView>
+    )
+  }
+
+  return (
+    <div style={{ background: pageBackground }}>
+      {
+        scene === 'init' ? formScene()! :
+          scene === 'chat' ? chatScene()! :
+            <div>Unknown scene</div>
+      }
+
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
         <App ref={appRef} agentSetKey="landbankAgent" />
