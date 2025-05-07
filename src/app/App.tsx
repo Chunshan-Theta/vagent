@@ -401,7 +401,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     cancelAssistantSpeech();
 
     setIsPTTUserSpeaking(true);
-    sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
+    sendClientEvent({ type: "input_audio_buffer.clear" }, "(clear PTT buffer)");
   };
 
   const handleTalkButtonUp = () => {

@@ -50,8 +50,20 @@ export function useAiChat(){
       await appRef.current.connectToRealtime();
       setIsSessionStarted(true);
     }
-    sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
   };
+  useEffect(()=>{
+    console.log('data channel changed')
+  }, [appContext.dataChannel])
+  useEffect(()=>{
+    if(appContext.dataChannel?.readyState){
+      console.log('data channel readyState update', appContext.dataChannel?.readyState)
+    }
+  }, [appContext.dataChannel?.readyState])
+  useEffect(()=>{
+    if(appContext.dataChannel && appContext.dataChannel?.readyState === 'open'){
+      sendClientEvent({ type: "input_audio_buffer.clear" }, "(clear PTT buffer)");
+    }
+  }, [appContext.dataChannel, appContext.dataChannel?.readyState])
 
   const cancelAssistantSpeech = () => {
     const mostRecentAssistantMessage = [...transcriptItems]

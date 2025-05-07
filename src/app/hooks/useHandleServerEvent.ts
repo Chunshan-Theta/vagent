@@ -197,7 +197,9 @@ export function useHandleServerEvent({
         const itemId = serverEvent.item_id;
         const deltaText = serverEvent.delta || "";
         if (itemId) {
-          updateTranscriptMessage(itemId, deltaText, true);
+          // STT 的中途結果有 bug ，某些 token 會因為被切半導致變成亂碼
+          // 現在不再做動態更新
+          // updateTranscriptMessage(itemId, deltaText, true);
         }
         break;
       }

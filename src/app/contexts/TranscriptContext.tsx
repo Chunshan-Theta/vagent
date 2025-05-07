@@ -132,8 +132,8 @@ export const TranscriptProvider: FC<PropsWithChildren> = ({ children }) => {
       emit('update_item', {
         action: 'update_title',
         index,
-        item: prev[index],
-        items: prev,
+        item: newItem,
+        items: newArr,
       });
       return newArr;
     });
