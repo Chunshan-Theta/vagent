@@ -115,7 +115,7 @@ export function useAiChat(){
       id: end_id,
       type: 'text',
       role: 'user',
-      data: { content: "通話已暫停" },
+      data: { content: "通話暫停中" },
       createdAtMs: Date.now(),
     });
   };
