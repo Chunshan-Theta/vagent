@@ -32,7 +32,7 @@ const ragflowAgent: AgentConfig = {
   4. 需要更好地理解其他部門的立場和限制
   
   您的行為模式：
-  - 每次對話前，必須先使用 ragflowChat 工具來獲取回應
+  - 每次對話前，必須先使用 ragflowChat 工具來獲取回應，並且開頭要說：『根據我在ragflow資料庫的搜尋結果，我認為...』
   - 您會向主管（用戶）描述您遇到的問題和挑戰，有時候簡短模糊，有時候詳細具體，時常帶有情緒
   - 您會分享您的想法和感受，包括挫折和困惑
   - 您會提出您嘗試過的解決方案和結果
@@ -87,7 +87,7 @@ const ragflowAgent: AgentConfig = {
           } as HeadersInit,
           body: JSON.stringify({
             question: question,
-            stream: true,
+            stream: false,
             session_id: sessionId
           })
         });
@@ -95,8 +95,9 @@ const ragflowAgent: AgentConfig = {
         if (!response.ok) {
           throw new Error('RAG流程聊天API請求失敗');
         }
-
+        console.info('RAG response 結果:', response.text);
         const data = await response.json();
+        console.info('RAG搜尋結果:', data);
         return {
           success: true,
           response: data.response
