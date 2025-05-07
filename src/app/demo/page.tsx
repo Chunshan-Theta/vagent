@@ -9,6 +9,8 @@ import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { FaMicrophone, FaPhone, FaVolumeUp, FaHashtag, FaSpinner, FaUser } from 'react-icons/fa';
 import { AppProvider } from "@/app/contexts/AppContext";
 
+import { sharedConfig } from "@/app/agentConfigs";
+
 function DemoContent() {
   const router = useRouter();
   const { transcriptItems } = useTranscript();
