@@ -24,7 +24,7 @@ import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
 import { createRealtimeConnection } from "./lib/realtimeConnection";
 
 // Agent configs
-import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
+import { allAgentSets, defaultAgentSetKey, sharedConfig } from "@/app/agentConfigs";
 
 // Add language options
 const languageOptions = [
@@ -293,10 +293,9 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     const instructions = currentAgent?.instructions || "";
     const tools = currentAgent?.tools || [];
 
-    const sttPrompt = currentAgent?.sttPrompt || "以下語音的說話者是台灣人，請將語音轉換為文字。";
-    if (currentAgent?.sttPrompt) {
-      console.log("STT Prompt:", sttPrompt);
-    }
+    // Use shared config for sttPrompt
+    const { sttPrompt } = sharedConfig;
+    console.log("STT Prompt:", sttPrompt);
 
     const sessionUpdateEvent = {
       type: "session.update",
@@ -313,7 +312,6 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         },
         turn_detection: turnDetection,
         tools,
-
       },
     };
 
@@ -343,7 +341,8 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         role: "system",
       })
       console.log(`之前的對話紀錄:\n${chatHistory}`);
-      const startAsk = currentAgent?.startAsk || "接著繼續";
+      // Use shared config for startAsk
+      const { startAsk } = sharedConfig;
       console.log(startAsk);
       sendSimulatedUserMessage(startAsk, { hide: true, triggerResponse: true, });
     }

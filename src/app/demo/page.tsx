@@ -22,6 +22,9 @@ function DemoContent() {
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const appRef = useRef<AppRef>(null);
 
+  // Get sttPrompt and startAsk from shared config
+  const { sttPrompt, startAsk } = sharedConfig;
+
   useEffect(() => {
     if (isCallStarted && !isCallEnded) {
       const timer = setInterval(() => {
@@ -72,6 +75,8 @@ function DemoContent() {
         return !(
           content === "接著繼續" ||
           content === "以下是來自於台灣人的對話" ||
+          content === startAsk ||
+          content === sttPrompt ||
           content.length < 1
         );
       })
