@@ -23,8 +23,8 @@ function AnalysisReportContent() {
     const storedChatMessages = localStorage.getItem('chatMessages');
 
     const roleMap = {
-      user: '我',
-      assistant: '客戶王先生'
+      user: '主管',
+      assistant: 'AI下屬'
     }
 
     const storedChatHistory = getChatHistoryText(JSON.parse(storedChatMessages || '[]'), { roleMap })

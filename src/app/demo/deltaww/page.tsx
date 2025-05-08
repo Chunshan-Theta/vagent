@@ -36,6 +36,8 @@ function DynamicAnalysisContent() {
 
     endConversation,
     getChatHistoryText,
+    getChatHistory,
+
 
     isLoading,
 
@@ -160,12 +162,13 @@ function DynamicAnalysisContent() {
       // Store the analysis result and chat history in localStorage
       localStorage.setItem('analysisResult', JSON.stringify(analysisResult));
       localStorage.setItem('chatHistory', chatHistory);
+      localStorage.setItem('chatMessages', JSON.stringify(getChatHistory()));
 
       setAnalysisProgress(100);
 
       // Redirect to the analysis report page
       const back = encodeURIComponent('/demo/deltaww');
-      router.push(`/demo/analysis-report?back=${back}`);
+      router.push(`/demo/deltaww/report?back=${back}`);
     } catch (error) {
       // Clear the progress timer on error
       if (progressTimerRef.current) {

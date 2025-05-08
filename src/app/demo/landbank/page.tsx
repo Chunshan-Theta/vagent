@@ -40,6 +40,7 @@ function LandbankChatPage() {
     endConversation,
 
     getChatHistoryText,
+    getChatHistory,
 
     isLoading,
 
@@ -211,6 +212,7 @@ function LandbankChatPage() {
       // Store the analysis result and chat history in localStorage
       localStorage.setItem('analysisResult', JSON.stringify(analysisResult));
       localStorage.setItem('chatHistory', chatHistory);
+      localStorage.setItem('chatMessages', JSON.stringify(getChatHistory()));
 
       setAnalysisProgress(100);
 

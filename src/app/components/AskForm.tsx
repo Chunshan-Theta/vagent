@@ -1,5 +1,4 @@
 import React, { CSSProperties, useMemo } from 'react'
-import type { MessageItem, TextMessage } from '@/app/contexts/ChatContext'
 import './AskForm.scss'
 
 type AskFormItem = {

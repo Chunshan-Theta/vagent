@@ -13,6 +13,10 @@ import { v4 as uuidv4 } from "uuid";
 
 import { sharedConfig } from "@/app/agentConfigs";
 
+import * as utils from "./utils";
+
+import { toast } from 'react-toastify';
+
 
 
 /**
@@ -78,6 +82,21 @@ export function useAiChat(){
   const onSessionClose = ()=>{
     setIsPTTUserSpeaking(false);
   }
+  
+  const canPause = useMemo(() => {
+    // 如果原先並沒有連線，則不需要 pause ，所以狀態一律是 false
+    // 需要確保 AI 講完他想講的話，才可以掛斷電話
+    if(isPTTUserSpeaking){
+      // 找最後一則訊息
+      const items = transcriptItems.filter((item)=>item.type === 'MESSAGE')
+      const item = items[items.length - 1];
+      if(item && item.role === 'assistant' && item.status === 'DONE'){
+        // 如果最後一則訊息是 assistant 的話，則可以掛斷電話
+        return true;
+      }
+    }
+    return false;
+  }, [isPTTUserSpeaking, transcriptItems])
 
   // useEffect(()=>{
   //   console.log('data channel changed')
@@ -145,20 +164,24 @@ export function useAiChat(){
   const handleMicrophoneClick = () => {
     if (isLoading) {return;}
     if (isPTTUserSpeaking) {
-      handleTalkOff();  // 掛斷電話
+      if(canPause){
+        handleTalkOff();  // 掛斷電話
+      } else {
+        toast.info('系統回應中，需等待回應完成後再暫停對話。', {
+          position: 'top-center',
+          autoClose: 700,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: false,
+        });
+      }
     } else {
       handleTalkOn();  // 開始講話
     }
   };
 
-  const sttTextValid = (text:string)=>{
-    const invalid =       text === "接著繼續" ||
-      text === "以下是來自於台灣人的對話" ||
-      text === startAsk ||
-      text === sttPrompt || 
-      text.length < 1;
-    return !invalid;
-  }
+  const sttTextValid = utils.sttTextValid
 
   // Set isClient to true after component mounts (client-side only)
   useEffect(() => {
@@ -263,18 +286,22 @@ export function useAiChat(){
     }
   }
 
-  const getChatHistoryText = ()=>{
-    
+  type getChatHistoryTextOptions = {
+    roleMap?: {[role:string]: string};
+  }
+  const getChatHistoryText = (opts: getChatHistoryTextOptions = {})=>{
+    return utils.getChatHistoryText(transcriptItems, opts);
+  }
+
+  const getChatHistory = ()=>{
     const chatHistory = transcriptItems
-      .filter(item => item.type === 'MESSAGE')
-      .filter(item => {
-        // Skip messages that should be hidden
-        const content = item.title || '';
-        return sttTextValid(content);
-      })
-      .map(item => `${item.role}: ${item.title}`)
-      .join('\n\n');
-      return chatHistory;
+    .filter(item => item.type === 'MESSAGE')
+    .filter(item => {
+      // Skip messages that should be hidden
+      const content = item.title || '';
+      return sttTextValid(content);
+    })
+    return chatHistory;
   }
 
 
@@ -312,6 +339,7 @@ export function useAiChat(){
 
     sendSimulatedUserMessage,
 
+    getChatHistory,
     getChatHistoryText,
 
     handleTalkOn,
@@ -322,6 +350,7 @@ export function useAiChat(){
     addTranscriptMessage,
     clearTranscript,
     transcriptItems,
+    canPause,
 
     progressTimerRef,
     isLoading: isLoading,
