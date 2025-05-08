@@ -224,7 +224,7 @@ export function useAiChat(){
 
     triggerResponse?: boolean;
   }
-  const sendSimulatedUserMessage = (text: string, opts: sendSimulatedUserMessageOpts) => {
+  const sendSimulatedUserMessage = (text: string, opts: sendSimulatedUserMessageOpts = {}) => {
     const id = uuidv4().slice(0, 32);
     const role = opts.role || "user";
 
