@@ -76,6 +76,24 @@
     border-radius: 4px;
     border: 1px solid rgba(255, 107, 107, 0.3);
   }
+  .ask-form__loading {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3); /* 外圍淡色 */
+    border-top: 3px solid #ffffff; /* 頂部實色 */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 // 以下是針對特定主題的樣式覆蓋

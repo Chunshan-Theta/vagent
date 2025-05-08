@@ -25,6 +25,7 @@ type AskFormProps = {
   /** 對應不同風格樣式和配色 */
   theme?: 'default' | 'landbank' | 'deltaww'
   submitText?: string
+  loading?: boolean
   onSubmit?: (data: SubmitForm) => void
 }
 
@@ -109,9 +110,12 @@ const AskForm: React.FC<AskFormProps> = (props) => {
         }
       })}
       <div className="ask-form__submit">
-        <button type="button" className="ask-form__submit-button" onClick={btnSubmit}>
-          {submitText}
-        </button>
+        { props.loading && <div className="ask-form__loading"></div> }
+        { !props.loading &&
+          <button type="button" className="ask-form__submit-button" onClick={btnSubmit}>
+            {submitText}
+          </button>
+        }
       </div>
     </div>
   )
