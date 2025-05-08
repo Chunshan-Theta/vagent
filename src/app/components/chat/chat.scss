@@ -115,7 +115,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #ff9292;
+        background-color: #ff4343;
         border: none;
         border-radius: 50%;
 
@@ -124,23 +124,23 @@
         cursor: default;
 
         &.active {
-          background-color: #ff4343;
+          background-color: #28a745; // 改成綠色
           animation: pulse 1.5s infinite;
         }
         &:disabled {
           opacity: 0.7;
           animation: none;
         }
-
+      
         @keyframes pulse {
           0% {
-            box-shadow: 0 0 0 0 rgba(255, 67, 67, 0.7);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); // 綠色陰影
           }
           70% {
-            box-shadow: 0 0 0 10px rgba(255, 67, 67, 0);
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); // 綠色陰影
           }
           100% {
-            box-shadow: 0 0 0 0 rgba(255, 67, 67, 0);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); // 綠色陰影
           }
         }
       }

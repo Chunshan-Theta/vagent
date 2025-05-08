@@ -17,7 +17,7 @@ interface ChatViewProps {
 
   isEnd?: boolean
   isLoading?: boolean
-  isMicActive?: boolean
+  isRecording?: boolean
 
   onSubmit?: (text: string) => void
   onClickEnd?: () => void
@@ -28,15 +28,13 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const classNames = props.classNames || []
   const { background, onSubmit, onClickEnd, onMicrophoneClick } = props
   const { messageItems, inputText, updateInputText } = useChat()
+
+  /**
+   * 決定 mic 的 icon 是否顯示為"開啟狀態"
+   */
   const isMicActive = useMemo(() => {
-    return props.isMicActive || false
-  }, [props.isMicActive])
-
-  useEffect(() => {
-    console.log('[DDD] isMicActive', isMicActive)
-  }, [isMicActive])
-
-  // const [isMicActive, setIsMicActive] = useState(false)
+    return props.isRecording || false
+  }, [props.isRecording])
 
   const mClassNames = useMemo(() => {
     return ['chat', ...classNames]
@@ -57,7 +55,6 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
 
   const handleMicClick = () => {
     if (!disableInteraction && onMicrophoneClick) {
-      // setIsMicActive(!isMicActive)
       onMicrophoneClick()
     }
   }
@@ -94,14 +91,14 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
               type="text"
               placeholder={!isMicActive ? "通話未開始" : "請在此輸入..."}
               value={inputText}
-              disabled={!isInputDisabled}
+              disabled={isInputDisabled}
               onChange={(e) => updateInputText(e.target.value)}
               onKeyDown={(e) =>
                 e.key === 'Enter' && isMicActive && onSubmit && onSubmit(inputText)
               }
               style={{
-                opacity: !isInputDisabled ? 0.6 : 1,
-                cursor: !isInputDisabled ? 'not-allowed' : 'text'
+                opacity: isInputDisabled ? 0.6 : 1,
+                cursor: isInputDisabled ? 'text' : 'not-allowed'
               }}
             />
             <button
@@ -113,7 +110,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
                 opacity: dataChannel ? 1 : 0.8
               }}
             >
-              {isMicActive ? <FaMicrophone /> : <FaStop />}
+              {isMicActive ? <FaStop /> : <FaMicrophone /> }
             </button>
             <button
               className="send-button"
