@@ -216,7 +216,7 @@ function LandbankChatPage() {
   return (
     <div style={{ background: pageBackground }}>
       <ChatView
-        classNames={['ragflowStaff']}
+        classNames={['ragflowAgentInsurancePolicySale']}
         background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
