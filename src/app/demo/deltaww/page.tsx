@@ -240,7 +240,7 @@ function DynamicAnalysisContent() {
 
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="landbankAgent" />
+        <App ref={appRef} agentSetKey="chineseAgent" />
       </div>
     </div>
   );
