@@ -40,12 +40,24 @@ export interface AppRef {
 export type AppProps = {
   hideLogs?: boolean;
   agentSetKey?: string;
+
+  /** 第一次接通時 */
+  onSessionOpen?: () => void;
+  /** 第二次以後接通 */
+  onSessionResume?: () => void;
+  /** 每次中斷 */
+  onSessionClose?: () => void;
 };
 
 const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const hideLogs = props.hideLogs || false;
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
+  const noop = () => { };
+  const onSessionOpen = props.onSessionOpen ?? noop;
+  const onSessionResume = props.onSessionResume ?? noop;
+  const onSessionClose = props.onSessionClose ?? noop;
+
 
   const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
     useTranscript();
@@ -80,6 +92,9 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] =
     useState<boolean>(true);
+
+  /** 記錄 session 連線到 realtime 的次數 */
+  const [sessionStartTimes, setSessionStartTimes] = useState<number>(0);
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     if (dcRef.current && dcRef.current.readyState === "open") {
@@ -145,7 +160,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
           currentAgent
         );
       }
-      updateSession(true);
+      updateSession(sessionStartTimes === 0);
     }
   }, [selectedAgentConfigSet, selectedAgentName, sessionStatus, hideLogs]);
 
@@ -233,6 +248,8 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     setIsPTTUserSpeaking(false);
 
     logClientEvent({}, "disconnected");
+
+    onSessionClose();
   };
   type sendSimulatedUserMessageOpts = {
     hide?: boolean;
@@ -271,6 +288,14 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   };
 
   const updateSession = (shouldTriggerResponse: boolean = false) => {
+
+    // console.log('updateSession', {
+    //   selectedAgentName,
+    //   selectedAgentConfigSet,
+    //   isPTTActive,
+    //   shouldTriggerResponse,
+    //   transcriptItems,
+    // });
     sendClientEvent(
       { type: "input_audio_buffer.clear" },
       "clear audio buffer on session update"
@@ -316,26 +341,32 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     };
 
     sendClientEvent(sessionUpdateEvent);
+    // Format transcriptItems into readable chat history
+    const chatHistory = transcriptItems
+      .filter(item => item && item.type === 'MESSAGE' && item.role && item.title)
+      .map(item => `${item.role}: ${item.title}`)
+      .join('\n\n');
+
+    if (chatHistory) {
+      sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}`, {
+        hide: true,
+        role: "system",
+      })
+      console.log(`送出之前的對話紀錄:\n${chatHistory}`);
+    }
 
     if (shouldTriggerResponse) {
-      // Format transcriptItems into readable chat history
-      const chatHistory = transcriptItems
-        .filter(item => item && item.type === 'MESSAGE' && item.role && item.title)
-        .map(item => `${item.role}: ${item.title}`)
-        .join('\n\n');
-
-      if (chatHistory) {
-        sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}`, {
-          hide: true,
-          role: "system",
-        })
-      }
-      console.log(`之前的對話紀錄:\n${chatHistory}`);
       // Use shared config for startAsk
       const { startAsk } = sharedConfig;
-      console.log(startAsk);
       sendSimulatedUserMessage(startAsk, { hide: true, triggerResponse: true, });
     }
+    if (sessionStartTimes === 0) {
+      onSessionOpen();
+    } else {
+      sendSimulatedUserMessage('通話已恢復', { hide: false, triggerResponse: false, });
+      onSessionResume();
+    }
+    setSessionStartTimes((prev) => prev + 1);
   };
 
   const cancelAssistantSpeech = async () => {
@@ -497,6 +528,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
 
   const agentSetKey = props.agentSetKey || searchParams?.get("agentConfig") || "default";
 
+  // expose 給父元件
   useImperativeHandle(ref, () => ({
     disconnectFromRealtime,
     connectToRealtime

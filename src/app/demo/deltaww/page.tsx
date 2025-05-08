@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { TranscriptProvider, useTranscript } from "@/app/contexts/TranscriptContext";
 import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
@@ -35,8 +35,21 @@ function DynamicAnalysisContent() {
     progressTimerRef,
 
     endConversation,
-    getChatHistoryText
+    getChatHistoryText,
+
+    onSessionOpen,
+    onSessionResume,
+    onSessionClose
   } = useAiChat();
+
+  useEffect(() => {
+    document.title = '部門溝通情境對話';
+  }, []);
+
+  const [localLoading, setLocalLoading] = useState(false);
+  const loading = useMemo(() => {
+    return localLoading;
+  }, [localLoading])
 
   const [pageBackground] = useState("#0F2D38");
   const [chatBackground] = useState("#173944");
@@ -177,8 +190,36 @@ function DynamicAnalysisContent() {
       form.emitError('password', '密碼長度過長')
       return
     }
+    setLocalLoading(true);
+    fetch('/api/deltaww/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        account: account,
+        password: password,
+      }),
+      signal: AbortSignal.timeout(3000)
+    }).then((res) => {
+      return res.json();
+    }).then((data) => {
+      if (data.error) {
+        // 登入失敗，得到錯誤訊息
+        alert(data.message);
+        return;
+      } else {
+        // 登入成功
+        // TODO 後續或許要實現保留 token 等操作
+        setScene('chat');
+        return;
+      }
+    }).catch(() => {
+      alert('登入失敗，請稍後再試');
+    }).finally(() => {
+      setLocalLoading(false);
+    })
 
-    setScene('chat');
   }
   // 等切換到 chat 之後要自動開 mic
   useEffect(() => {
@@ -209,6 +250,7 @@ function DynamicAnalysisContent() {
             submitText="送出並開始"
             onSubmit={onSubmitAskForm}
             theme="deltaww"
+            loading={loading}
           ></AskForm>
         </div>
       </div>
@@ -222,10 +264,11 @@ function DynamicAnalysisContent() {
         background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
-        isMicActive={isPTTUserSpeaking}
+        isRecording={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
+
       ></ChatView>
     )
   }
@@ -240,7 +283,13 @@ function DynamicAnalysisContent() {
 
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="chineseAgent" />
+        <App
+          ref={appRef}
+          agentSetKey="chineseAgent"
+          onSessionOpen={onSessionOpen}
+          onSessionResume={onSessionResume}
+          onSessionClose={onSessionClose}
+        />
       </div>
     </div>
   );

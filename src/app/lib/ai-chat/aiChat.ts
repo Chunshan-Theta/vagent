@@ -57,6 +57,11 @@ export function useAiChat(){
       setIsSessionStarted(true);
     }
   };
+
+  const onSessionOpen = ()=>{}
+  const onSessionResume = ()=>{}
+  const onSessionClose = ()=>{}
+
   useEffect(()=>{
     console.log('data channel changed')
   }, [appContext.dataChannel])
@@ -245,6 +250,10 @@ export function useAiChat(){
     router,
     isClient,
     appRef,
+
+    onSessionOpen,
+    onSessionResume,
+    onSessionClose,
 
     inputText,
     updateInputText,

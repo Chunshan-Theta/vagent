@@ -39,9 +39,17 @@ function LandbankChatPage() {
 
     endConversation,
 
-    getChatHistoryText
+    getChatHistoryText,
+    
+    onSessionOpen,
+    onSessionResume,
+    onSessionClose
   } = useAiChat();
 
+  
+  useEffect(() => {
+    document.title = '業務陪練劇本';
+  }, []);
   // styles start
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [chatBackground] = useState("linear-gradient(rgb(46, 74, 63) 0%, rgb(26, 42, 52) 100%)")
@@ -237,6 +245,7 @@ function LandbankChatPage() {
     updateInputText('');
   }
 
+  
   function formScene() {
     const bgStyles = {
       background: 'linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)',
@@ -266,7 +275,7 @@ function LandbankChatPage() {
         background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
-        isMicActive={isPTTUserSpeaking}
+        isRecording={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
@@ -284,7 +293,13 @@ function LandbankChatPage() {
 
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="landbankAgent" />
+        <App
+          ref={appRef}
+          agentSetKey="landbankAgent"
+          onSessionOpen={onSessionOpen}
+          onSessionResume={onSessionResume}
+          onSessionClose={onSessionClose}
+        />
       </div>
     </div>
   );
