@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { use, useMemo, useState } from 'react'
 
 import { useChat } from '@/app/contexts/ChatContext'
 import { useAppContext } from '@/app/contexts/AppContext'
@@ -28,6 +28,9 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const classNames = props.classNames || []
   const { background, onSubmit, onClickEnd, onMicrophoneClick } = props
   const { messageItems, inputText, updateInputText } = useChat()
+  const isLoading = useMemo(() => {
+    return props.isLoading || false
+  }, [props.isLoading])
 
   /**
    * 決定 mic 的 icon 是否顯示為"開啟狀態"
@@ -60,7 +63,24 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   }
 
   // Determine if input and submit button should be disabled
-  const isInputDisabled = disableInteraction || !dataChannel || isMicActive
+  const isInputDisabled = disableInteraction || !isMicActive
+
+  const micState = useMemo(() => {
+    const state = {
+      className: '',
+      disabled: false,
+    }
+    if (isLoading) {
+      state.disabled = true
+    }
+    if (isMicActive) {
+      state.className = 'active'
+    }
+    if (disableInteraction) {
+      state.className = 'disabled'
+    }
+    return state
+  }, [isLoading, isMicActive, disableInteraction])
 
   return (
     <div className={mClassNames.join(' ')} style={chatStyle}>
@@ -79,7 +99,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
         </div>
         <div className="chat-footer">
           {/* if loading => add loading icon */}
-          {props.isLoading && (
+          {isLoading && (
             <div style={{ width: '100%', textAlign: 'center' }}>
               <div className="loading-icon">
               </div>
@@ -98,19 +118,18 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
               }
               style={{
                 opacity: isInputDisabled ? 0.6 : 1,
-                cursor: isInputDisabled ? 'text' : 'not-allowed'
+                cursor: isInputDisabled ? 'not-allowed' : 'text'
               }}
             />
             <button
-              className={`mic-icon ${isMicActive ? 'active' : 'disabled'}`}
-              disabled={disableInteraction}
+              className={`mic-icon ${micState.className}`}
+              disabled={micState.disabled}
               onClick={handleMicClick}
               style={{
-                color: 'white',
-                opacity: dataChannel ? 1 : 0.8
+                color: 'white'
               }}
             >
-              {isMicActive ? <FaStop /> : <FaMicrophone /> }
+              {isMicActive ? <FaStop /> : <FaMicrophone />}
             </button>
             <button
               className="send-button"

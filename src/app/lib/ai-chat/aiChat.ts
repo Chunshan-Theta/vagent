@@ -1,5 +1,5 @@
 
-import React, { Suspense, useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { TranscriptProvider, useTranscript } from "@/app/contexts/TranscriptContext";
 import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
@@ -41,6 +41,15 @@ export function useAiChat(){
   const [isClient, setIsClient] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
+  const [waitRealtimeConnection, setWaitRealtimeConnection] = useState(false);
+
+  const isLoading = useMemo(() => {
+    return waitRealtimeConnection;
+  }, [waitRealtimeConnection])
+
+  useEffect(()=>{
+    console.log('[aichat] isLoading', isLoading);
+  }, [isLoading])
 
   // Clear transcript on page refresh
   useEffect(() => {
@@ -50,7 +59,7 @@ export function useAiChat(){
 
   const handleTalkOn = async () => {
     // alert("handleTalkOn");
-    setIsPTTUserSpeaking(true);
+    setWaitRealtimeConnection(true);
 
     if (appRef.current) {
       await appRef.current.connectToRealtime();
@@ -58,13 +67,21 @@ export function useAiChat(){
     }
   };
 
-  const onSessionOpen = ()=>{}
-  const onSessionResume = ()=>{}
-  const onSessionClose = ()=>{}
+  const onSessionOpen = ()=>{
+    setWaitRealtimeConnection(false);
+    setIsPTTUserSpeaking(true);
+  }
+  const onSessionResume = ()=>{
+    setWaitRealtimeConnection(false);
+    setIsPTTUserSpeaking(true);
+  }
+  const onSessionClose = ()=>{
+    setIsPTTUserSpeaking(false);
+  }
 
-  useEffect(()=>{
-    console.log('data channel changed')
-  }, [appContext.dataChannel])
+  // useEffect(()=>{
+  //   console.log('data channel changed')
+  // }, [appContext.dataChannel])
   useEffect(()=>{
     if(appContext.dataChannel?.readyState){
       console.log('data channel readyState update', appContext.dataChannel?.readyState)
@@ -126,6 +143,7 @@ export function useAiChat(){
   };
 
   const handleMicrophoneClick = () => {
+    if (isLoading) {return;}
     if (isPTTUserSpeaking) {
       handleTalkOff();  // 掛斷電話
     } else {
@@ -198,10 +216,21 @@ export function useAiChat(){
     }
   })
 
-  
-  const sendSimulatedUserMessage = (text: string) => {
+  type sendSimulatedUserMessageOpts = {
+    hide?: boolean;
+    role?: 'user' | 'assistant' | 'system';
+
+    noAppendToTranscript?: boolean;
+
+    triggerResponse?: boolean;
+  }
+  const sendSimulatedUserMessage = (text: string, opts: sendSimulatedUserMessageOpts) => {
     const id = uuidv4().slice(0, 32);
-    addTranscriptMessage(id, "user", text, true);
+    const role = opts.role || "user";
+
+    if (!opts.noAppendToTranscript) {
+      addTranscriptMessage(id, role as any, text, !!opts.hide);
+    }
 
     sendClientEvent(
       {
@@ -209,17 +238,20 @@ export function useAiChat(){
         item: {
           id,
           type: "message",
-          role: "user",
+          role: role,
           content: [{ type: "input_text", text }],
         },
       },
       "(simulated user text message)"
     );
-    sendClientEvent(
-      { type: "response.create" },
-      "(trigger response after simulated user text message)"
-    );
+    if (opts.triggerResponse) {
+      sendClientEvent(
+        { type: "response.create" },
+        "(trigger response after simulated user text message)"
+      );
+    }
   };
+
   const endConversation = ()=>{
     setIsAnalyzing(true);
     setIsCallEnded(true);
@@ -292,6 +324,7 @@ export function useAiChat(){
     transcriptItems,
 
     progressTimerRef,
+    isLoading: isLoading,
 
     endConversation
   }

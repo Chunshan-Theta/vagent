@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { TranscriptProvider, useTranscript } from "@/app/contexts/TranscriptContext";
 import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
@@ -40,16 +40,25 @@ function LandbankChatPage() {
     endConversation,
 
     getChatHistoryText,
-    
+
+    isLoading,
+
     onSessionOpen,
     onSessionResume,
     onSessionClose
   } = useAiChat();
 
-  
+
   useEffect(() => {
     document.title = '業務陪練劇本';
   }, []);
+  const [localLoading, setLocalLoading] = useState(false);
+  const loading = useMemo(() => {
+    return localLoading || isLoading || isAnalyzing;
+  }, [localLoading, isLoading, isAnalyzing])
+  useEffect(() => {
+    console.log('[deltaww] loading', loading);
+  }, [loading])
   // styles start
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [chatBackground] = useState("linear-gradient(rgb(46, 74, 63) 0%, rgb(26, 42, 52) 100%)")
@@ -226,7 +235,7 @@ function LandbankChatPage() {
     const datas = form.datas
     console.log('name:', datas.name)
     const name = (datas.name || '').trim()
-    if(!name){
+    if (!name) {
       form.emitError('name', '請務必輸入名字')
       return
     }
@@ -234,18 +243,18 @@ function LandbankChatPage() {
     setScene('chat');
   }
   // 等切換到 chat 之後要自動開 mic
-  useEffect(()=>{
+  useEffect(() => {
     if (scene === 'chat') {
       handleTalkOn();
     }
   }, [scene])
 
   const onSubmitText = () => {
-    sendSimulatedUserMessage(inputText);
+    sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true });
     updateInputText('');
   }
 
-  
+
   function formScene() {
     const bgStyles = {
       background: 'linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)',
@@ -274,7 +283,7 @@ function LandbankChatPage() {
         classNames={['landbank']}
         background={chatBackground}
         isEnd={isCallEnded}
-        isLoading={isAnalyzing}
+        isLoading={isLoading}
         isRecording={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}

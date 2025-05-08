@@ -37,6 +37,8 @@ function DynamicAnalysisContent() {
     endConversation,
     getChatHistoryText,
 
+    isLoading,
+
     onSessionOpen,
     onSessionResume,
     onSessionClose
@@ -48,8 +50,11 @@ function DynamicAnalysisContent() {
 
   const [localLoading, setLocalLoading] = useState(false);
   const loading = useMemo(() => {
-    return localLoading;
-  }, [localLoading])
+    return localLoading || isLoading || isAnalyzing;
+  }, [localLoading, isLoading, isAnalyzing])
+  useEffect(()=>{
+    console.log('[deltaww] loading', loading);
+  }, [loading])
 
   const [pageBackground] = useState("#0F2D38");
   const [chatBackground] = useState("#173944");
@@ -229,7 +234,7 @@ function DynamicAnalysisContent() {
   }, [scene])
 
   const onSubmitText = () => {
-    sendSimulatedUserMessage(inputText);
+    sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true });
     updateInputText('');
   }
 
@@ -263,7 +268,7 @@ function DynamicAnalysisContent() {
         classNames={['default']}
         background={chatBackground}
         isEnd={isCallEnded}
-        isLoading={isAnalyzing}
+        isLoading={loading}
         isRecording={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}

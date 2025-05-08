@@ -348,7 +348,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       .join('\n\n');
 
     if (chatHistory) {
-      sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}`, {
+      sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}\n\n你的角色是 assistant`, {
         hide: true,
         role: "system",
       })
