@@ -6,8 +6,8 @@ import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata: Metadata = {
-  title: "Realtime API Agents",
-  description: "A demo app from OpenAI.",
+  title: "Ai Coach",
+  description: "VIP trial",
 };
 
 export default function RootLayout({
