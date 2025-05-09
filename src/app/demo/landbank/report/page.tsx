@@ -27,7 +27,7 @@ function AnalysisReportContent() {
       assistant: '客戶王先生'
     }
 
-    const storedChatHistory = getChatHistoryText(JSON.parse(storedChatMessages || '[]'), { roleMap })
+    const storedChatHistory = getChatHistoryText(JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system'), { roleMap })
 
     if (storedAnalysis && storedChatHistory) {
       try {
