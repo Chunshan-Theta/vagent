@@ -40,6 +40,7 @@ export interface AppRef {
 export type AppProps = {
   hideLogs?: boolean;
   agentSetKey?: string;
+  agentName?: string;
 
   /** 第一次接通時 */
   onSessionOpen?: () => void;
@@ -67,7 +68,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const logClientEvent = eventContext.logClientEvent;
   const logServerEvent = eventContext.logServerEvent;
 
-  const [selectedAgentName, setSelectedAgentName] = useState<string>("");
+  const [selectedAgentName, setSelectedAgentName] = useState<string>(props.agentName ?? "");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
     useState<AgentConfig[] | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");

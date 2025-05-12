@@ -12,6 +12,7 @@ export interface Tool {
   id: number;
   tool_id: string;
   name: string;
+  tool_type: string;
   api_url: string | null;
   api_key: string | null;
   agent_id: string | null;
@@ -47,7 +48,7 @@ export async function updateToolConfig(
 export async function createTool(
   toolId: string, 
   name: string, 
-  config: Partial<Pick<Tool, 'api_url' | 'api_key' | 'agent_id' | 'session_id'>>
+  config: Partial<Pick<Tool, 'tool_type' | 'api_url' | 'api_key' | 'agent_id' | 'session_id'>>
 ): Promise<Tool> {
   const columns = ['tool_id', 'name', ...Object.keys(config)];
   const values = [toolId, name, ...Object.values(config)];

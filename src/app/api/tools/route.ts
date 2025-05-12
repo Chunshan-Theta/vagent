@@ -1,83 +1,50 @@
 import { NextResponse } from 'next/server';
-import { createTool, getToolConfig, updateToolConfig } from '@/db';
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
+});
+
+export async function GET() {
+  try {
+    const result = await pool.query('SELECT * FROM tools ORDER BY created_at DESC');
+    return NextResponse.json({ success: true, tools: result.rows });
+  } catch (error) {
+    console.error('Error fetching tools:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch tools' },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { tool_id, name, api_url, api_key, agent_id, session_id } = body;
+    const { name, tool_type, api_url, api_key, agent_id, session_id } = await request.json();
 
-    if (!tool_id || !name) {
+    if (!name || !tool_type) {
       return NextResponse.json(
-        { error: 'tool_id and name are required' },
+        { success: false, error: 'Name and tool type are required' },
         { status: 400 }
       );
     }
 
-    const tool = await createTool(tool_id, name, {
-      api_url,
-      api_key,
-      agent_id,
-      session_id
-    });
+    const result = await pool.query(
+      `INSERT INTO tools (tool_id, name, tool_type, api_url, api_key, agent_id, session_id)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [name, tool_type, api_url, api_key, agent_id, session_id]
+    );
 
-    return NextResponse.json(tool);
+    return NextResponse.json({ success: true, tool: result.rows[0] });
   } catch (error) {
     console.error('Error creating tool:', error);
     return NextResponse.json(
-      { error: `Failed to create tool: ${error}` },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const toolId = searchParams.get('tool_id');
-
-    if (!toolId) {
-      return NextResponse.json(
-        { error: 'tool_id is required' },
-        { status: 400 }
-      );
-    }
-
-    const tool = await getToolConfig(toolId);
-    if (!tool) {
-      return NextResponse.json(
-        { error: 'Tool not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(tool);
-  } catch (error) {
-    console.error('Error getting tool:', error);
-    return NextResponse.json(
-      { error: 'Failed to get tool' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    const body = await request.json();
-    const { tool_id, ...updates } = body;
-
-    if (!tool_id) {
-      return NextResponse.json(
-        { error: 'tool_id is required' },
-        { status: 400 }
-      );
-    }
-
-    const tool = await updateToolConfig(tool_id, updates);
-    return NextResponse.json(tool);
-  } catch (error) {
-    console.error('Error updating tool:', error);
-    return NextResponse.json(
-      { error: 'Failed to update tool' },
+      { success: false, error: 'Failed to create tool' },
       { status: 500 }
     );
   }

@@ -91,7 +91,7 @@ const ragflowAgentInsurancePolicySale: AgentConfig = {
       console.info('RAG by ragflowAgentInsurancePolicySale:', question);
 
       try {
-        const response = await fetch('/api/ragflow', {
+        const response = await fetch(`/api/tools/5036ad47-d3bc-457f-b81f-3b5d87f14774/use`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

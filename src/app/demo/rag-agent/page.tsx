@@ -226,7 +226,7 @@ function LandbankChatPage() {
       ></ChatView>
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="ragflowAgent" />
+        <App ref={appRef} agentSetKey="ragflowAgent" agentName="ragflowAgentInsurancePolicySale"/>
       </div>
     </div>
   );

@@ -1,16 +1,32 @@
 import { NextResponse } from 'next/server';
+import { getToolConfig } from '@/db';
 
 export async function POST(request: Request) {
   try {
-    const { question } = await request.json();
+    const { question, toolId } = await request.json();
     
-    const apiUrl = process.env.RAGFLOW_API_URL;
-    const agentId = process.env.RAGFLOW_AGENT_ID;
-    const apiKey = process.env.RAGFLOW_API_KEY;
-    const sessionId = process.env.RAGFLOW_SESSION_ID;
+    if (!toolId) {
+      return NextResponse.json(
+        { success: false, error: 'toolId is required' },
+        { status: 400 }
+      );
+    }
+
+    const toolConfig = await getToolConfig(toolId);
+    if (!toolConfig) {
+      return NextResponse.json(
+        { success: false, error: 'Tool configuration not found' },
+        { status: 404 }
+      );
+    }
+
+    const apiUrl = toolConfig.api_url || "https://ragflow.lazyinwork.com/api/v1";
+    const agentId = toolConfig.agent_id;
+    const apiKey = toolConfig.api_key;
+    const sessionId = toolConfig.session_id;
 
     if (!apiUrl || !agentId || !apiKey || !sessionId) {
-      throw new Error('Missing required environment variables');
+      throw new Error('Missing required tool configuration');
     }
 
     const response = await fetch(`${apiUrl}/agents/${agentId}/completions`, {
@@ -21,6 +37,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         question,
+        tool_id: toolId,
         stream: false,
         session_id: sessionId
       })
@@ -35,7 +52,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('RAG service error:', error);
     return NextResponse.json(
-      { success: false, error: "Error communicating with RAG service" },
+      { success: false, error: `Error communicating with RAG service: ${error}` },
       { status: 500 }
     );
   }
