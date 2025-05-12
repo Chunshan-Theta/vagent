@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
+    "@types/pg": "^8.15.1",
     "canvas-confetti": "^1.9.3",
     "mitt": "^3.0.1",
     "next": "15.1.4",
     "openai": "^4.77.3",
+    "pg": "^8.15.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
