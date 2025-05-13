@@ -1,4 +1,4 @@
-import { AgentConfig, Tool } from "@/app/types";
+import { AgentConfig, Tool, TranscriptItem } from "@/app/types";
 
 /**
  * This defines and adds "transferAgents" tool dynamically based on the specified downstreamAgents on each agent.
@@ -46,7 +46,7 @@ export function injectTransferTools(agentDefs: AgentConfig[]): AgentConfig[] {
             destination_agent: {
               type: "string",
               description:
-                "The more specialized destination_agent that should handle the user’s intended request.",
+                "The more specialized destination_agent that should handle the user's intended request.",
               enum: downstreamAgents.map((dAgent) => dAgent.name),
             },
           },
@@ -78,3 +78,4 @@ export function injectTransferTools(agentDefs: AgentConfig[]): AgentConfig[] {
 
   return agentDefs;
 }
+

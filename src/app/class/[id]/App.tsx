@@ -7,9 +7,9 @@ import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
 
 // UI components
-import Transcript from "./components/Transcript";
-import Events from "./components/Events";
-import BottomToolbar from "./components/BottomToolbar";
+import Transcript from "@/app/components/Transcript";
+import Events from "@/app/components/Events";
+import BottomToolbar from "@/app/components/BottomToolbar";
 
 // Types
 import { AgentConfig, SessionStatus } from "@/app/types";
@@ -18,10 +18,10 @@ import { AgentConfig, SessionStatus } from "@/app/types";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useAppContext } from "@/app/contexts/AppContext";
-import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
+import { useHandleServerEvent } from "@/app/hooks/useHandleServerEvent";
 
 // Utilities
-import { createRealtimeConnection } from "./lib/realtimeConnection";
+import { createRealtimeConnection } from "@/app/lib/realtimeConnection";
 
 // Agent configs
 import { allAgentSets, defaultAgentSetKey, sharedConfig } from "@/app/agentConfigs";
@@ -39,9 +39,7 @@ export interface AppRef {
 
 export type AppProps = {
   hideLogs?: boolean;
-  agentSetKey?: string;
-  agentName?: string;
-
+  agentConfig?: AgentConfig;
   /** 第一次接通時 */
   onSessionOpen?: () => void;
   /** 第二次以後接通 */
@@ -49,6 +47,8 @@ export type AppProps = {
   /** 每次中斷 */
   onSessionClose?: () => void;
 };
+
+
 
 const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const hideLogs = props.hideLogs || false;
@@ -68,7 +68,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const logClientEvent = eventContext.logClientEvent;
   const logServerEvent = eventContext.logServerEvent;
 
-  const [selectedAgentName, setSelectedAgentName] = useState<string>(props.agentName ?? "");
+  const [selectedAgentName, setSelectedAgentName] = useState<string>(props.agentConfig?.name ?? "");
   const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
     useState<AgentConfig[] | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("zh");
@@ -123,28 +123,14 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   });
 
   useEffect(() => {
-    const agentSetKey = props.agentSetKey || searchParams?.get("agentConfig") || defaultAgentSetKey;
-    const agentSet = allAgentSets[agentSetKey];
+    const agentConfig = props.agentConfig;
 
-    if (agentSet) {
-      setSelectedAgentConfigSet(agentSet);
-
-      // Set the default agent name if not already set
-      if (!selectedAgentName && agentSet.length > 0) {
-        setSelectedAgentName(agentSet[0].name);
-      }
-
-      // Set the language based on the agent configuration
+    if (agentConfig) {
+      setSelectedAgentConfigSet([agentConfig]);
+      setSelectedAgentName(agentConfig.name);
       setSelectedLanguage("zh");
-
-      // If language is Chinese, ensure we're using the Chinese agent
-      if (selectedLanguage === "zh" && !allAgentSets[agentSetKey]) {
-        const url = new URL(window.location.toString());
-        url.searchParams.set("agentConfig", "chineseAgent");
-        window.location.replace(url.toString());
-      }
     }
-  }, [searchParams, selectedAgentName, selectedLanguage]);
+  }, [props.agentConfig]);
 
   useEffect(() => {
     if (
@@ -447,36 +433,9 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     }
   };
 
-  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newAgentConfig = e.target.value;
-    const url = new URL(window.location.toString());
-    url.searchParams.set("agentConfig", newAgentConfig);
-    window.location.replace(url.toString());
-  };
-
-  const handleSelectedAgentChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const newAgentName = e.target.value;
-    setSelectedAgentName(newAgentName);
-  };
-
-  // Add language change handler
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value;
     setSelectedLanguage(newLanguage);
-
-    // If language is Chinese, select the Chinese agent set
-    if (newLanguage === "zh") {
-      const url = new URL(window.location.toString());
-      url.searchParams.set("agentConfig", "chineseAgent");
-      window.location.replace(url.toString());
-    } else {
-      // If language is English, select the default agent set
-      const url = new URL(window.location.toString());
-      url.searchParams.set("agentConfig", defaultAgentSetKey);
-      window.location.replace(url.toString());
-    }
   };
 
   useEffect(() => {
@@ -527,8 +486,6 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     setMounted(true);
   }, []);
 
-  const agentSetKey = props.agentSetKey || searchParams?.get("agentConfig") || "default";
-
   // expose 給父元件
   useImperativeHandle(ref, () => ({
     disconnectFromRealtime,
@@ -554,19 +511,19 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         </div>
         <div className="flex items-center">
           {!hideLogs && (
-            <>
+            <div className="flex items-center">
               <label className="flex items-center text-base gap-1 mr-2 font-medium">
-                Scenario
+                Language
               </label>
               <div className="relative inline-block">
                 <select
-                  value={agentSetKey}
-                  onChange={handleAgentChange}
+                  value={selectedLanguage}
+                  onChange={handleLanguageChange}
                   className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
                 >
-                  {Object.keys(allAgentSets).map((agentKey) => (
-                    <option key={agentKey} value={agentKey}>
-                      {agentKey}
+                  {languageOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
@@ -580,69 +537,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
                   </svg>
                 </div>
               </div>
-
-              <div className="flex items-center ml-6">
-                <label className="flex items-center text-base gap-1 mr-2 font-medium">
-                  Language
-                </label>
-                <div className="relative inline-block">
-                  <select
-                    value={selectedLanguage}
-                    onChange={handleLanguageChange}
-                    className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
-                  >
-                    {languageOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
-                    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.44l3.71-3.21a.75.75 0 111.04 1.08l-4.25 3.65a.75.75 0 01-1.04 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {agentSetKey && (
-                <div className="flex items-center ml-6">
-                  <label className="flex items-center text-base gap-1 mr-2 font-medium">
-                    Agent
-                  </label>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedAgentName}
-                      onChange={handleSelectedAgentChange}
-                      className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
-                    >
-                      {selectedAgentConfigSet?.map(agent => (
-                        <option key={agent.name} value={agent.name}>
-                          {agent.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
-                      <svg
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.23 7.21a.75.75 0 011.06.02L10 10.44l3.71-3.21a.75.75 0 111.04 1.08l-4.25 3.65a.75.75 0 01-1.04 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
       </div>

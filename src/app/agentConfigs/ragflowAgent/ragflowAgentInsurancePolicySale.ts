@@ -79,7 +79,7 @@ const ragflowAgentInsurancePolicySale: AgentConfig = {
         properties: {
           question: {
             type: "string",
-            description: "要發送給RAG的特定問題"
+            description: "要發送的特定問題"
           }
         },
         required: ["question"]
@@ -91,43 +91,26 @@ const ragflowAgentInsurancePolicySale: AgentConfig = {
       console.info('RAG by ragflowAgentInsurancePolicySale:', question);
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_RAGFLOW_API_URL;
-        const agentId = 'c9b785a62bb211f0a2610242ac120005';
-        const apiKey = process.env.NEXT_PUBLIC_RAGFLOW_API_KEY;
-        const sessionId = '556c310a2bbd11f085320242ac120005';
-
-        if (!apiUrl || !agentId || !apiKey || !sessionId) {
-          throw new Error('Missing required environment variables');
-        }
-
-        const response = await fetch(`${apiUrl}/agents/${agentId}/completions`, {
+        const response = await fetch(`/api/tools/5036ad47-d3bc-457f-b81f-3b5d87f14774/use`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          } as HeadersInit,
-          body: JSON.stringify({
-            question: question,
-            stream: false,
-            session_id: sessionId
-          })
+          },
+          body: JSON.stringify({ question })
         });
 
         if (!response.ok) {
-          throw new Error('RAG流程聊天API請求失敗');
+          throw new Error('RAG API request failed');
         }
-        console.info('RAG response 結果:', response.text);
+
         const data = await response.json();
-        console.info('RAG搜尋結果:', data);
-        return {
-          success: true,
-          response: data.response
-        };
+        console.info('RAG search results:', data);
+        return data;
       } catch (error) {
-        console.error('RAG流程聊天錯誤:', error);
+        console.error('RAG chat error:', error);
         return {
           success: false,
-          error: "與RAG流程聊天API通信時發生錯誤"
+          error: "Error communicating with RAG service"
         };
       }
     }
