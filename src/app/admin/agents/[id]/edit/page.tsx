@@ -4,31 +4,14 @@ import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Agent, Tool } from '@/app/types/agent';
 
-const agentSchema = z.object({
-  name: z.string(),
-  public_description: z.string(),
-  prompt_name: z.string(),
-  prompt_personas: z.string(),
-  prompt_customers: z.string(),
-  prompt_tool_logics: z.string(),
-  prompt_voice_styles: z.string().optional(),
-  prompt_conversation_modes: z.string().optional(),
-  prompt_prohibited_phrases: z.string().optional(),
-  tools: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string()
-  })).optional(),
-});
-
-type Agent = z.infer<typeof agentSchema> & { id: number };
 
 export default function EditAgentPage({ params }: { params: any }) {
   const router = useRouter();
   const [formData, setFormData] = useState<Partial<Agent>>({});
   const [error, setError] = useState<string | null>(null);
-  const [availableTools, setAvailableTools] = useState<Array<{ id: string; name: string; tool_type: string }>>([]);
+  const [availableTools, setAvailableTools] = useState<Array<any>>([]);
 
   useEffect(() => {
     fetchAgent();
@@ -65,11 +48,21 @@ export default function EditAgentPage({ params }: { params: any }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const body = {
+      ...formData,
+      tools: formData.tools?.map((tool: Tool) => ({
+        id: tool.id,
+        name: tool.name,
+        description: tool.description,
+        tool_id: tool.tool_id
+      }))
+    };
+
     try {
       const response = await fetch(`/api/agents/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) throw new Error('Failed to update agent');
@@ -198,33 +191,33 @@ export default function EditAgentPage({ params }: { params: any }) {
         <div>
           <label className="block text-sm font-medium text-gray-700">Tools</label>
           <div className="space-y-2">
-            {availableTools.map((tool) => {
-              const isSelected = formData.tools?.some(t => t.id === tool.id);
-              const selectedTool = formData.tools?.find(t => t.id === tool.id);
+            {availableTools.map((toolConfig: any) => {
+              const isSelected = formData.tools?.some(t => t.id === toolConfig.id);
+              const selectedTool = formData.tools?.find(t => t.id === toolConfig.id);
               
               return (
-                <div key={tool.id} className="flex items-center space-x-4 p-2 border rounded">
+                <div key={toolConfig.id} className="flex items-center space-x-4 p-2 border rounded">
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={(e) => {
-                      const newTools = e.target.checked
-                        ? [...(formData.tools || []), { id: tool.id, name: tool.name, description: '' }]
-                        : (formData.tools || []).filter(t => t.id !== tool.id);
+                      const newTools: Tool[] = e.target.checked
+                        ? [...(formData.tools || []), { id: toolConfig.id, name: toolConfig.name, description: '', tool_id: toolConfig.tool_id }]
+                        : (formData.tools || []).filter(t => t.id !== toolConfig.id);
                       setFormData({ ...formData, tools: newTools });
                     }}
                     className="h-4 w-4 text-blue-600"
                   />
                   <div className="flex-1">
-                    <div className="font-medium">{tool.name}</div>
-                    <div className="text-sm text-gray-500">{tool.tool_type}</div>
+                    <div className="font-medium">{toolConfig.name}</div>
+                    <div className="text-sm text-gray-500">{toolConfig.tool_type}</div>
                     {isSelected && (
                       <input
                         type="text"
                         value={selectedTool?.description || ''}
                         onChange={(e) => {
                           const newTools = (formData.tools || []).map(t =>
-                            t.id === tool.id ? { ...t, description: e.target.value } : t
+                              t.id === toolConfig.id ? { ...t, description: e.target.value } : t
                           );
                           setFormData({ ...formData, tools: newTools });
                         }}

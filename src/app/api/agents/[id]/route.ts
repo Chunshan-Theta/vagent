@@ -77,7 +77,7 @@ export async function PUT(
            prompt_personas = $4, prompt_customers = $5, prompt_tool_logics = $6,
            prompt_voice_styles = $7, prompt_conversation_modes = $8,
            prompt_prohibited_phrases = $9, tools = $10, updated_at = CURRENT_TIMESTAMP
-       WHERE agent_id = $11
+       WHERE id = $11
        RETURNING *`,
       [
         name,
@@ -119,7 +119,7 @@ export async function DELETE(
   const { params } = context;
   try {
     const result = await pool.query(
-      'DELETE FROM agents WHERE agent_id = $1 RETURNING *',
+      'DELETE FROM agents WHERE id = $1 RETURNING *',
       [params.id]
     );
 

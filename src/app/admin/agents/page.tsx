@@ -3,25 +3,9 @@
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import Link from 'next/link';
+import { Agent } from '@/app/types/agent';
 
-const agentSchema = z.object({
-  name: z.string(),
-  public_description: z.string(),
-  prompt_name: z.string(),
-  prompt_personas: z.string(),
-  prompt_customers: z.string(),
-  prompt_tool_logics: z.string(),
-  prompt_voice_styles: z.string().optional(),
-  prompt_conversation_modes: z.string().optional(),
-  prompt_prohibited_phrases: z.string().optional(),
-  tools: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string()
-  })).optional(),
-});
 
-type Agent = z.infer<typeof agentSchema> & { id: number };
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);

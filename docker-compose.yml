@@ -52,6 +52,23 @@ services:
     networks:
       - vagent-network
 
+  pgadmin:
+    image: dpage/pgadmin4:7.5
+    user: root
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "5050:5050"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: 5050
+      PGADMIN_CONFIG_WTF_CSRF_CHECK_DEFAULT: "False"
+    depends_on:
+      - db
+    networks:
+      - vagent-network
+
 volumes:
   postgres_data:
 

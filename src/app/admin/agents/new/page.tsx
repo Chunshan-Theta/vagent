@@ -1,33 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-
-const agentSchema = z.object({
-  name: z.string(),
-  public_description: z.string(),
-  prompt_name: z.string(),
-  prompt_personas: z.string(),
-  prompt_customers: z.string(),
-  prompt_tool_logics: z.string(),
-  prompt_voice_styles: z.string().optional(),
-  prompt_conversation_modes: z.string().optional(),
-  prompt_prohibited_phrases: z.string().optional(),
-  tools: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string()
-  })).optional(),
-});
-
-type Agent = z.infer<typeof agentSchema>;
+import { Agent, Tool } from '@/app/types/agent';
 
 export default function NewAgentPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<Partial<Agent>>({});
   const [error, setError] = useState<string | null>(null);
-  const [availableTools, setAvailableTools] = useState<Array<{ id: string; name: string; tool_type: string }>>([]);
+  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
 
   useEffect(() => {
     fetchTools();
@@ -49,11 +30,21 @@ export default function NewAgentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const body = {
+      ...formData,
+      tools: formData.tools?.map((tool: any) => ({
+        id: tool.id,
+        name: tool.name,
+        description: tool.description,
+        tool_id: tool.tool_id
+      }))
+    };
+
     try {
       const response = await fetch('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) throw new Error('Failed to save agent');
@@ -187,7 +178,12 @@ export default function NewAgentPage() {
                     checked={isSelected}
                     onChange={(e) => {
                       const newTools = e.target.checked
-                        ? [...(formData.tools || []), { id: tool.id, name: tool.name, description: '' }]
+                        ? [...(formData.tools || []), { 
+                            id: tool.id, 
+                            name: tool.name, 
+                            description: '', 
+                            tool_id: tool.tool_id,
+                          }]
                         : (formData.tools || []).filter(t => t.id !== tool.id);
                       setFormData({ ...formData, tools: newTools });
                     }}
@@ -195,7 +191,6 @@ export default function NewAgentPage() {
                   />
                   <div className="flex-1">
                     <div className="font-medium">{tool.name}</div>
-                    <div className="text-sm text-gray-500">{tool.tool_type}</div>
                     {isSelected && (
                       <input
                         type="text"

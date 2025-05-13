@@ -11,30 +11,30 @@ const tool_call_ragflow = async (toolConfig: any, question: string) => {
     if (!apiUrl || !agentId || !apiKey || !sessionId) {
       throw new Error('Missing required tool configuration');
     }
-
-    const response = await fetch(`${apiUrl}/agents/${agentId}/completions`, {
+    const body = {
+        question,
+        stream: false,
+        session_id: sessionId
+    }
+    const url = `${apiUrl}/agents/${agentId}/completions`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        question,
-        stream: false,
-        session_id: sessionId
-      })
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) {
       throw new Error('Tool API request failed');
     }
+    console.log(`tool.request.url: ${url}`);
+    console.log(`tool.request.body: ${JSON.stringify(body)}`);
+    console.log(`tool.request.response: ${JSON.stringify(response)}`);
 
     const data = await response.json();
     return NextResponse.json({ success: true, response: data.response, data: data });
-}
-
-const tool_map = {
-    "ragflow": tool_call_ragflow
 }
 
 export async function POST(
