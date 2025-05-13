@@ -26,6 +26,7 @@ PGPASSWORD=postgres psql -h db -U postgres -d vagent -c "
 
 # Run each migration file
 for file in /app/src/db/migrations/*.sql; do
+  echo "Running migration: $file"
   filename=$(basename "$file")
   migration_name="${filename%.*}"
   
