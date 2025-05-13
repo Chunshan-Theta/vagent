@@ -18,6 +18,17 @@ export default function AdminDashboard() {
           </p>
         </Link>
       </div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Link
+          href="/admin/tools"
+          className="block p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Tool Management</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Create, edit, and manage your AI tools
+          </p>
+        </Link>
+      </div>
     </div>
   );
 } 

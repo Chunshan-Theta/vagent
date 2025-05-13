@@ -93,7 +93,7 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, tool: result.rows[0] });
   } catch (error) {
     console.error('Error deleting tool:', error);
     return NextResponse.json(

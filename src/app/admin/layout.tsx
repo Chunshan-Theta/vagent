@@ -44,6 +44,16 @@ export default function AdminLayout({
                 >
                   Agents
                 </Link>
+                <Link
+                  href="/admin/tools"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive('/admin/tools')
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
+                >
+                  tools
+                </Link>
               </div>
             </div>
           </div>
