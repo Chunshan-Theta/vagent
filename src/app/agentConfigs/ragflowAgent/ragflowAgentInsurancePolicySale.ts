@@ -79,7 +79,7 @@ const ragflowAgentInsurancePolicySale: AgentConfig = {
         properties: {
           question: {
             type: "string",
-            description: "要發送給RAG的特定問題"
+            description: "要發送的特定問題"
           }
         },
         required: ["question"]
