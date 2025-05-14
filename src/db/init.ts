@@ -5,7 +5,7 @@ const pool = new Pool({
   port: parseInt(process.env.POSTGRES_PORT || '5432'),
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
-  database: 'postgres' // Connect to default postgres database first
+  database: process.env.POSTGRES_DB 
 });
 
 async function initDatabase() {
@@ -13,8 +13,8 @@ async function initDatabase() {
   try {
     // Create database if it doesn't exist
     await client.query(`
-      SELECT 'CREATE DATABASE vagent'
-      WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'vagent')
+      SELECT 'CREATE DATABASE ${process.env.POSTGRES_DB}'
+      WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${process.env.POSTGRES_DB}')
     `);
     
     console.log('Database initialized successfully');

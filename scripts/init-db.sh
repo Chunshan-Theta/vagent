@@ -43,7 +43,4 @@ for file in /app/src/db/migrations/*.sql; do
   fi
 done
 
-echo "Database initialization completed"
-
-# Keep container running
-tail -f /dev/null 
+echo "Database initialization completed" 
