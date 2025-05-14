@@ -57,7 +57,7 @@ function createAgentConfig(apiResult: any): AgentConfig {
   ${apiResult.prompt_personas}
   ## 你的對談對象
   ${apiResult.prompt_customers}
-  ## 你的工具
+  ## 你的工具使用規則與說明
   ${apiResult.prompt_tool_logics}
   ## 你的聲音風格
   ${apiResult.prompt_voice_styles}
