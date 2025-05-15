@@ -345,7 +345,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     if (shouldTriggerResponse) {
       // Use shared config for startAsk
       const { startAsk } = sharedConfig;
-      sendSimulatedUserMessage(startAsk, { hide: true, triggerResponse: true, });
+      sendSimulatedUserMessage('請開始對話', { hide: true, triggerResponse: true, });
     }
     if (sessionStartTimes === 0) {
       onSessionOpen();

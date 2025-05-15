@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent, Tool } from '@/app/types/agent';
 
-
-export default function EditAgentPage({ params }: { params: any }) {
+export default function EditAgentPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const resolvedParams = use(params);
+  const id = resolvedParams.id;
   const router = useRouter();
   const [formData, setFormData] = useState<Partial<Agent>>({});
   const [error, setError] = useState<string | null>(null);
@@ -16,11 +21,11 @@ export default function EditAgentPage({ params }: { params: any }) {
   useEffect(() => {
     fetchAgent();
     fetchTools();
-  }, [params.id]);
+  }, [id]);
 
   const fetchAgent = async () => {
     try {
-      const response = await fetch(`/api/agents/${params.id}`);
+      const response = await fetch(`/api/agents/${id}`);
       if (!response.ok) throw new Error('Failed to fetch agent');
       const data = await response.json();
       if (!data.success || !data.agent) {
@@ -59,7 +64,7 @@ export default function EditAgentPage({ params }: { params: any }) {
     };
 
     try {
-      const response = await fetch(`/api/agents/${params.id}`, {
+      const response = await fetch(`/api/agents/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -67,23 +72,16 @@ export default function EditAgentPage({ params }: { params: any }) {
 
       if (!response.ok) throw new Error('Failed to update agent');
       
-      router.push(`/admin/agents/${params.id}`);
+      router.push(`/admin/agents/${id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update agent');
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Edit Agent</h1>
-        <Link
-          href={`/admin/agents/${params.id}`}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-        >
-          Cancel
-        </Link>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-gray-900">Edit Agent</h1>
+
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -104,7 +102,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Public Description</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Description</label>
           <textarea
             value={formData.public_description || ''}
             onChange={(e) => setFormData({ ...formData, public_description: e.target.value })}
@@ -115,7 +113,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Name</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Name</label>
           <input
             type="text"
             value={formData.prompt_name || ''}
@@ -126,7 +124,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Personas</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Describe</label>
           <textarea
             value={formData.prompt_personas || ''}
             onChange={(e) => setFormData({ ...formData, prompt_personas: e.target.value })}
@@ -137,7 +135,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Customers</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Customers Describe</label>
           <textarea
             value={formData.prompt_customers || ''}
             onChange={(e) => setFormData({ ...formData, prompt_customers: e.target.value })}
@@ -148,7 +146,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Tool Logics</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Tool Plugin Describe</label>
           <textarea
             value={formData.prompt_tool_logics || ''}
             onChange={(e) => setFormData({ ...formData, prompt_tool_logics: e.target.value })}
@@ -159,7 +157,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Voice Styles</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Voice Styles</label>
           <textarea
             value={formData.prompt_voice_styles || ''}
             onChange={(e) => setFormData({ ...formData, prompt_voice_styles: e.target.value })}
@@ -169,7 +167,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Conversation Modes</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Conversation Modes</label>
           <textarea
             value={formData.prompt_conversation_modes || ''}
             onChange={(e) => setFormData({ ...formData, prompt_conversation_modes: e.target.value })}
@@ -179,7 +177,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Prohibited Phrases</label>
+          <label className="block text-sm font-medium text-gray-700">Agent Prohibited Rules</label>
           <textarea
             value={formData.prompt_prohibited_phrases || ''}
             onChange={(e) => setFormData({ ...formData, prompt_prohibited_phrases: e.target.value })}
@@ -235,7 +233,7 @@ export default function EditAgentPage({ params }: { params: any }) {
         <div className="flex justify-end space-x-3">
           <button
             type="button"
-            onClick={() => router.push(`/admin/agents/${params.id}`)}
+            onClick={() => router.push(`/admin/agents/${id}`)}
             className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Cancel

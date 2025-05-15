@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent } from '@/app/types/agent';
 
-
-export default function ViewAgentPage({ params }: { params: any }) {
+export default function ViewAgentPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const router = useRouter();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     fetchAgent();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const fetchAgent = async () => {
     try {
-      const response = await fetch(`/api/agents/${params.id}`);
+      const response = await fetch(`/api/agents/${resolvedParams.id}`);
       if (!response.ok) throw new Error('Failed to fetch agent');
       const data = await response.json();
       if (!data.success || !data.agent) {
@@ -46,7 +46,7 @@ export default function ViewAgentPage({ params }: { params: any }) {
         <h1 className="text-2xl font-bold text-gray-900">Agent Details</h1>
         <div className="space-x-3">
           <Link
-            href={`/admin/agents/${params.id}/edit`}
+            href={`/admin/agents/${resolvedParams.id}/edit`}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Edit
@@ -75,7 +75,7 @@ export default function ViewAgentPage({ params }: { params: any }) {
               <div className="mt-1 text-sm text-gray-900">{agent.name}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Public Description</label>
+              <label className="block text-sm font-medium text-gray-700">Agent  Description</label>
               <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.public_description}</div>
             </div>
           </div>
@@ -85,36 +85,36 @@ export default function ViewAgentPage({ params }: { params: any }) {
           <h2 className="text-lg font-medium text-gray-900">Prompt Configuration</h2>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Prompt Name</label>
+              <label className="block text-sm font-medium text-gray-700">Agent  Name</label>
               <div className="mt-1 text-sm text-gray-900">{agent.prompt_name}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Prompt Personas</label>
+              <label className="block text-sm font-medium text-gray-700">Agent  Describe</label>
               <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_personas}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Prompt Customers</label>
+              <label className="block text-sm font-medium text-gray-700">Agent  Customers Describe</label>
               <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_customers}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Prompt Tool Logics</label>
+              <label className="block text-sm font-medium text-gray-700">Agent  Tool Plugin Describe</label>
               <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_tool_logics}</div>
             </div>
             {agent.prompt_voice_styles && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Prompt Voice Styles</label>
+                <label className="block text-sm font-medium text-gray-700">Agent  Voice Styles</label>
                 <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_voice_styles}</div>
               </div>
             )}
             {agent.prompt_conversation_modes && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Prompt Conversation Modes</label>
+                <label className="block text-sm font-medium text-gray-700">Agent  Conversation Modes</label>
                 <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_conversation_modes}</div>
               </div>
             )}
             {agent.prompt_prohibited_phrases && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Prompt Prohibited Phrases</label>
+                <label className="block text-sm font-medium text-gray-700">Agent Prohibited Rules</label>
                 <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_prohibited_phrases}</div>
               </div>
             )}
