@@ -11,46 +11,12 @@ import { AppProvider } from "@/app/contexts/AppContext";
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 import ChatView from "@/app/components/chat/ChatView";
 
-function createAgentConfig(apiResult: any): AgentConfig {
-  const toolLogic: Record<string, (args: any, transcriptLogsFiltered: TranscriptItem[]) => Promise<any> | any> = {};
-  
-  // Convert tools to full Tool objects and build toolLogic
-  const fullTools: Tool[] = apiResult.tools.map((tool: any) => {
-    // Add tool logic
-    toolLogic[tool.name] = async ({ question }) => {
-      console.info(`Tool ${tool.name} called:`, question);
-      try {
-        const response = await fetch(`/api/tools/${tool.tool_id}/use`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question })
-        });
-        if (!response.ok) throw new Error(`${tool.name} API request failed`);
-        const data = await response.json();
-        console.info(`${tool.name} results:`, data);
-        return data;
-      } catch (error) {
-        console.error(`${tool.name} error:`, error);
-        return { success: false, error: `Error communicating with ${tool.name} service` };
-      }
-    };
+import * as utils from '../utils'
 
-    return {
-      type: "function",
-      name: tool.name,
-      description: tool.description,
-      parameters: {
-        type: "object",
-        properties: {
-          question: {
-            type: "string",
-            description: "The question to ask"
-          }
-        },
-        required: ["question"]
-      }
-    };
-  });
+function createAgentConfig(apiResult: any): AgentConfig {
+
+  // Convert tools to full Tool objects and build toolLogic
+  const { tools: fullTools, toolLogic } = utils.handleApiTools(apiResult.tools)
   const instructions = `
   現在開始，請扮演${apiResult.prompt_name}，以下是你的角色和更多詳細資料：
   ## 你的角色：${apiResult.prompt_name}
@@ -83,7 +49,7 @@ function ClassChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [localLoading, setLocalLoading] = useState(false);
-  
+
   const {
     router,
     inputText,
@@ -116,6 +82,9 @@ function ClassChatPage() {
   useEffect(() => {
     const fetchAgentConfig = async () => {
       try {
+
+
+
         const response = await fetch(`/api/agents/${params.id}`);
         if (!response.ok) {
           throw new Error('Agent not found');
@@ -127,7 +96,7 @@ function ClassChatPage() {
         setAgentConfig(agentConfig);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load agent');
-      } 
+      }
     };
 
     fetchAgentConfig();
@@ -268,26 +237,18 @@ function ClassChatPage() {
   }
 
   return (
-    <EventProvider>
-      <TranscriptProvider>
-        <ChatProvider>
-          <AppProvider>
-            <div style={{ background: pageBackground }}>
-              {chatScene()}
-              <div>
-                <App
-                  ref={appRef}
-                  agentConfig={agentConfig}
-                  onSessionOpen={onSessionOpen}
-                  onSessionResume={onSessionResume}
-                  onSessionClose={onSessionClose}
-                />
-              </div>
-            </div>
-          </AppProvider>
-        </ChatProvider>
-      </TranscriptProvider>
-    </EventProvider>
+    <div style={{ background: pageBackground }}>
+      {chatScene()}
+      <div>
+        <App
+          ref={appRef}
+          agentConfig={agentConfig}
+          onSessionOpen={onSessionOpen}
+          onSessionResume={onSessionResume}
+          onSessionClose={onSessionClose}
+        />
+      </div>
+    </div>
   );
 }
 

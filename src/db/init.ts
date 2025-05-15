@@ -1,12 +1,13 @@
-import { Pool } from 'pg';
 
+import { config } from './db.config';
+import { Pool } from "pg";
+
+// 這邊必須要獨立寫一個 pool，因為我們要在初始化時檢查是否要創建資料庫
 const pool = new Pool({
-  host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB 
+  ...config,
+  database: undefined
 });
+
 
 async function initDatabase() {
   const client = await pool.connect();
@@ -16,7 +17,7 @@ async function initDatabase() {
       SELECT 'CREATE DATABASE ${process.env.POSTGRES_DB}'
       WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${process.env.POSTGRES_DB}')
     `);
-    
+
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -24,6 +25,7 @@ async function initDatabase() {
   } finally {
     client.release();
   }
+  
 }
 
 // Run if this file is executed directly
