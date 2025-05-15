@@ -1,24 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent } from '@/app/types/agent';
 
-
-export default function ViewAgentPage({ params }: { params: any }) {
+export default function ViewAgentPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const router = useRouter();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     fetchAgent();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const fetchAgent = async () => {
     try {
-      const response = await fetch(`/api/agents/${params.id}`);
+      const response = await fetch(`/api/agents/${resolvedParams.id}`);
       if (!response.ok) throw new Error('Failed to fetch agent');
       const data = await response.json();
       if (!data.success || !data.agent) {
@@ -46,7 +46,7 @@ export default function ViewAgentPage({ params }: { params: any }) {
         <h1 className="text-2xl font-bold text-gray-900">Agent Details</h1>
         <div className="space-x-3">
           <Link
-            href={`/admin/agents/${params.id}/edit`}
+            href={`/admin/agents/${resolvedParams.id}/edit`}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Edit
