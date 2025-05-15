@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.44.0",
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.7.0",
     "@radix-ui/react-label": "^2.1.6",
@@ -17,9 +18,9 @@
     "@types/canvas-confetti": "^1.9.0",
     "@types/pg": "^8.15.1",
     "canvas-confetti": "^1.9.3",
-    "lodash": "^4.17.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.509.0",
     "mitt": "^3.0.1",
     "next": "15.1.4",
