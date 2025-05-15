@@ -1,0 +1,1 @@
+k3d cluster create k3s-default --api-port 6550 --servers 1 --agents 1 --port 30000:30000@loadbalancer --port 30001:30001@loadbalancer
