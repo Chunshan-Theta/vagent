@@ -1,19 +1,23 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from 'react';
 import { useEvent } from "@/app/contexts/EventContext";
 
 interface AppContextProps {
   dataChannel: RTCDataChannel | null;
+  setRtcAudioElement: (audio: HTMLAudioElement | null) => void;
   setDataChannel: (dc: RTCDataChannel | null) => void;
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
+  stopAudio: () => void;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [dataChannel, setDataChannel] = useState<any>(null);
-  
+  const rtcAudioElement = useRef<HTMLAudioElement | null>(null);
+  const rtcAudioPrevVolume = useRef<number | null>(null);
+
   // Use a try-catch to handle the case when EventContext is not available
   let logClientEvent;
   try {
@@ -26,6 +30,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     logClientEvent = (eventObj: any, eventNameSuffix = "") => {
       console.log(`[Client Event] ${eventNameSuffix}:`, eventObj);
     };
+  }
+
+  const setRtcAudioElement = (audioElement: HTMLAudioElement | null) => {
+    rtcAudioElement.current = audioElement;
+  }
+
+  const enableAudio = () => {
+    if (rtcAudioElement.current) {
+      const volume = rtcAudioPrevVolume.current ?? 1;
+      rtcAudioElement.current.volume = volume;
+    }
+  }
+
+  const stopAudio = () => {
+    if (rtcAudioElement.current) {
+      rtcAudioPrevVolume.current = rtcAudioElement.current.volume;
+      rtcAudioElement.current.volume = 0;
+    }
   }
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
@@ -44,7 +66,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
   return (
-    <AppContext.Provider value={{ dataChannel, setDataChannel, sendClientEvent }}>
+    <AppContext.Provider value={{ setRtcAudioElement, stopAudio, dataChannel, setDataChannel, sendClientEvent }}>
       {children}
     </AppContext.Provider>
   );
