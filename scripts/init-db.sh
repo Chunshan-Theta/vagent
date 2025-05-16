@@ -6,7 +6,7 @@ sleep 10
 
 # Create database if it doesn't exist
 echo "Creating database..."
-PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} -d postgres -c "
+PGPASSWORD=${POSTGRES_PASSWORD} psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "
   CREATE DATABASE ${POSTGRES_DB};
 " || echo "Database already exists"
 
