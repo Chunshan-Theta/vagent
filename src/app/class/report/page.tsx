@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import type { AnalysisResponse } from '../../../api/analysis/route';
+import type { AnalysisResponse } from '@/app/api/analysis/route';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
@@ -24,7 +24,7 @@ function AnalysisReportContent() {
 
     const roleMap = {
       user: '我',
-      assistant: '客戶王先生'
+      assistant: '對話助理'
     }
 
     const storedChatHistory = getChatHistoryText(JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system'), { roleMap })
@@ -207,12 +207,8 @@ function AnalysisReportContent() {
   };
 
   const handleBackToDemo = () => {
-    if (searchParams.has('back')) {
-      const backUrl = searchParams.get('back') || '/demo';
-      router.push(backUrl);
-    } else {
       router.back();
-    }
+    
   };
 
   return (

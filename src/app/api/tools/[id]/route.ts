@@ -5,9 +5,8 @@ const pool = getPool();
 
 export async function GET(
   request: Request,
-  context: any
+  { params }: { params: any }
 ) {
-  const { params } = context;
   try {
     const result = await pool.query('SELECT * FROM tools WHERE tool_id = $1', [params.id]);
     
@@ -30,9 +29,8 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: any
+  { params }: { params: any }
 ) {
-  const { params } = context;
   try {
     const { name, tool_type, api_url, api_key, agent_id, session_id } = await request.json();
 
@@ -71,9 +69,8 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: any
+  { params }: { params: any }
 ) {
-  const { params } = context;
   try {
     const result = await pool.query(
       'DELETE FROM tools WHERE tool_id = $1 RETURNING *',

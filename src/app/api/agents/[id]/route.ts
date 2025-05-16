@@ -6,9 +6,8 @@ const pool = getPool();
 // GET /api/agents/:id - Get a single agent
 export async function GET(
   request: Request,
-  context: any
+  { params }: { params: any }
 ) {
-  const { params } = context;
   try {
     const result = await pool.query('SELECT * FROM agents WHERE id = $1', [params.id]);
     
@@ -32,9 +31,8 @@ export async function GET(
 // PUT /api/agents/:id - Update an agent
 export async function PUT(
   request: Request,
-  context: any
+  { params }: { params: any }
 ) {
-  const { params } = context;
   try {
     const data = await request.json();
     const {
@@ -108,9 +106,8 @@ export async function PUT(
 // DELETE /api/agents/:id - Delete an agent
 export async function DELETE(
   request: Request,
-  context: any
+  { params }: { params: any }
 ) {
-  const { params } = context;
   try {
     const result = await pool.query(
       'DELETE FROM agents WHERE id = $1 RETURNING *',

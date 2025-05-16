@@ -124,7 +124,7 @@ const ChatTextMessage: React.FC<ChatTextMessageProps> = ({
     />
   </div>
 
-  return (
+  return ( content !== '' &&
     <div className={classNames.join(' ')} style={{ textAlign: align }}>
       {avatar.show && avatar.type === 'image' && role === 'assistant' && avatarRef}
       <div className="content-wrap">

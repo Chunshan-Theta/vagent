@@ -80,7 +80,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Public Description</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Description</label>
           <textarea
             value={formData.public_description || ''}
             onChange={(e) => setFormData({ ...formData, public_description: e.target.value })}
@@ -91,7 +91,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Name</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Name</label>
           <input
             type="text"
             value={formData.prompt_name || ''}
@@ -102,7 +102,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Personas</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Describe</label>
           <textarea
             value={formData.prompt_personas || ''}
             onChange={(e) => setFormData({ ...formData, prompt_personas: e.target.value })}
@@ -113,7 +113,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Customers</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Customers Describe</label>
           <textarea
             value={formData.prompt_customers || ''}
             onChange={(e) => setFormData({ ...formData, prompt_customers: e.target.value })}
@@ -124,7 +124,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Tool Logics</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Tool Plugin Describe</label>
           <textarea
             value={formData.prompt_tool_logics || ''}
             onChange={(e) => setFormData({ ...formData, prompt_tool_logics: e.target.value })}
@@ -135,7 +135,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Voice Styles</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Voice Styles</label>
           <textarea
             value={formData.prompt_voice_styles || ''}
             onChange={(e) => setFormData({ ...formData, prompt_voice_styles: e.target.value })}
@@ -145,7 +145,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Conversation Modes</label>
+          <label className="block text-sm font-medium text-gray-700">Agent  Conversation Modes</label>
           <textarea
             value={formData.prompt_conversation_modes || ''}
             onChange={(e) => setFormData({ ...formData, prompt_conversation_modes: e.target.value })}
@@ -155,7 +155,7 @@ export default function NewAgentPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Prompt Prohibited Phrases</label>
+          <label className="block text-sm font-medium text-gray-700">Agent Prohibited Rules</label>
           <textarea
             value={formData.prompt_prohibited_phrases || ''}
             onChange={(e) => setFormData({ ...formData, prompt_prohibited_phrases: e.target.value })}

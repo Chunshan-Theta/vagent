@@ -182,6 +182,12 @@ export function useHandleServerEvent({
             text = "[Transcribing...]\n";
           }
           addTranscriptMessage(itemId, role, text);
+          if (role === "assistant" && text === "") {
+            sendClientEvent(
+              { type: "response.create" },
+              "(trigger response after simulated user text message)"
+            );
+          }
         }
         break;
       }
