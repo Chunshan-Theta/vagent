@@ -237,7 +237,7 @@ function DynamicAnalysisContent() {
   }, [scene])
 
   const onSubmitText = () => {
-    sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true });
+    sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true, interruptAI: true });
     updateInputText('');
   }
 

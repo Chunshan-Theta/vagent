@@ -252,7 +252,7 @@ function LandbankChatPage() {
   }, [scene])
 
   const onSubmitText = () => {
-    sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true });
+    sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true, interruptAI: true });
     updateInputText('');
   }
 
@@ -285,7 +285,7 @@ function LandbankChatPage() {
         classNames={['landbank']}
         background={chatBackground}
         isEnd={isCallEnded}
-        isLoading={isLoading}
+        isLoading={loading}
         isRecording={isPTTUserSpeaking}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}

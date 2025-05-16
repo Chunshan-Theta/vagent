@@ -50,7 +50,8 @@ export function handleAnalysisExamples(examples:string[], opts: handleAnalysisEx
   const roleMap = opts.roleMap || {}
   examples = examples || [];
   return examples.map((example)=>{
-    example = example || '';
+    example = (example || '').trim();
+    
     if(roleMap.user){
       example = example.replace(/^[uU]ser[:：]/, `${roleMap.user}: `)
     } else if(roleMap.assistant){

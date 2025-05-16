@@ -82,6 +82,11 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
     return state
   }, [isLoading, isMicActive, disableInteraction])
 
+
+  const activeSendButton = useMemo(() => {
+    return isMicActive && !isLoading
+  }, [isMicActive, isLoading])
+
   return (
     <div className={mClassNames.join(' ')} style={chatStyle}>
       <div className="chat-view">
@@ -133,13 +138,13 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
             </button>
             <button
               className="send-button"
-              disabled={!isMicActive}
+              disabled={!activeSendButton}
               onClick={() => onSubmit && onSubmit(inputText)}
               style={{
-                backgroundColor: !isMicActive ? '#9e9e9e' : '#00a3e0',
+                backgroundColor: !activeSendButton ? '#9e9e9e' : '#00a3e0',
                 color: 'white',
-                opacity: !isMicActive ? 0.6 : 1,
-                cursor: !isMicActive ? 'not-allowed' : 'pointer'
+                opacity: !activeSendButton ? 0.6 : 1,
+                cursor: !activeSendButton ? 'not-allowed' : 'pointer'
               }}
             >
               ➤

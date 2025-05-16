@@ -497,6 +497,15 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   }, []);
 
   useEffect(() => {
+    console.log('src changed', audioElementRef.current?.src);
+    audioElementRef.current?.play().catch((err) => { console.error(err) })
+  }, [audioElementRef.current?.src]);
+
+  useEffect(() => {
+    appContext.setRtcAudioElement(audioElementRef.current);
+  }, [audioElementRef.current]);
+
+  useEffect(() => {
     localStorage.setItem("pushToTalkUI", isPTTActive.toString());
   }, [isPTTActive]);
 
@@ -532,7 +541,10 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   // expose 給父元件
   useImperativeHandle(ref, () => ({
     disconnectFromRealtime,
-    connectToRealtime
+    connectToRealtime,
+    cancelAudioPlay: () => {
+      audioElementRef.current?.pause();
+    }
   }));
 
   return (

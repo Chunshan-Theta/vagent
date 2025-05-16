@@ -117,12 +117,17 @@ export function useAiChat(){
       .reverse()
       .find((item) => item.role === "assistant");
 
+    // console.log('mostRecentAssistantMessage', mostRecentAssistantMessage?.status, mostRecentAssistantMessage);
+    // appContext.stopAudio();
+
     if (!mostRecentAssistantMessage) {
       return;
     }
     if (mostRecentAssistantMessage.status === "DONE") {
       return;
     }
+
+    // console.log('do cancelAssistantSpeech');
 
     sendClientEvent({
       type: "conversation.item.truncate",
@@ -245,11 +250,22 @@ export function useAiChat(){
 
     noAppendToTranscript?: boolean;
 
+    interruptAI?: boolean;
+
     triggerResponse?: boolean;
   }
   const sendSimulatedUserMessage = (text: string, opts: sendSimulatedUserMessageOpts = {}) => {
+    text = (text || '').trim();
+    if (!text) {
+      return;
+    }
     const id = uuidv4().slice(0, 32);
     const role = opts.role || "user";
+
+    if (opts.interruptAI){
+      console.log('interruptAI', true);
+      cancelAssistantSpeech();
+    }
 
     if (!opts.noAppendToTranscript) {
       addTranscriptMessage(id, role as any, text, !!opts.hide);
