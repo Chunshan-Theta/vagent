@@ -39,7 +39,7 @@ function createAgentConfig(apiResult: any): AgentConfig {
     instructions,
     tools: fullTools,
     toolLogic,
-    criteria: apiResult.criteria,
+    ...apiResult
   };
 }
 

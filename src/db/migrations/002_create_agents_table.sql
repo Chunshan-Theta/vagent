@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS agents (
     prompt_prohibited_phrases TEXT,
     criteria TEXT,
     tools JSONB[] DEFAULT '{}',
+    voice VARCHAR(255) DEFAULT 'echo',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

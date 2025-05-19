@@ -147,7 +147,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
           currentAgent
         );
       }
-      updateSession(sessionStartTimes === 0);
+      updateSession(sessionStartTimes === 0, currentAgent?.voice || "echo");
     }
   }, [selectedAgentConfigSet, selectedAgentName, sessionStatus, hideLogs]);
 
@@ -274,15 +274,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     }
   };
 
-  const updateSession = (shouldTriggerResponse: boolean = false) => {
-
-    // console.log('updateSession', {
-    //   selectedAgentName,
-    //   selectedAgentConfigSet,
-    //   isPTTActive,
-    //   shouldTriggerResponse,
-    //   transcriptItems,
-    // });
+  const updateSession = (shouldTriggerResponse: boolean = false, voice: string = "echo") => {
     sendClientEvent(
       { type: "input_audio_buffer.clear" },
       "clear audio buffer on session update"
@@ -304,17 +296,20 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
 
     const instructions = currentAgent?.instructions || "";
     const tools = currentAgent?.tools || [];
+    const agentVoice = currentAgent?.voice || voice;
 
     // Use shared config for sttPrompt
     const { sttPrompt } = sharedConfig;
     console.log("STT Prompt:", sttPrompt);
+    console.log("currentAgent:", currentAgent);
+    console.log("agentVoice:", agentVoice);
 
     const sessionUpdateEvent = {
       type: "session.update",
       session: {
         modalities: ["text", "audio"],
         instructions,
-        voice: "echo",
+        voice: agentVoice,
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: {

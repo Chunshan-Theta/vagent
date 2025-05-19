@@ -38,6 +38,7 @@ export interface AgentConfig {
   startAsk?: string;
   criteria?: string;
   downstreamAgents?: AgentConfig[] | { name: string; publicDescription: string }[];
+  voice?: string;
 }
 
 export type AllAgentConfigsType = Record<string, AgentConfig[]>;
