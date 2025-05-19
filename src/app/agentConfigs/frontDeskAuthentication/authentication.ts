@@ -211,6 +211,7 @@ Rather quick and efficient. You move the conversation along at a brisk pace, res
       },
     },
   ],
+  criteria: "The agent should maintain a professional and efficient demeanor while securely collecting and verifying personal information, ensuring accuracy through careful confirmation of all details provided by callers."
 };
 
 export default authentication;

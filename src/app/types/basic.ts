@@ -36,6 +36,7 @@ export interface AgentConfig {
   >;
   sttPrompt?: string;
   startAsk?: string;
+  criteria?: string;
   downstreamAgents?: AgentConfig[] | { name: string; publicDescription: string }[];
 }
 

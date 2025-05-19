@@ -165,6 +165,16 @@ export default function NewAgentPage() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Agent Criteria</label>
+          <textarea
+            value={formData.criteria || ''}
+            onChange={(e) => setFormData({ ...formData, criteria: e.target.value })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            rows={3}
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">Tools</label>
           <div className="space-y-2">
             {availableTools.map((tool) => {
