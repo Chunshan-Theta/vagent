@@ -22,7 +22,7 @@ function LandbankChatPage() {
 
     inputText,
     updateInputText,
-
+    addTranscriptMessage,
     sendSimulatedUserMessage,
     isPTTUserSpeaking,
     handleMicrophoneClick,
@@ -52,6 +52,25 @@ function LandbankChatPage() {
 
   useEffect(() => {
     document.title = 'Business Training Script';
+    addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `💡 This exercise is a "Customer Dialogue Simulation" scenario. Please try to play the role of a consultant and see how you would respond to the customer's concerns!
+      Here's the customer's basic information:
+      👤 Ms. Wang's background:
+      30 years old, married working professional
+      Combined monthly household income: $12,000 (with spouse)
+      Monthly expenses include:
+      🏠 Mortgage: Taoyuan Zhonglu District, $800,000 loan, monthly payment $28,678
+      🎓 Children's education: Two children, monthly cost $30,000
+      🛒 Household expenses (food, clothing, transportation, entertainment, insurance, etc.): About $30,000 monthly
+      ❤️ Parental support: $5,000 monthly
+      💬 Ms. Wang's concern: "The insurance premium is too expensive, will this leave us with no money to use?"
+      
+      `);
+      addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 Your task:
+      Please try to use professional explanations to help Ms. Wang clarify her concerns, help her understand the value of this insurance policy, and work together to find the most suitable solution, thereby increasing her willingness to purchase.
+      This exercise simulates real dialogue with instant feedback to help strengthen your customer communication and persuasion skills!
+      
+      I will now act as 'Ms. Wang' for your practice.
+      `);
   }, []);
   const [localLoading, setLocalLoading] = useState(false);
   const loading = useMemo(() => {
@@ -283,6 +302,7 @@ Cannot Judge: Not mentioned or cannot be determined.
   function chatScene() {
     return (
       <ChatView
+        lang="en"
         classNames={['landbank']}
         background={chatBackground}
         isEnd={isCallEnded}

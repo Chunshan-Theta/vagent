@@ -23,8 +23,8 @@ function AnalysisReportContent() {
     const storedChatMessages = localStorage.getItem('chatMessages');
 
     const roleMap = {
-      user: '我',
-      assistant: '客戶王先生'
+      user: '新手業務',
+      assistant: '客戶王小姐'
     }
 
     const storedChatHistory = getChatHistoryText(JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system'), { roleMap })
@@ -272,7 +272,7 @@ function AnalysisReportContent() {
               <FaComments className="mr-2 text-[#FFE066]" />
               {getLocalizedText('conversationSummary')}
             </h2>
-            <p className="text-white text-lg">{analysis.summary}</p>
+            <p className="text-white text-lg">{analysis.summary.replace('user', '新手業務')}</p>
           </div>
 
           {/* Overall Improvement Tips */}
@@ -287,7 +287,7 @@ function AnalysisReportContent() {
                   <span className="inline-block w-6 h-6 rounded-full bg-[#2D5A67] text-[#FFE066] flex items-center justify-center mr-2 mt-0.5 text-sm font-bold">
                     {index + 1}
                   </span>
-                  {tip}
+                  {tip.replace('user', '新手業務')}
                 </li>
               ))}
             </ul>
@@ -313,7 +313,7 @@ function AnalysisReportContent() {
                     <span className="ml-2 text-xl">{getScoreEmoji(score.score)}</span>
                   </div>
                 </div>
-                <p className="text-white mb-3">{score.explanation}</p>
+                <p className="text-white mb-3">{score.explanation.replace('user', '新手業務')}</p>
 
                 {/* Examples Section */}
                 <div className="mt-3 mb-3 bg-[#2D5A67] bg-opacity-50 p-3 rounded-[16px]">
@@ -340,7 +340,7 @@ function AnalysisReportContent() {
                         <span className="inline-block w-5 h-5 rounded-full bg-[#2D5A67] text-[#FFE066] flex items-center justify-center mr-2 mt-0.5 text-xs font-bold">
                           {idx + 1}
                         </span>
-                        {tip}
+                        {tip.replace('user', '新手業務')}
                       </li>
                     ))}
                   </ul>

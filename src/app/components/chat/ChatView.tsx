@@ -14,6 +14,7 @@ interface ChatViewProps {
   boxShadow?: string
   background?: string
   classNames?: string[]
+  lang?: string
 
   isEnd?: boolean
   isLoading?: boolean
@@ -86,6 +87,9 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const activeSendButton = useMemo(() => {
     return isMicActive && !isLoading
   }, [isMicActive, isLoading])
+  const NoStart = props.lang === 'zh' ? '對話未開始' : 'Not Started'
+  const PleaseEnter = props.lang === 'zh' ? '請輸入對話' : 'Please enter here...'
+  const EndAndStartAnalysis = props.lang === 'zh' ? '結束並開始分析' : 'End and Start Analysis'
 
   return (
     <div className={mClassNames.join(' ')} style={chatStyle}>
@@ -114,7 +118,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
           <div className="input-box">
             <input
               type="text"
-              placeholder={!isMicActive ? "Not Started" : "Please enter here..."}
+              placeholder={!isMicActive ? NoStart : PleaseEnter}
               value={inputText}
               disabled={isInputDisabled}
               onChange={(e) => updateInputText(e.target.value)}
@@ -156,7 +160,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
               disabled={disableInteraction}
               onClick={() => !disableInteraction && onClickEnd && onClickEnd()}
             >
-              End and Start Analysis
+              {EndAndStartAnalysis}
             </button>
           </div>
         </div>

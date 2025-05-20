@@ -23,7 +23,7 @@ function AnalysisReportContent() {
     const storedChatMessages = localStorage.getItem('chatMessages');
 
     const roleMap = {
-      user: 'Me',
+      user: 'Jr. Sales',
       assistant: 'Customer Ms. Wang'
     }
 
