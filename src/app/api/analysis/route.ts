@@ -11,6 +11,7 @@ export interface AnalysisRequest {
     criteria: string[];
     weights?: number[];
   };
+  detectedLanguage?: string;
 }
 
 export interface AnalysisResponse {
@@ -31,7 +32,7 @@ export interface AnalysisResponse {
 export async function POST(request: Request) {
   try {
     const body: AnalysisRequest = await request.json();
-    const { message, rubric } = body;
+    const { message, rubric, detectedLanguage="zh" } = body;
 
     if (!message || !rubric || !rubric.criteria) {
       return NextResponse.json(
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     // });
 
     // const detectedLanguage = languageDetection.choices[0].message.content?.trim() || "en";
-    const detectedLanguage = "zh";
+    // const detectedLanguage = "zh";
     
     // Create language-specific instructions
     let languageInstruction = "";

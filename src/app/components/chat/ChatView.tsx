@@ -114,7 +114,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
           <div className="input-box">
             <input
               type="text"
-              placeholder={!isMicActive ? "通話未開始" : "請在此輸入..."}
+              placeholder={!isMicActive ? "Not Started" : "Please enter here..."}
               value={inputText}
               disabled={isInputDisabled}
               onChange={(e) => updateInputText(e.target.value)}
@@ -156,7 +156,7 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
               disabled={disableInteraction}
               onClick={() => !disableInteraction && onClickEnd && onClickEnd()}
             >
-              結束並開始分析
+              End and Start Analysis
             </button>
           </div>
         </div>

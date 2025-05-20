@@ -7,9 +7,9 @@ import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
 
 // UI components
-import Transcript from "./components/Transcript";
-import Events from "./components/Events";
-import BottomToolbar from "./components/BottomToolbar";
+import Transcript from "@/app/components/Transcript";
+import Events from "@/app/components/Events";
+import BottomToolbar from "@/app/components/BottomToolbar";
 
 // Types
 import { AgentConfig, SessionStatus } from "@/app/types";
@@ -18,13 +18,13 @@ import { AgentConfig, SessionStatus } from "@/app/types";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useAppContext } from "@/app/contexts/AppContext";
-import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
+import { useHandleServerEvent } from "@/app/hooks/useHandleServerEvent";
 
 // Utilities
-import { createRealtimeConnection } from "./lib/realtimeConnection";
+import { createRealtimeConnection } from "@/app/lib/realtimeConnection";
 
 // Agent configs
-import { allAgentSets, defaultAgentSetKey, sharedConfig } from "@/app/agentConfigs";
+import { allAgentSets, defaultAgentSetKey, sharedConfigEN } from "@/app/agentConfigs";
 
 // Add language options
 const languageOptions = [
@@ -320,7 +320,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     const tools = currentAgent?.tools || [];
 
     // Use shared config for sttPrompt
-    const { sttPrompt } = sharedConfig;
+    const { sttPrompt } = sharedConfigEN;
     console.log("STT Prompt:", sttPrompt);
 
     const sessionUpdateEvent = {
@@ -333,7 +333,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         output_audio_format: "pcm16",
         input_audio_transcription: {
           model: "gpt-4o-transcribe",
-          language: "zh",
+          language: sharedConfigEN.language,
           prompt: sttPrompt,
         },
         turn_detection: turnDetection,
@@ -358,7 +358,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
 
     if (shouldTriggerResponse) {
       // Use shared config for startAsk
-      const { startAsk } = sharedConfig;
+      const { startAsk } = sharedConfigEN;
       sendSimulatedUserMessage(startAsk, { hide: true, triggerResponse: true, });
     }
     if (sessionStartTimes === 0) {
