@@ -187,6 +187,7 @@ export function useAiChat(){
   };
 
   const sttTextValid = utils.sttTextValid
+  const sttTextValidEx = utils.sttTextValidEx
 
   // Set isClient to true after component mounts (client-side only)
   useEffect(() => {
@@ -320,6 +321,77 @@ export function useAiChat(){
     return chatHistory;
   }
 
+  type getMessagePairsOptions = {
+    spRole: 'assistant' | 'user';
+
+    /** 指定一個數值，表示要額外保留後續幾則訊息以便分析 */
+    keepNextMsgCount?: number;
+    keepSystemMessage?: boolean;  /** 是否保留最後一則對話，因為是最後一則該則對話不會有另一個對象的回應 */
+    keepLastMessage?: boolean;
+  }
+
+  /**
+   * 分組訊息，變成由一則訊息搭配回應的形式
+   * 
+   * 比如 spRole 是 assistant 時，則會把1 則 assistant 的訊息和對應的多則 user 的訊息分同一組
+   * 
+   * @param spRole 
+   * @returns 
+   */
+  const getMessagePairs = (opts: getMessagePairsOptions)=>{
+    const spRole = opts.spRole;
+
+    type Msg = (typeof chatContext.messageItems)[number]
+    const pairs: { messages: Msg[], time: number }[] = []
+    const craeteNextPair = (time: number) => {
+      pairs.push({ messages: [], time });
+    }
+    const pushMsg = (msg: Msg) => {
+      pairs[pairs.length - 1].messages.push(msg)
+    }
+
+    const msgItems = chatContext.messageItems.filter((msg) => {
+      if (msg.type !== 'text') {
+        return false;
+      }
+      if (msg.role === 'system' && !opts.keepSystemMessage) {
+        return false;
+      }
+      // Skip messages that should be hidden
+      const content = msg.data.content || '';
+      return sttTextValidEx(content);
+    });
+    let foundStartMsg = false;
+    let keepCount = 0;
+    const keepCountMax = opts.keepNextMsgCount || 0;
+    for(let i = 0; i < msgItems.length; i++){
+      const msg = msgItems[i];
+      if (msg.role === spRole) {
+        foundStartMsg = true;
+        craeteNextPair(msg.createdAtMs);
+        pushMsg(msg)
+        keepCount = 0;
+        continue;
+      }
+      if (!foundStartMsg) {
+        continue;
+      }
+      pushMsg(msg)
+      if(msg.role === spRole){
+        craeteNextPair(msg.createdAtMs);
+        if(keepCountMax > 0){
+          keepCount++;
+          msgItems.slice(i + 1, i + 1 + keepCountMax).forEach((msg) => pushMsg(msg));
+        }
+      }
+    }
+    const fPairs = pairs.filter((p)=>p.messages.length > 0);
+    return {
+      startAt: fPairs[0]?.messages[0].createdAtMs || null,
+      pairs: fPairs
+    }
+  }
+
 
   return {
     router,
@@ -354,6 +426,8 @@ export function useAiChat(){
     setIsPTTUserSpeaking,
 
     sendSimulatedUserMessage,
+
+    getMessagePairs,
 
     getChatHistory,
     getChatHistoryText,
