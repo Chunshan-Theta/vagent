@@ -207,12 +207,8 @@ function AnalysisReportContent() {
   };
 
   const handleBackToDemo = () => {
-    if (searchParams.has('back')) {
-      const backUrl = searchParams.get('back') || '/demo';
-      router.push(backUrl);
-    } else {
-      router.back();
-    }
+    const backUrl = searchParams.get('back') || '/demo/landbank';
+    router.push(backUrl);
   };
 
   return (
