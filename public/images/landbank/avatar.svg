@@ -1,0 +1,5 @@
+<svg class="avatar" viewBox="0 0 24 24" fill="none" stroke="#8AA992" stroke-width="2">
+  <circle cx="12" cy="12" r="10"></circle>
+  <circle cx="12" cy="8" r="3"></circle>
+  <path d="M6 18c2-4 4-4 6 0 2-4 4-4 6 0"></path>
+</svg>
