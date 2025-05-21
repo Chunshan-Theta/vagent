@@ -167,6 +167,25 @@ export default function EditAgentPage({
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Voice</label>
+          <select
+            value={formData.voice || 'echo'}
+            onChange={e => setFormData({ ...formData, voice: e.target.value })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            required
+          >
+            <option value="alloy">alloy</option>
+            <option value="ash">ash</option>
+            <option value="ballad">ballad</option>
+            <option value="coral">coral</option>
+            <option value="echo">echo</option>
+            <option value="sage">sage</option>
+            <option value="shimmer">shimmer</option>
+            <option value="verse">verse</option>
+          </select>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">Agent  Conversation Modes</label>
           <textarea
             value={formData.prompt_conversation_modes || ''}
@@ -181,6 +200,16 @@ export default function EditAgentPage({
           <textarea
             value={formData.prompt_prohibited_phrases || ''}
             onChange={(e) => setFormData({ ...formData, prompt_prohibited_phrases: e.target.value })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Agent Criteria</label>
+          <textarea
+            value={formData.criteria || ''}
+            onChange={(e) => setFormData({ ...formData, criteria: e.target.value })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             rows={3}
           />

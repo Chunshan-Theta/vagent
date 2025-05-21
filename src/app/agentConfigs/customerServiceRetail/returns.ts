@@ -297,6 +297,7 @@ true/false/need_more_information
       return { result: completion.choices[0].message.content };
     },
   },
+  criteria: "The agent should maintain a calm and approachable demeanor while expertly handling return requests, ensuring thorough verification of order details and policy compliance, and providing clear guidance throughout the return process."
 };
 
 export default returns;

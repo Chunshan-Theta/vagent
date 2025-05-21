@@ -18,7 +18,9 @@ export const agentSchema = z.object({
   prompt_voice_styles: z.string().optional(),
   prompt_conversation_modes: z.string().optional(),
   prompt_prohibited_phrases: z.string().optional(),
+  criteria: z.string().optional(),
   tools: z.array(toolSchema).optional(),
+  voice: z.string().default('echo')
 });
 
 export type Agent = z.infer<typeof agentSchema>;

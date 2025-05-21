@@ -45,7 +45,9 @@ export async function PUT(
       prompt_voice_styles,
       prompt_conversation_modes,
       prompt_prohibited_phrases,
+      criteria,
       tools,
+      voice,
     } = data;
 
     // Validate tools format
@@ -68,8 +70,8 @@ export async function PUT(
        SET name = $1, public_description = $2, prompt_name = $3,
            prompt_personas = $4, prompt_customers = $5, prompt_tool_logics = $6,
            prompt_voice_styles = $7, prompt_conversation_modes = $8,
-           prompt_prohibited_phrases = $9, tools = $10, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $11
+           prompt_prohibited_phrases = $9, criteria = $10, tools = $11, voice = $12, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $13
        RETURNING *`,
       [
         name,
@@ -81,7 +83,9 @@ export async function PUT(
         prompt_voice_styles,
         prompt_conversation_modes,
         prompt_prohibited_phrases,
+        criteria,
         tools || [],
+        voice || 'echo',
         params.id,
       ]
     );

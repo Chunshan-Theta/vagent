@@ -155,6 +155,7 @@ const salesAgent: AgentConfig = {
         };
       },
     },
-  };
+    criteria: "The agent should be knowledgeable about products and promotions, provide accurate pricing information, and guide customers through the purchasing process while maintaining a helpful and professional demeanor."
+};
 
 export default salesAgent;

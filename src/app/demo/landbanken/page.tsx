@@ -4,7 +4,7 @@ import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { TranscriptProvider, useTranscript } from "@/app/contexts/TranscriptContext";
 import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
-import App, { AppRef } from "@/app/App";
+import App, { AppRef } from "./App";
 import { useRouter } from "next/navigation";
 
 import ChatView from "@/app/components/chat/ChatView";
@@ -49,29 +49,27 @@ function LandbankChatPage() {
     onSessionClose
   } = useAiChat();
 
-  
 
   useEffect(() => {
-    document.title = '業務陪練劇本';
-
-    addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `💡 本次練習是「模擬與客戶對話」的情境練習，請你試著扮演顧問角色，看看你會怎麼回應客戶的疑問！
-      這位客戶的基本情況如下：
-      👤 客戶王小姐的背景：
-      30 歲，已婚上班族
-      全家月收入約 12 萬元（與配偶合計）
-      每月主要開銷包含：
-      🏠 房貸：桃園中路重劃區，貸款 800 萬元，每月還款 28,678 元
-      🎓 小孩教育費：兩位孩子每月花費 3 萬元
-      🛒 家用開銷（食衣住行、娛樂、保險等）：每月約 3 萬元
-      ❤️ 孝親費：每月 5,000 元
-      💬 王小姐的疑問與擔心：「保費太貴了，這樣會不會讓我們沒錢用？」
+    document.title = 'Business Training Script';
+    addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `💡 This exercise is a "Customer Dialogue Simulation" scenario. Please try to play the role of a consultant and see how you would respond to the customer's concerns!
+      Here's the customer's basic information:
+      👤 Ms. Wang's background:
+      30 years old, married working professional
+      Combined monthly household income: $12,000 (with spouse)
+      Monthly expenses include:
+      🏠 Mortgage: Taoyuan Zhonglu District, $800,000 loan, monthly payment $28,678
+      🎓 Children's education: Two children, monthly cost $30,000
+      🛒 Household expenses (food, clothing, transportation, entertainment, insurance, etc.): About $30,000 monthly
+      ❤️ Parental support: $5,000 monthly
+      💬 Ms. Wang's concern: "The insurance premium is too expensive, will this leave us with no money to use?"
       
       `);
-      addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 你的任務是：
-      請試著用專業的說明方式，幫助王小姐釐清他的疑慮，讓他了解這張保單的保障意義，並一起找出最適合他的做法，進而提高他願意購買的可能性。
-      這個練習會模擬實際對話，搭配即時回饋，幫助你強化與客戶溝通與說服的能力！
+      addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 Your task:
+      Please try to use professional explanations to help Ms. Wang clarify her concerns, help her understand the value of this insurance policy, and work together to find the most suitable solution, thereby increasing her willingness to purchase.
+      This exercise simulates real dialogue with instant feedback to help strengthen your customer communication and persuasion skills!
       
-      現在我會作為『客戶王小姐』，讓您練習。
+      I will now act as 'Ms. Wang' for your practice.
       `);
   }, []);
   const [localLoading, setLocalLoading] = useState(false);
@@ -89,7 +87,7 @@ function LandbankChatPage() {
   const askItems = useRef([
     {
       type: 'text' as const,
-      title: '請輸入您的名字',
+      title: 'Please enter your name',
       name: 'name',
       defaultValue: '',
     },
@@ -123,61 +121,61 @@ function LandbankChatPage() {
 
       // Perform analysis here before redirecting
       const criteria = `
-評分標準標題 1：用淺白語言闡述財富價值
-非常好：使用強烈視覺化的比喻（如「財務安全氣囊」），具體描述保險如何在意外時吸收房貸壓力，並提及保護對象（如家人），情境鮮明且具象。
-好：使用簡單比喻（如「安全氣囊」），點出保險的關鍵作用，但描述稍簡略，未展開細節。
-普通：文字平淡，僅泛泛提及保障功能，缺乏具體畫面或吸引力。
-不太好：語言抽象（如「避免風險」），未提供具體情境，難以引發客戶共鳴。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 1: Explain Wealth Value in Simple Terms
+Excellent: Uses strong visual metaphors (like "financial safety cushion"), specifically describes how insurance absorbs mortgage pressure during accidents, mentions protection targets (like family), with vivid and concrete scenarios.
+Good: Uses simple metaphors (like "safety cushion"), points out key insurance functions, but descriptions are brief without detailed elaboration.
+Average: Plain text, only generally mentions protection functions, lacks specific imagery or appeal.
+Poor: Abstract language (like "avoiding risks"), no specific scenarios, difficult to resonate with clients.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 2：梳理對話邏輯提升客戶信心
-非常好：先確認客戶疑慮（如「保費太高」），接著解釋原因並連結實際情境（房貸壓力），最後提出具體且彈性的解決方案，邏輯流暢。
-好：回應疑慮並提供解決方案，但解釋環節較簡略，未能充分鋪陳。
-普通：回應直接但缺乏層次感，僅提及方案調整，未展現完整邏輯。
-不太好：回應零散，無明確結構，甚至顯得敷衍，難以建立專業感。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 2: Organize Dialogue Logic to Build Client Confidence
+Excellent: First confirms client concerns (like "premium too high"), then explains reasons and connects to actual scenarios (mortgage pressure), finally proposes specific and flexible solutions, with smooth logic.
+Good: Responds to concerns and provides solutions, but explanation is brief, not fully developed.
+Average: Direct response but lacks layering, only mentions plan adjustments, doesn't show complete logic.
+Poor: Scattered responses, no clear structure, even appears perfunctory, difficult to establish professionalism.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 3：回應客戶情緒建立信任關係
-非常好：具體點出客戶生活壓力（如「房貸、學費」），展現深度理解，並自然過渡到保障建議，情緒共鳴強。
-好：認同客戶情緒（如「精打細算」），但未展開具體情境，理解感稍弱。
-普通：泛泛回應客戶想法，缺乏針對性細節，情緒連結不足。
-不太好：忽視或輕視客戶情緒（如「不算什麼」），可能引發反感。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 3: Respond to Client Emotions to Build Trust
+Excellent: Specifically points out client life pressures (like "mortgage, tuition"), shows deep understanding, naturally transitions to protection suggestions, strong emotional resonance.
+Good: Acknowledges client emotions (like "careful budgeting"), but doesn't expand on specific scenarios, understanding feels weak.
+Average: General response to client thoughts, lacks targeted details, insufficient emotional connection.
+Poor: Ignores or belittles client emotions (like "not a big deal"), may cause resentment.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 4：針對客戶疑慮提供精準解方
-非常好：針對疑慮（如「短期財務壓力」）提出具體方案（如「保費遞增型」），包含數字細節並徵詢意見，解決力強。
-好：回應疑慮並給出方向（如「基本保障」），但細節不夠具體。
-普通：泛泛建議調整方案，缺乏針對性細節，解決力有限。
-不太好：回應空洞或過於自信（如「不會有更低的」），未能有效解惑。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 4: Provide Precise Solutions for Client Concerns
+Excellent: Addresses concerns (like "short-term financial pressure") with specific solutions (like "incremental premium"), includes numerical details and seeks opinions, strong problem-solving ability.
+Good: Responds to concerns and gives direction (like "basic coverage"), but details aren't specific enough.
+Average: General suggestions for plan adjustments, lacks targeted details, limited problem-solving.
+Poor: Empty responses or overly confident (like "can't get lower"), fails to effectively address concerns.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 5：用數據佐證凸顯財富效益
-非常好：用具體數字（如「每天 40 元」對比「500 萬房貸」），並以生活化單位（如「便當錢」）解釋，效益清晰且吸引人。
-好：提供數字（如「1.5 萬 vs. 500 萬」），但未細化到日常層面，說服力稍弱。
-普通：提及保費與保障關係，但數字模糊，缺乏震撼力。
-不太好：數字空泛（如「幾千塊」），未能有效凸顯效益。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 5: Use Data to Highlight Wealth Benefits
+Excellent: Uses specific numbers (like "40 dollars daily" vs "500k mortgage"), explains in everyday terms (like "lunch money"), clear and attractive benefits.
+Good: Provides numbers (like "15k vs 500k"), but doesn't break down to daily level, slightly weaker persuasion.
+Average: Mentions premium and coverage relationship, but numbers are vague, lacks impact.
+Poor: Vague numbers (like "a few thousand"), fails to effectively highlight benefits.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 6：闡述風險對比凸顯保障優勢
-非常好：詳細對比無保險的風險（「500 萬房貸，每月 2.5 萬」）與有保險的安心，數字明確且具衝擊力。
-好：點出風險與保障差異，但細節不夠具體，力度稍弱。
-普通：泛泛提及保障作用，風險描述模糊，難以打動客戶。
-不太好：風險與保障關係不清，表達空洞，缺乏說服力。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 6: Explain Risk Comparison to Highlight Coverage Advantages
+Excellent: Detailed comparison of risks without insurance ("500k mortgage, 25k monthly") vs security with insurance, clear numbers with impact.
+Good: Points out risk and coverage differences, but details aren't specific enough, slightly weaker impact.
+Average: Generally mentions coverage function, vague risk description, difficult to move clients.
+Poor: Unclear relationship between risk and coverage, empty expression, lacks persuasion.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 7：分享成功案例增強說服力
-非常好：講述具體案例（「三年前投保，400 萬房貸還清」），細節豐富且具情感共鳴。
-好：提及案例並點出效果，但缺乏細節，故事性稍弱。
-普通：泛泛提及他人經驗，無具體內容，說服力不足。
-不太好：僅空洞推薦，無案例支撐，難以建立信任。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 7: Share Success Stories to Enhance Persuasion
+Excellent: Tells specific cases ("insured three years ago, 400k mortgage paid off"), rich details with emotional resonance.
+Good: Mentions cases and points out effects, but lacks details, slightly weaker storytelling.
+Average: Generally mentions others' experiences, no specific content, insufficient persuasion.
+Poor: Only empty recommendations, no case support, difficult to build trust.
+Cannot Judge: Not mentioned or cannot be determined.
 ---
-評分標準標題 8：順勢探詢意願促進財富規劃
-非常好：以具體調整（如「每天 40 元」）為基礎，自然徵詢意見（如「這樣符合您的規劃嗎？」），過渡流暢。
-好：提出調整後簡單詢問意願，語氣自然但吸引力稍弱。
-普通：直接問看法，缺乏引導鋪陳，略顯突兀。
-不太好：語氣急促或推銷感強（如「要不要試試」），易讓客戶抗拒。
-無法判斷：未提及或無法判斷。
+Rating Criteria Title 8: Naturally Inquire About Willingness to Promote Wealth Planning
+Excellent: Based on specific adjustments (like "40 dollars daily"), naturally seeks opinions (like "does this match your planning?"), smooth transition.
+Good: Proposes adjustment and simply asks about willingness, natural tone but slightly weaker appeal.
+Average: Directly asks for opinion, lacks guiding context, slightly abrupt.
+Poor: Rushed tone or strong sales pressure (like "want to try?"), easily causes client resistance.
+Cannot Judge: Not mentioned or cannot be determined.
 `.trim().split('---').map(item => item.trim());
 
       const weights = [0.5, 0.5, 0.5, 0.5];
@@ -193,6 +191,7 @@ function LandbankChatPage() {
             criteria,
             weights,
           },
+          detectedLanguage: "en",
         }),
       });
 
@@ -238,8 +237,8 @@ function LandbankChatPage() {
       setAnalysisProgress(100);
 
       // Redirect to the analysis report page
-      const back = encodeURIComponent('/demo/landbank');
-      router.push(`/demo/landbank/report?back=${back}`);
+      const back = encodeURIComponent('/demo/landbanken');
+      router.push(`/demo/landbanken/report?back=${back}`);
     } catch (error) {
       // Clear the progress timer on error
       if (progressTimerRef.current) {
@@ -259,7 +258,7 @@ function LandbankChatPage() {
     console.log('name:', datas.name)
     const name = (datas.name || '').trim()
     if (!name) {
-      form.emitError('name', '請務必輸入名字')
+      form.emitError('name', 'Please enter your name')
       return
     }
 
@@ -291,7 +290,7 @@ function LandbankChatPage() {
         <div style={{ maxWidth: '400px', width: '100%' }}>
           <AskForm
             items={askItems.current}
-            submitText="送出並開始"
+            submitText="Submit and Start"
             onSubmit={onSubmitAskForm}
             theme="landbank"
           ></AskForm>
@@ -303,6 +302,7 @@ function LandbankChatPage() {
   function chatScene() {
     return (
       <ChatView
+        lang="en"
         classNames={['landbank']}
         background={chatBackground}
         isEnd={isCallEnded}
@@ -311,7 +311,6 @@ function LandbankChatPage() {
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
-        lang="zh"
       ></ChatView>
     )
   }
@@ -328,7 +327,7 @@ function LandbankChatPage() {
       <div style={{ display: 'none' }}>
         <App
           ref={appRef}
-          agentSetKey="landbankAgent"
+          agentSetKey="landbankAgentEn"
           onSessionOpen={onSessionOpen}
           onSessionResume={onSessionResume}
           onSessionClose={onSessionClose}

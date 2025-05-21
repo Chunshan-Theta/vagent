@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPool } from '../db';
+import { v4 as uuidv4 } from 'uuid';
 
 const pool = getPool();
 
@@ -31,7 +32,9 @@ export async function POST(request: Request) {
       prompt_voice_styles,
       prompt_conversation_modes,
       prompt_prohibited_phrases,
+      criteria,
       tools,
+      voice,
     } = data;
 
     // Validate tools format
@@ -48,15 +51,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    const agent_id = uuidv4();
 
     const result = await pool.query(
       `INSERT INTO agents (
-        name, public_description, prompt_name, prompt_personas,
+        agent_id, name, public_description, prompt_name, prompt_personas,
         prompt_customers, prompt_tool_logics, prompt_voice_styles,
-        prompt_conversation_modes, prompt_prohibited_phrases, tools
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        prompt_conversation_modes, prompt_prohibited_phrases, criteria, tools, voice
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *`,
       [
+        agent_id,
         name,
         public_description,
         prompt_name,
@@ -66,7 +71,9 @@ export async function POST(request: Request) {
         prompt_voice_styles,
         prompt_conversation_modes,
         prompt_prohibited_phrases,
+        criteria,
         tools || [],
+        voice || 'echo',
       ]
     );
 

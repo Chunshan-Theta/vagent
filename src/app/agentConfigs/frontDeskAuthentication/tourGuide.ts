@@ -52,6 +52,7 @@ Callers should always end up feeling welcomed and excited about potentially book
 3. Offer additional resources or answer any questions, ensuring the conversation remains engaging and informative.
 `,
   tools: [],
+  criteria: "The agent should maintain a warm, enthusiastic, and slightly nervous personality while providing detailed information about apartment amenities and ensuring all visitor inquiries are addressed thoroughly."
 };
 
 export default tourGuide;

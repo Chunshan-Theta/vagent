@@ -48,16 +48,17 @@ export default function IntroPage() {
 
         <div className="mt-8 text-center">
           <a
-            href="/demo"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Get Started
-          </a>
-          <a
-            href="/demo/deltaww"
+            href="/demo/landbanken"
             className="ml-4 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
-            Get Started With Chat
+            Get Started With English Chat
+          </a>
+          
+          <a
+            href="/demo/landbank"
+            className="ml-4 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Get Started With Mandarin Chat
           </a>
         </div>
       </div>

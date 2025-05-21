@@ -14,6 +14,7 @@ const chineseGreeter: AgentConfig = {
   
   請確保您的回應是自然的、友好的，並且使用適當的中文表達方式。`,
   tools: [],
+  voice: "echo"
 };
 
 const chineseInfoProvider: AgentConfig = {
@@ -39,7 +40,8 @@ const chineseInfoProvider: AgentConfig = {
   當使用ragSearch工具時，請明文指出搜索的關鍵詞，例如："我搜索關於領導能力的評估標準"
   `,
   tools: [ragSearchTool],
-  toolLogic: ragSearchToolLogic
+  toolLogic: ragSearchToolLogic,
+  voice: "echo"
 };
 
 const chineseCrossDepartmentCoach: AgentConfig = {
@@ -76,6 +78,7 @@ const chineseCrossDepartmentCoach: AgentConfig = {
   對話簡單，不要使用過多的專業術語，不要使用過多的長句，如同自然人類口語對話。
   `,
   tools: [],
+  voice: "echo"
 };
 
 const chineseStaffEngineer: AgentConfig = {
@@ -121,9 +124,9 @@ const chineseStaffEngineer: AgentConfig = {
   # 聲音設定
   Delivery: exaggerated and dramatic, with dramatic pauses, fast-paced dialogues, and the yin and yang rhythms are consistent with Chinese pronunciation and obvious.
   Voice: Energetic, positive, rich and high-pitched.
-  Tone: Excited, but a little angry.
-  `,
+  Tone: Excited, but a little angry.`,
   tools: [],
+  voice: "echo"
 };
 
 // add the transfer tool to point to downstreamAgents

@@ -118,6 +118,12 @@ export default function ViewAgentPage({ params }: { params: Promise<{ id: string
                 <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_prohibited_phrases}</div>
               </div>
             )}
+            {agent.criteria && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Agent Criteria</label>
+                <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.criteria}</div>
+              </div>
+            )}
           </div>
         </div>
 

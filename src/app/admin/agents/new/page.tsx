@@ -9,6 +9,7 @@ export default function NewAgentPage() {
   const [formData, setFormData] = useState<Partial<Agent>>({});
   const [error, setError] = useState<string | null>(null);
   const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     fetchTools();
@@ -52,6 +53,32 @@ export default function NewAgentPage() {
       router.push('/admin/agents');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save agent');
+    }
+  };
+
+  const generateCriteria = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate/criteria', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          public_description: formData.public_description,
+          prompt_name: formData.prompt_name,
+          prompt_personas: formData.prompt_personas,
+          prompt_customers: formData.prompt_customers,
+          prompt_tool_logics: formData.prompt_tool_logics,
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to generate criteria');
+      const data = await response.json();
+      setFormData({ ...formData, criteria: data.criteria });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate criteria');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -145,6 +172,25 @@ export default function NewAgentPage() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Voice</label>
+          <select
+            value={formData.voice || 'echo'}
+            onChange={e => setFormData({ ...formData, voice: e.target.value })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            required
+          >
+            <option value="alloy">alloy</option>
+            <option value="ash">ash</option>
+            <option value="ballad">ballad</option>
+            <option value="coral">coral</option>
+            <option value="echo">echo</option>
+            <option value="sage">sage</option>
+            <option value="shimmer">shimmer</option>
+            <option value="verse">verse</option>
+          </select>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">Agent  Conversation Modes</label>
           <textarea
             value={formData.prompt_conversation_modes || ''}
@@ -159,6 +205,26 @@ export default function NewAgentPage() {
           <textarea
             value={formData.prompt_prohibited_phrases || ''}
             onChange={(e) => setFormData({ ...formData, prompt_prohibited_phrases: e.target.value })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-medium text-gray-700">Agent Criteria</label>
+            <button
+              type="button"
+              onClick={generateCriteria}
+              disabled={isGenerating}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 flex items-center gap-1"
+            >
+              {isGenerating ? 'Generating...' : 'Auto Generate'}
+            </button>
+          </div>
+          <textarea
+            value={formData.criteria || ''}
+            onChange={(e) => setFormData({ ...formData, criteria: e.target.value })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             rows={3}
           />

@@ -9,7 +9,9 @@ CREATE TABLE IF NOT EXISTS agents (
     prompt_voice_styles TEXT,
     prompt_conversation_modes TEXT,
     prompt_prohibited_phrases TEXT,
+    criteria TEXT,
     tools JSONB[] DEFAULT '{}',
+    voice VARCHAR(255) DEFAULT 'echo',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
