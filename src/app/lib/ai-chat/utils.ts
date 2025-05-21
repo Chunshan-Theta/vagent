@@ -5,11 +5,11 @@ import { sharedConfig } from "@/app/agentConfigs";
 
 
 const { sttPrompt, startAsk } = sharedConfig;
-  /**
-   * 確保文字並不是直接重複 stt prompt 的內容
-   * @param text 
-   * @returns 
-   */
+/**
+ * 確保文字並不是直接重複 stt prompt 的內容
+ * @param text 
+ * @returns 
+ */
 export function sttTextValid(text:string){
   text = (text || '').trim();
   const invalid = text === "接著繼續" ||
@@ -18,6 +18,12 @@ export function sttTextValid(text:string){
     text === sttPrompt || 
     text.length < 1;
   return !invalid;
+}
+
+export function sttTextValidEx(text:string){
+  text = (text || '').trim();
+  const valid = sttTextValid(text) && text !== '通話暫停中' && text !== '通話已恢復';
+  return valid;
 }
   
 type getChatHistoryTextOptions = {
