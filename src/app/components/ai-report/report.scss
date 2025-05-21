@@ -1,0 +1,116 @@
+.report-view {
+  --black: #121212;
+  --dark-gray: #1e1e1e;
+  --mid-gray: #333333;
+  --light-gray: #f5f5f5;
+  --yellow: #ffd166;
+  --orange: #ef8354;
+  --blue: #4361ee;
+  --accent: #06d6a0;
+  --gradient-start: #ffd166;
+  --gradient-end: #ef8354;
+}
+
+.report-view {
+  color: white;
+
+  .timeline-title {
+    font-size: 1.2em;
+    margin-bottom: 12px;
+  }
+
+  .timeline-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding-left: 14px;
+  }
+
+  .timeline-item {
+    border-left: 3px solid var(--yellow);
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .timeline-item .marker {
+    position: absolute;
+    left: -12px;
+    top: 0;
+    background-color: var(--yellow);
+    color: var(--black);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.8em;
+  }
+
+  .content-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+
+    &:not(:last-child) {
+      margin-bottom: 15px;
+    }
+  }
+
+  .content-colume {
+    flex: 1;
+    border-radius: 10px;
+    padding: 15px;
+  }
+
+  // 以下是不同版本的樣式
+
+  &.v1 {
+    .analysis {
+      background: rgba(30, 30, 30, 0.5);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .key-point {
+
+      width: calc(100% / 2 - 10px);
+      // min-width: 300px;
+      max-width: 300px;
+
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 5px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--light-gray);
+    }
+
+    .dialogue-box {
+      flex: 1;
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      border: 1px solid rgba(67, 97, 238, 0.2);
+      min-width: 300px;
+    }
+
+    .dialogue-box.agent {
+      background: rgba(6, 214, 160, 0.1);
+      border: 1px solid rgba(6, 214, 160, 0.2);
+    }
+
+    .dialogue-box p {
+      margin: 0;
+    }
+
+    .dialogue-box p:first-child {
+      font-weight: 600;
+      color: var(--light-gray);
+      margin-bottom: 10px;
+    }
+  }
+}
