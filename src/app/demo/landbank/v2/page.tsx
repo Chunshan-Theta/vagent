@@ -318,6 +318,9 @@ function LandbankChatPage() {
 
     setAnalysisProgress(100);
     setIsAnalyzing(false);
+
+
+    router.push(`/demo/landbank/report/v2`);
   }
 
   /** 處理要放在對話紀錄裡面的  */
