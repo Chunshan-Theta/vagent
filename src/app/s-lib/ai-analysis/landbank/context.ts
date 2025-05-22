@@ -37,6 +37,11 @@ export function getMessages(params: SentimentParams){
 - 對話是否已產生斷裂、誤解或情緒升溫？
 
 不需評論誰對誰錯，只需客觀描述狀況演變。
+最後條列出「目前的情境狀況」(sentences)」
+
+範例回應：
+- 客戶表現出對財務壓力的擔憂和焦慮
+- 對話中出現了客戶對業務員的質疑和不滿
 
 對話如下：
 ${params.history}

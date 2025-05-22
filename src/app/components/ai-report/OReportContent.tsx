@@ -1,5 +1,6 @@
-/* eslint-disable @next/next/no-img-element */
+"use client"
 import React, { useEffect, useRef, useMemo, useState } from 'react'
+import { ReportV1 } from '@/app/types/ai-report'
 import Image from 'next/image'
 
 const avatarImg1 = '/images/landbank/土銀_楊副_大笑.jpg'
@@ -7,27 +8,9 @@ const avatarImg2 = '/images/landbank/土銀_楊副_平和.jpg'
 const avatarImg3 = '/images/landbank/土銀_楊副_生氣.jpg'
 
 
-type GradingItem = {
-  appendScore: number
-  reason: string
-  score: number
-  title: string
-  type: string
-  typeId: number
-}
+type GradingItem = ReportV1.GradingItem
 
-type OReportProps = {
-  history?: Array<{ role: string, content: string }>
-  rubric?: Array<{ criterion: string, score: number }>
-  playLogText?: string
-  adviceItems?: Array<{ content: string }>
-  user?: {
-    name?: string
-    code?: string
-    jobTitle?: string
-  }
-  gradingItems?: Array<GradingItem>
-}
+type OReportProps = ReportV1.OReportProps
 
 const gradingOrder: { [title: string]: number } = {
   解釋財富價值清晰度: 0,
@@ -44,35 +27,13 @@ const gradingRule = {
   minContainScore: 5
 }
 
-function parseAdvice(text: string) {
-  const mm = [...text.matchAll(/^建議\s*\d\s*[:：]\s*/gm)]
-  const list = new Array(mm.length)
-  for (let i = 0; i < mm.length; i += 1) {
-    const m = mm[i]
-    const nM = mm[i + 1]
-    const start = m.index! + m[0].length
-    const end = nM ? nM.index : text.length
-    const content = text.substring(start, end).trim()
-    list[i] = { content }
-  }
-  return list
-}
-
-function getFormValue(datas: any, key: string) {
-  if (datas.exercise === 'B') {
-    const obj = { code: '123456', jobTitle: '理財業務人員' } as any
-    return obj[key]
-  }
-  return datas.demoInfo?.[key] || undefined
-}
-
 function getPlayLogs(datas: any) {
   const m = datas.playLogs || {}
   const playLogs: Array<{ role: 'assistant' | 'user'; content: string }> = m['1'] || []
   return playLogs
 }
 
-export default function OReportView(opts: OReportProps) {
+export default function OReportContent(opts: OReportProps) {
   const conv = {}
 
   const [ready, setReady] = useState(false)
@@ -87,37 +48,49 @@ export default function OReportView(opts: OReportProps) {
 
   const user = useMemo(() => {
     return opts.user || {}
-  }, [datas])
+  }, [opts.user])
 
   const playLogsText = useMemo(() => {
-    return opts.playLogText
+    return opts.playLogText || ''
   }, [opts.playLogText])
 
   const adviceItems = useMemo(() => {
-    const mLogs = logs.filter((log: any) => log.name === 'landbank/n-ask--a4')
-    const log = mLogs[mLogs.length - 1] || null
-    if (log) return parseAdvice(log.results?.output || '')
-    return []
-  }, [logs])
+    // TODO
+    const items = opts.adviceItems || []
+    return items
+  }, [opts.adviceItems])
 
   const grading = useMemo(() => {
-    const gradingItems: GradingItem[] = opts.gradingItems || []
-    let other = 100
-    gradingItems.forEach((item) => {
-      if (gradingOrder[item.title] === undefined) {
-        gradingOrder[item.title] = other
-        other++
+    if (opts.rubric) {
+      const gradingItems: GradingItem[] = opts.rubric.map((item) => ({
+        title: item.criterion,
+        score: item.score,
+        reason: item.reason,
+        type: '',
+        typeId: 5,
+        appendScore: 0
+      }))
+      let other = 100
+      gradingItems.forEach((item) => {
+        if (gradingOrder[item.title] === undefined) {
+          gradingOrder[item.title] = other
+          other++
+        }
+        item.score = item.score || 0
+        if (item.score < 0) item.score = 0
+        if (item.score > 100) item.score = 100
+      })
+      gradingItems.sort((a, b) => gradingOrder[a.title] - gradingOrder[b.title])
+      return {
+        gradingItems,
+        gradingTitles: gradingItems.map((item) => item.title)
       }
-      item.score = item.score || 0
-      if (item.score < 0) item.score = 0
-      if (item.score > 100) item.score = 100
-    })
-    gradingItems.sort((a, b) => gradingOrder[a.title] - gradingOrder[b.title])
-    return {
-      gradingItems,
-      gradingTitles: gradingItems.map((item) => item.title)
     }
-  }, [datas])
+    return {
+      gradingItems: [],
+      gradingTitles: []
+    }
+  }, [opts.rubric])
 
 
   // 計算分數統計
@@ -159,8 +132,7 @@ export default function OReportView(opts: OReportProps) {
       console.log('[oreport] init')
       if (!gsap || !Chart) {
         if (retires > 5) {
-          // eslint-disable-next-line no-console
-          console.error('state', { Chart, gsap })
+          console.log('[oreport] ready')
           setLocalLoading(false)
           return
         }
@@ -169,13 +141,9 @@ export default function OReportView(opts: OReportProps) {
         return
       }
       if (destroyed) return
-      console.log('A')
       improvmentHoverEffect()
-      console.log('B')
       initRadarChart()
-      console.log('C')
       animatePageLoad()
-      console.log('D')
       setLocalLoading(false)
     }
     run()
@@ -422,6 +390,15 @@ export default function OReportView(opts: OReportProps) {
         })
       )
     }
+
+    console.log('[oreport] DEBUG', {
+      grading,
+      scoreStatistics,
+      user,
+      playLogsText,
+      adviceItems
+    })
+
     return () => {
       const { gsap } = window as any
       destroyed = true

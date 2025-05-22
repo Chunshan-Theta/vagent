@@ -97,6 +97,9 @@ function LandbankChatPage() {
       defaultValue: '',
     },
   ])
+  const userInfo = useRef({
+    name: '',
+  })
 
 
 
@@ -108,7 +111,7 @@ function LandbankChatPage() {
       form.emitError('name', '請務必輸入名字')
       return
     }
-
+    userInfo.current = { name }
     setScene('chat');
   }
   // 等切換到 chat 之後要自動開 mic
@@ -153,6 +156,7 @@ function LandbankChatPage() {
     })
     // console.log('pairs:', pairs)
 
+    // 初始化 timelineItems
     const timelineItems = pairs.map((item) => {
       const aiMsg = item.messages[0]
       const userMsgs = item.messages.slice(1)
@@ -168,7 +172,7 @@ function LandbankChatPage() {
         mainColor: '#ffd166',
         title: `🕒 ${timeStr}`,
         subtitleColor: '#ffd166',
-        subtitle: '客戶情緒：Neutral（中性）',
+        subtitle: '客戶情緒：......',
         aiRole: roleMap.assistant,
         userRole,
         aiSay,
@@ -190,6 +194,7 @@ function LandbankChatPage() {
       return
     }
 
+    // 基本檢查都跑完之後再確定提交 endConversation
     endConversation();
     setAnalysisProgress(0);
 
@@ -197,13 +202,18 @@ function LandbankChatPage() {
       const { aiSay, userSay } = item
 
       const analysisRole = roleMap.user
-      const chatHistory = `${roleMap.assistant}: ${aiSay}\n${roleMap.user}: ${userSay}`
+      const chatHistory = [
+        `${roleMap.assistant}: ${parseHistoryContent(aiSay)}`,
+        `${roleMap.user}: ${userSay}`
+      ].join('\n')
 
       const missions = [
-        // 順序別改
+        // 順序不重要，後續會用 missionId 來對應
         'landbank/sentiment',
         'landbank/key_points',
-        'landbank/highlights'
+        // landbank/context 和 highlights 會有重疊，只能選一個
+        // 'landbank/highlights',
+        'landbank/context'
       ]
 
       const collect = {
@@ -268,6 +278,13 @@ function LandbankChatPage() {
           item.analysis = highlights
         }
       }
+      if (resMap['landbank/context']) {
+        const contextRes = resMap['landbank/context']
+        const context = contextRes.json.sentences
+        if (Array.isArray(context)) {
+          item.analysis = context
+        }
+      }
 
     }
 
@@ -276,7 +293,7 @@ function LandbankChatPage() {
       missionId: 'landbank/rubric',
       params: {
         criteria: getCriteria(),
-        history: getFullChatHistory(),
+        history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
       },
       responseType: 'json_schema'
     })
@@ -289,19 +306,26 @@ function LandbankChatPage() {
     }
 
     const oreport = {
-      
-      history: getFullChatHistory(),
+      user: userInfo.current,
+      scores: res.json.scores || [],
+      history: getFullChatHistory().map((msg) => `${roleMap[msg.role as 'user' | 'assistant']}: ${msg.content}`).join('\n\n'),
     }
 
     // Store the analysis result and chat history in localStorage
     localStorage.setItem('landbank/v2/report', JSON.stringify(report));
-    localStorage.setItem('landbank/v2/oreport', JSON.stringify(report));
+    localStorage.setItem('landbank/v2/oreport', JSON.stringify(oreport));
     localStorage.setItem('landbank/v2/messages', JSON.stringify(getFullChatHistory()));
 
     setAnalysisProgress(100);
     setIsAnalyzing(false);
   }
 
+  /** 處理要放在對話紀錄裡面的  */
+  function parseHistoryContent(content: string | undefined | null) {
+    if (content == null) return ''
+    const mContent = (content || '').trim().replace(/\n/g, ' ')
+    return `"${mContent}"`
+  }
 
   function getFullChatHistory() {
     const { pairs } = getMessagePairs({
@@ -309,12 +333,12 @@ function LandbankChatPage() {
       'keepSystemMessage': false,
       'keepNextMsgCount': 0,
     })
-    const history: any[] = []
+    const history: Array<{ role: string; content: string; createdAtMs: number }> = []
     for (const pair of pairs) {
       pair.messages.forEach((msg) => {
         history.push({
           role: msg.role,
-          content: msg.data.content,
+          content: parseHistoryContent(msg.data.content),
           createdAtMs: msg.createdAtMs
         })
       })

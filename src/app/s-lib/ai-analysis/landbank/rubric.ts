@@ -2,7 +2,9 @@ import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from
 import getOpts from "./_config"
 
 export type RubricParams = {
+  criteriaTitles?: string[]
   criteria?: string[]|string
+  /** 注: 此處的 history 內講話的對象名稱必須是 user 和 assistant 而不是取代過後的其他字眼 */
   history?: string
 }
 
@@ -113,6 +115,12 @@ ${criteria.join(', ')}。
 }
 
 export function expectSchema(params: RubricParams){
+
+  const criterionAppend: any = {}
+  if(params.criteriaTitles && params.criteriaTitles.length > 0){
+    criterionAppend.enum = params.criteriaTitles
+  }
+
   return {
     name: 'rubric',
     description: '根據這些標準(criteria)分析以下訊息',
@@ -126,11 +134,14 @@ export function expectSchema(params: RubricParams){
             properties: {
               criterion: {
                 type: 'string',
+                description: '評分標準的名稱(標題)',
+                ...criterionAppend
               },
               score: {
                 type: 'number',
+                description: '針對該標準的得分',
               },
-              explanation: {
+              reason: {
                 type: 'string',
               },
               examples: {
@@ -146,11 +157,14 @@ export function expectSchema(params: RubricParams){
                 },
               },
             },
-            required: ['criterion', 'score', 'explanation', 'examples', 'improvementTips'],
+            additionalProperties: false,
+            required: ['criterion', 'score', 'reason', 'examples', 'improvementTips'],
           },
         }
       },
+      additionalProperties: false,
       required: ['scores'],
-    }
+    },
+    strict: true,
   };
 }

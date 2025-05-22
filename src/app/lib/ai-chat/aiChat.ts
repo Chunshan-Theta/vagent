@@ -378,11 +378,11 @@ export function useAiChat(){
       }
       pushMsg(msg)
       if(msg.role === spRole){
-        craeteNextPair(msg.createdAtMs);
         if(keepCountMax > 0){
           keepCount++;
           msgItems.slice(i + 1, i + 1 + keepCountMax).forEach((msg) => pushMsg(msg));
         }
+        craeteNextPair(msg.createdAtMs);
       }
     }
     const fPairs = pairs.filter((p)=>p.messages.length > 0);

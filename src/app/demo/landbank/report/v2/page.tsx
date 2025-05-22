@@ -16,13 +16,32 @@ const settingsMap = {
   }
 }
 
+type OReportDatas = {
+  user: { name: string }
+  scores: any[]
+  history: string
+}
+
 function LandbankReportV2() {
   const reportData = useRef<ReportV1.ReportDatas | null>(null)
+  const oreportData = useRef<OReportDatas | null>(null)
 
   const [localLoading, setLocalLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'report' | 'oreport'>('report')
 
   const loading = useMemo(() => localLoading, [localLoading])
+
+  const advanceItems = useMemo(() => {
+    const tips: string[] = []
+    const scores = oreportData.current?.scores || []
+    for (const score of scores) {
+      const { criterion, score: scoreValue, improvementTips } = score
+      if (improvementTips && improvementTips.length > 0) {
+        tips.push(improvementTips[0])
+      }
+    }
+    return tips.map((tip) => ({ content: tip }))
+  }, [oreportData.current])
 
   useEffect(() => {
     changeRootCssVar('--background', '#173944')
@@ -45,15 +64,31 @@ function LandbankReportV2() {
     const { timeline } = reportData
 
     const timelineDatas: ReportV1.TimelineData[] = timeline
-    console.log('reportData', reportData)
     return {
       timeline: timelineDatas
     }
   }
 
+  async function fetchOReportData(): Promise<OReportDatas> {
+
+    const settings = settingsMap.default
+    const reportDataStr = localStorage.getItem('landbank/v2/oreport')
+    if (!reportDataStr) {
+      throw new Error('No report data found in local storage')
+    }
+    const reportData = JSON.parse(reportDataStr) as OReportDatas
+    return reportData
+  }
+
   async function init() {
     const data = await fetchReportData()
     reportData.current = data
+    const oreport = await fetchOReportData()
+    oreportData.current = oreport
+    console.log('[report_page]', {
+      report: reportData.current,
+      oreport: oreportData.current
+    })
   }
 
 
@@ -66,7 +101,7 @@ function LandbankReportV2() {
       .finally(() => {
         setLocalLoading(false)
       })
-  })
+  }, [])
 
   function createReportView() {
     if (reportData.current) {
@@ -79,7 +114,20 @@ function LandbankReportV2() {
         )
       }
       if (activeTab === 'oreport') {
-        return <OReportView />
+        const data = oreportData.current
+        return (
+          <>
+            {data &&
+              <OReportView
+                user={data.user}
+                rubric={data.scores}
+                adviceItems={advanceItems}
+                playLogText={data.history}
+
+              />
+            }
+          </>
+        )
       }
     }
     return null
@@ -102,7 +150,7 @@ function LandbankReportV2() {
       color: '#fff'
     }
 
-    const nowStyle = activeTab === tab ? {...style, ...activeStyle} : style
+    const nowStyle = activeTab === tab ? { ...style, ...activeStyle } : style
 
     return {
       style: nowStyle

@@ -9,10 +9,6 @@ type OReportProps = Parameters<typeof OReportContent>[0]
 
 const OReportView: React.FC<OReportProps> = (props) => {
   const [loaded, setLoaded] = useState(0)
-  const conv = useMemo(() => {
-    return {}
-  }, [props.history, props.rubric])
-
 
   const injectScripts = [
     'https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js',
@@ -38,11 +34,11 @@ const OReportView: React.FC<OReportProps> = (props) => {
     }
     // console.log('add script', nowIndex, injectScripts.length, injectScripts[nowIndex])
 
-    console.log('start to load script', injectScripts[nowIndex])
+    // console.log('start to load script', injectScripts[nowIndex])
     const nowScript = document.createElement('script')
     nowScript.src = nextSrc
     nowScript.onload = () => {
-      console.log('load script', injectScripts[nowIndex])
+      // console.log('load script', injectScripts[nowIndex])
       setLoaded((prev) => prev + 1)
       setTimeout(() => {
         loadIndex.current += 1
@@ -73,7 +69,6 @@ const OReportView: React.FC<OReportProps> = (props) => {
           playLogText={props.playLogText}
           adviceItems={props.adviceItems}
           user={props.user}
-          gradingItems={props.gradingItems}
         ></OReportContent>
       }
     </div>

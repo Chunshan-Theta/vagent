@@ -18,3 +18,24 @@ export type TimelineData = {
 export type ReportDatas = {
   timeline: TimelineData[]
 }
+
+export type GradingItem = {
+  appendScore: number
+  reason: string
+  score: number
+  title: string
+  type: string
+  typeId: number
+}
+
+export type OReportProps = {
+  history?: Array<{ role: string, content: string }>
+  rubric?: Array<{ criterion: string, score: number, reason: string }>
+  playLogText?: string
+  adviceItems?: Array<{ content: string }>
+  user?: {
+    name?: string
+    code?: string
+    jobTitle?: string
+  }
+}
