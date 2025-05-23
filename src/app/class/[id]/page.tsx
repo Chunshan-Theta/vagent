@@ -16,7 +16,7 @@ import * as utils from '../utils'
 function createAgentConfig(apiResult: any): AgentConfig {
 
   // Convert tools to full Tool objects and build toolLogic
-  const { tools: fullTools, toolLogic } = utils.handleApiTools(apiResult.tools)
+  const toolConfig = utils.handleApiTools(apiResult.tools)
   const instructions = `
   現在開始，請扮演${apiResult.prompt_name}，以下是你的角色和更多詳細資料：
   ## 你的角色：${apiResult.prompt_name}
@@ -34,12 +34,12 @@ function createAgentConfig(apiResult: any): AgentConfig {
   `;
 
   return {
+    ...apiResult,
     name: apiResult.name,
     publicDescription: apiResult.public_description,
     instructions,
-    tools: fullTools,
-    toolLogic,
-    ...apiResult
+    tools: toolConfig.tools,
+    toolLogic: toolConfig.toolLogic,
   };
 }
 

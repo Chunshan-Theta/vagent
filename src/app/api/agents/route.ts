@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     const result = await pool.query(
       `INSERT INTO agents (
-        agent_id, name, public_description, prompt_name, prompt_personas,
+        id, name, public_description, prompt_name, prompt_personas,
         prompt_customers, prompt_tool_logics, prompt_voice_styles,
         prompt_conversation_modes, prompt_prohibited_phrases, criteria, tools, voice
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)

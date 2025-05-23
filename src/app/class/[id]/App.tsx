@@ -537,7 +537,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         </div>
       </div>
 
-      <div className="flex flex-1 gap-2 px-2 overflow-hidden relative">
+      <div className="flex flex-1 gap-2 px-2  relative">
         <Transcript
           userText={userText}
           setUserText={setUserText}
