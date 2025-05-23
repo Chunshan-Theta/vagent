@@ -27,6 +27,12 @@ export default function ToolForm({ tool, mode }: ToolFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate tool_type pattern
+    if (!/^[a-zA-Z0-9_-]+$/.test(formData.tool_type)) {
+      alert('Tool type must only contain letters, numbers, underscores, and hyphens');
+      return;
+    }
+    
     const url = mode === 'create' ? '/api/tools' : `/api/tools/${tool?.tool_id}`;
     const method = mode === 'create' ? 'POST' : 'PUT';
     
