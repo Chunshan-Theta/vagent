@@ -26,6 +26,19 @@ function LandbankReportV2() {
   const reportData = useRef<ReportV1.ReportDatas | null>(null)
   const oreportData = useRef<OReportDatas | null>(null)
 
+  useEffect(() => {
+    // function handleResize() {
+    //   // 這裡可以根據需要處理 resize 事件
+    //   // console.log('Window resized');
+    // }
+
+    // window.addEventListener('resize', handleResize);
+
+    // return () => {
+    //   window.removeEventListener('resize', handleResize);
+    // };
+  }, [])
+
   const [localLoading, setLocalLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'report' | 'oreport'>('report')
 

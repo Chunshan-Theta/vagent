@@ -62,7 +62,7 @@ const OReportView: React.FC<OReportProps> = (props) => {
 
   return (
     <div className="landbank-oreport">
-      {loaded > injectScripts.length &&
+      {loaded >= injectScripts.length &&
         <OReportContent
           rubric={props.rubric}
           history={props.history}

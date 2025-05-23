@@ -142,13 +142,16 @@ export default function OReportContent(opts: OReportProps) {
         return
       }
       // window.alert('ready')
+      console.log('[oreport] state', { destroyed, ready })
       if (destroyed) return
       // improvmentHoverEffect()
       initRadarChart()
       // animatePageLoad()
       setLocalLoading(false)
     }
-    run()
+    run().catch((e) => {
+      window.alert('init error:' + e.message)
+    })
     function improvmentHoverEffect() {
       if (!rootRef.current) return
       const { gsap } = window as any
