@@ -46,18 +46,27 @@ export async function createRealtimeConnection(
 } 
 
 
-function getUserMedia(constraints: MediaStreamConstraints) {
+function getUserMedia(constraints: MediaStreamConstraints) : Promise<MediaStream>{
   // 根據不同的瀏覽器使用不同的 
   const nav = navigator as any;
-  const fnPromise = navigator.mediaDevices?.getUserMedia
-  // const fnCallback = nav.getUserMedia || nav.webkitGetUserMedia
+
+  let fnPromise:typeof navigator.mediaDevices.getUserMedia|null = null;
+  if(navigator.mediaDevices?.getUserMedia){
+    fnPromise = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices)
+  }
+  let fnCallback:any = null;
+  if(nav.getUserMedia){
+    fnCallback = nav.getUserMedia.bind(nav);
+  }else if(nav.webkitGetUserMedia){
+    fnCallback = nav.webkitGetUserMedia.bind(nav);
+  }
   if (fnPromise) {
     return fnPromise(constraints);
   }
-  // if (fnCallback) {
-  //   return new Promise<MediaStream>((resolve, reject) => {
-  //     fnCallback(constraints, resolve, reject);
-  //   });
-  // }
+  if (fnCallback) {
+    return new Promise<MediaStream>((resolve, reject) => {
+      fnCallback(constraints, resolve, reject);
+    });
+  }
   return Promise.reject(new Error("getUserMedia not supported"));
 }
