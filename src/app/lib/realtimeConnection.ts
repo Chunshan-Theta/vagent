@@ -50,14 +50,14 @@ function getUserMedia(constraints: MediaStreamConstraints) {
   // 根據不同的瀏覽器使用不同的 
   const nav = navigator as any;
   const fnPromise = navigator.mediaDevices?.getUserMedia
-  const fnCallback = nav.getUserMedia || nav.webkitGetUserMedia
+  // const fnCallback = nav.getUserMedia || nav.webkitGetUserMedia
   if (fnPromise) {
     return fnPromise(constraints);
   }
-  if (fnCallback) {
-    return new Promise<MediaStream>((resolve, reject) => {
-      fnCallback(constraints, resolve, reject);
-    });
-  }
+  // if (fnCallback) {
+  //   return new Promise<MediaStream>((resolve, reject) => {
+  //     fnCallback(constraints, resolve, reject);
+  //   });
+  // }
   return Promise.reject(new Error("getUserMedia not supported"));
 }
