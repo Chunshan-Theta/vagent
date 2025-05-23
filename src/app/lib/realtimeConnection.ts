@@ -14,7 +14,7 @@ export async function createRealtimeConnection(
     }
   };
 
-  const ms = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const ms = await getUserMedia({ audio: true });
   pc.addTrack(ms.getTracks()[0]);
 
   const dc = pc.createDataChannel("oai-events");
@@ -44,3 +44,20 @@ export async function createRealtimeConnection(
 
   return { pc, dc };
 } 
+
+
+function getUserMedia(constraints: MediaStreamConstraints) {
+  // 根據不同的瀏覽器使用不同的 
+  const nav = navigator as any;
+  const fnPromise = navigator.mediaDevices?.getUserMedia
+  const fnCallback = nav.getUserMedia || nav.webkitGetUserMedia
+  if (fnPromise) {
+    return fnPromise(constraints);
+  }
+  if (fnCallback) {
+    return new Promise<MediaStream>((resolve, reject) => {
+      fnCallback(constraints, resolve, reject);
+    });
+  }
+  return Promise.reject(new Error("getUserMedia not supported"));
+}

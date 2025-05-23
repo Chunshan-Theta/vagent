@@ -124,6 +124,7 @@ export default function OReportContent(opts: OReportProps) {
     let destroyed = false
     setLocalLoading(true)
     let retires = 0
+    const maxRetries = 15
     // 用於收集 gsap 動畫物件
     const gsapAnimations: any[] = []
     let floatingLights: HTMLElement[] = []
@@ -131,7 +132,7 @@ export default function OReportContent(opts: OReportProps) {
       const { Chart, gsap } = window as any
       console.log('[oreport] init')
       if (!gsap || !Chart) {
-        if (retires > 5) {
+        if (retires > maxRetries) {
           console.log('[oreport] ready')
           setLocalLoading(false)
           return
@@ -140,10 +141,11 @@ export default function OReportContent(opts: OReportProps) {
         setTimeout(run, 1000)
         return
       }
+      // window.alert('ready')
       if (destroyed) return
-      improvmentHoverEffect()
+      // improvmentHoverEffect()
       initRadarChart()
-      animatePageLoad()
+      // animatePageLoad()
       setLocalLoading(false)
     }
     run()

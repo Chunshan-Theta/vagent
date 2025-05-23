@@ -74,7 +74,7 @@ function LandbankReportV2() {
     const settings = settingsMap.default
     const reportDataStr = localStorage.getItem('landbank/v2/oreport')
     if (!reportDataStr) {
-      throw new Error('No report data found in local storage')
+      throw new Error('No oreport data found in local storage')
     }
     const reportData = JSON.parse(reportDataStr) as OReportDatas
     return reportData
