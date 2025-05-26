@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { TranscriptProvider, useTranscript } from "@/app/contexts/TranscriptContext";
 import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
@@ -16,6 +15,7 @@ import { sharedConfig } from "@/app/agentConfigs";
 import * as utils from "./utils";
 
 import { toast } from 'react-toastify';
+import { getTranslation, Language } from "@/app/i18n/translations";
 
 
 
@@ -33,6 +33,8 @@ export function useAiChat(){
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [language, setLanguage] = useState('en' as Language);
+
   const appContext = useAppContext();
   const { sendClientEvent } = appContext;
   
@@ -60,6 +62,7 @@ export function useAiChat(){
     clearTranscript();
   }, []);
 
+  
 
   const handleTalkOn = async () => {
     // alert("handleTalkOn");
@@ -161,7 +164,7 @@ export function useAiChat(){
       id: end_id,
       type: 'text',
       role: 'user',
-      data: { content: "通話暫停中" },
+      data: { content: getTranslation(language, 'ai_chatbot_action.stop_call') },
       createdAtMs: Date.now(),
     });
   };
@@ -172,7 +175,7 @@ export function useAiChat(){
       if(canPause){
         handleTalkOff();  // 掛斷電話
       } else {
-        toast.info('系統回應中，需等待回應完成後再暫停對話。', {
+        toast.info(getTranslation(language, 'ai_chatbot_action.wait_for_response'), {
           position: 'top-center',
           autoClose: 700,
           hideProgressBar: true,
@@ -436,7 +439,7 @@ export function useAiChat(){
     handleTalkOff,
     cancelAssistantSpeech,
     sendClientEvent,
-    
+    setLanguage,
     addTranscriptMessage,
     clearTranscript,
     transcriptItems,
@@ -445,6 +448,7 @@ export function useAiChat(){
     progressTimerRef,
     isLoading: isLoading,
 
-    endConversation
+    endConversation,
+    
   }
 }

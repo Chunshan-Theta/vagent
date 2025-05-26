@@ -25,6 +25,7 @@ import { createRealtimeConnection } from "@/app/lib/realtimeConnection";
 
 // Agent configs
 import { allAgentSets, defaultAgentSetKey, sharedConfig } from "@/app/agentConfigs";
+import { getTranslation, Language } from "@/app/i18n/translations";
 
 // Add language options
 const languageOptions = [
@@ -147,7 +148,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
           currentAgent
         );
       }
-      updateSession(sessionStartTimes === 0, currentAgent?.voice || "echo");
+      updateSession(sessionStartTimes === 0, currentAgent?.voice || "echo", currentAgent?.lang || "zh");
     }
   }, [selectedAgentConfigSet, selectedAgentName, sessionStatus, hideLogs]);
 
@@ -274,7 +275,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     }
   };
 
-  const updateSession = (shouldTriggerResponse: boolean = false, voice: string = "echo") => {
+  const updateSession = (shouldTriggerResponse: boolean = false, voice: string = "echo", lang: Language = "zh") => {
     sendClientEvent(
       { type: "input_audio_buffer.clear" },
       "clear audio buffer on session update"
@@ -299,9 +300,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     const agentVoice = currentAgent?.voice || voice;
 
     // Use shared config for sttPrompt
-    const { sttPrompt } = sharedConfig;
-    console.log("STT Prompt:", sttPrompt);
-    console.log("currentAgent:", currentAgent);
+    console.log("final agent instructions :", instructions);
     console.log("agentVoice:", agentVoice);
 
     const sessionUpdateEvent = {
@@ -314,8 +313,8 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         output_audio_format: "pcm16",
         input_audio_transcription: {
           model: "gpt-4o-transcribe",
-          language: "zh",
-          prompt: sttPrompt,
+          language: lang,
+          prompt: getTranslation(lang, 'ai_chatbot_action.sttPrompt'),
         },
         turn_detection: turnDetection,
         tools,

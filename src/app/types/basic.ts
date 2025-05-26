@@ -1,3 +1,5 @@
+import { Language } from "../i18n/translations";
+
 export type SessionStatus = "DISCONNECTED" | "CONNECTING" | "CONNECTED";
 
 export interface ToolParameterProperty {
@@ -39,6 +41,7 @@ export interface AgentConfig {
   criteria?: string;
   downstreamAgents?: AgentConfig[] | { name: string; publicDescription: string }[];
   voice?: string;
+  lang?: Language;
 }
 
 export type AllAgentConfigsType = Record<string, AgentConfig[]>;

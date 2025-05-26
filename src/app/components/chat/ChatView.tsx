@@ -9,12 +9,13 @@ import { FaMicrophone, FaMicrophoneSlash, FaStop } from 'react-icons/fa'
 import { useEffect } from 'react'
 
 import './chat.scss'
+import { getTranslation, Language } from '@/app/i18n/translations'
 
 interface ChatViewProps {
   boxShadow?: string
   background?: string
   classNames?: string[]
-  lang?: string
+  lang?: Language
 
   isEnd?: boolean
   isLoading?: boolean
@@ -87,9 +88,9 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
   const activeSendButton = useMemo(() => {
     return isMicActive && !isLoading
   }, [isMicActive, isLoading])
-  const NoStart = props.lang === 'zh' ? '對話未開始' : 'Not Started'
-  const PleaseEnter = props.lang === 'zh' ? '請輸入對話' : 'Please enter here...'
-  const EndAndStartAnalysis = props.lang === 'zh' ? '結束並開始分析' : 'End and Start Analysis'
+  const NoStart = getTranslation(props.lang || 'en', 'chat_view.not_started')
+  const PleaseEnter = getTranslation(props.lang || 'en', 'chat_view.enter_message')
+  const EndAndStartAnalysis = getTranslation(props.lang || 'en', 'chat_view.end_and_analyze')
 
   return (
     <div className={mClassNames.join(' ')} style={chatStyle}>

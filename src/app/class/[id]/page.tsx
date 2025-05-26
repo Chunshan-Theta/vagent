@@ -10,28 +10,70 @@ import { AgentConfig, Tool, TranscriptItem } from "@/app/types";
 import { AppProvider } from "@/app/contexts/AppContext";
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 import ChatView from "@/app/components/chat/ChatView";
+import { getTranslation, Language } from "@/app/i18n/translations";
+import LanguageToggle from "@/app/components/LanguageToggle";
 
 import * as utils from '../utils'
 
-function createAgentConfig(apiResult: any): AgentConfig {
+async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
+  try {
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        targetLang,
+      }),
+    });
 
+    if (!response.ok) {
+      throw new Error('Translation failed');
+    }
+
+    const result = await response.json();
+    return result.translatedText;
+  } catch (error) {
+    console.error('Translation error:', error);
+    return text; // Fallback to original text if translation fails
+  }
+}
+
+async function createAgentConfig(apiResult: any, lang?: Language): Promise<AgentConfig> {
   // Convert tools to full Tool objects and build toolLogic
   const toolConfig = utils.handleApiTools(apiResult.tools)
-  const instructions = `
-  現在開始，請扮演${apiResult.prompt_name}，以下是你的角色和更多詳細資料：
-  ## 你的角色：${apiResult.prompt_name}
-  ${apiResult.prompt_personas}
-  ## 你的對談對象
-  ${apiResult.prompt_customers}
-  ## 你的工具使用規則與說明
-  ${apiResult.prompt_tool_logics}
-  ## 你的聲音風格
-  ${apiResult.prompt_voice_styles}
-  ## 你的對話模式
-  ${apiResult.prompt_conversation_modes}
-  ## 你的禁止詞
-  ${apiResult.prompt_prohibited_phrases}
+  
+  const promptName = apiResult.prompt_name;
+  const promptPersonas = apiResult.prompt_personas;
+  const promptCustomers = apiResult.prompt_customers;
+  const promptToolLogics = apiResult.prompt_tool_logics;
+  const promptVoiceStyles = apiResult.prompt_voice_styles;
+  const promptConversationModes = apiResult.prompt_conversation_modes;
+  const promptProhibitedPhrases = apiResult.prompt_prohibited_phrases;
+
+  let instructions = `
+  Now, please play the role of ${promptName}, here are your role and more details:
+  ## Your Role: ${promptName}
+  ${promptPersonas}
+  ## Your Conversation Partner
+  ${promptCustomers}
+  ## Your Tool Usage Rules and Instructions
+  ${promptToolLogics}
+  ## Your Voice Style
+  ${promptVoiceStyles}
+  ## Your Conversation Mode
+  ${promptConversationModes}
+  ## Your Prohibited Phrases
+  ${promptProhibitedPhrases}
+
+  !Note: You will speak in ${lang} language, please respond in ${lang} language.
   `;
+  console.log('instructions source', instructions);
+
+  instructions = await translateToLanguage(instructions, lang || 'zh');
+  console.log('instructions translated', instructions);
+
 
   return {
     ...apiResult,
@@ -40,6 +82,7 @@ function createAgentConfig(apiResult: any): AgentConfig {
     instructions,
     tools: toolConfig.tools,
     toolLogic: toolConfig.toolLogic,
+    lang: lang || "zh",
   };
 }
 
@@ -50,6 +93,7 @@ function ClassChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [localLoading, setLocalLoading] = useState(false);
+  const [clientLanguage, setClientLanguage] = useState<Language>(localStorage.getItem('client-language') as Language || 'zh');
 
   const {
     router,
@@ -74,8 +118,15 @@ function ClassChatPage() {
     onSessionOpen,
     onSessionResume,
     onSessionClose,
-    clearTranscript
+    clearTranscript,
+    setLanguage
   } = useAiChat();
+
+
+  useEffect(() => {
+    setClientLanguage(localStorage.getItem('client-language') as Language || 'zh');
+    setLanguage(localStorage.getItem('client-language') as Language || 'zh');
+  }, []);
 
   const loading = useMemo(() => {
     return localLoading || isLoading || isAnalyzing;
@@ -83,25 +134,22 @@ function ClassChatPage() {
   useEffect(() => {
     const fetchAgentConfig = async () => {
       try {
-
-
-
         const response = await fetch(`/api/agents/${params.id}`);
         if (!response.ok) {
-          throw new Error('Agent not found');
+          throw new Error(getTranslation(clientLanguage, 'errors.failed_to_load'));
         }
         const data = await response.json();
         console.log('fetchAgentConfig data', data);
-        const agentConfig = createAgentConfig(data.agent);
+        const agentConfig = await createAgentConfig(data.agent, clientLanguage);
         console.log('agentConfig', agentConfig);
         setAgentConfig(agentConfig);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load agent');
+        setError(err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load'));
       }
     };
 
     fetchAgentConfig();
-  }, [params.id]);
+  }, [params.id, clientLanguage]);
 
   useEffect(() => {
     if (agentConfig) {
@@ -261,7 +309,7 @@ function ClassChatPage() {
   };
 
   if (error || !agentConfig) {
-    return <div>Error: {error || 'Agent not found'}</div>;
+    return <div>{error || getTranslation(clientLanguage, 'info.try_to_load_agent')}</div>;
   }
 
   function chatScene() {
@@ -275,6 +323,7 @@ function ClassChatPage() {
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
+        lang={clientLanguage}
       ></ChatView>
     )
   }
@@ -291,6 +340,16 @@ function ClassChatPage() {
           onSessionClose={onSessionClose}
         />
       </div>
+      <LanguageToggle
+        currentLanguage={clientLanguage}
+        onLanguageChange={(lang) => {
+          console.log('lang', lang); 
+          setLanguage(lang as Language);
+          setClientLanguage(lang as Language);
+          localStorage.setItem('client-language', lang);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
