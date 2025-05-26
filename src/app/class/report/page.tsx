@@ -2,13 +2,16 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import type { AnalysisResponse } from '@/app/api/analysis/route';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
 import confetti from 'canvas-confetti';
 
 import { getChatHistoryText, handleAnalysisExamples } from '@/app/lib/ai-chat/utils'
+import { getTranslation } from '@/app/i18n/translations'
+import type { Language } from '@/app/i18n/translations'
 
 function AnalysisReportContent() {
+  const { lang = localStorage.getItem('client-language') as Language || 'zh' } = useParams() as { lang?: Language }
   const [message, setMessage] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,16 +19,16 @@ function AnalysisReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const roleMap = {
+    user: getTranslation(lang, 'chat_view.participants.user'),
+    assistant: getTranslation(lang, 'chat_view.participants.assistant')
+  }
+
   // Check for history parameter in URL and retrieve analysis from localStorage
   useEffect(() => {
     // Get the analysis result and chat history from localStorage
     const storedAnalysis = localStorage.getItem('analysisResult');
     const storedChatMessages = localStorage.getItem('chatMessages');
-
-    const roleMap = {
-      user: '我',
-      assistant: '對話助理'
-    }
 
     const storedChatHistory = getChatHistoryText(JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system'), { roleMap })
 

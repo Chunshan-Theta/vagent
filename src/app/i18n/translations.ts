@@ -171,6 +171,24 @@ export const translations = {
       fr: 'Terminer et commencer l\'analyse',
       de: 'Beenden und Analyse starten',
       ja: '終了して分析を開始'
+    },
+    participants: {
+      user: {
+        en: 'Me',
+        zh: '我',
+        es: 'Yo',
+        fr: 'Moi',
+        de: 'Ich',
+        ja: '私'
+      },
+      assistant: {
+        en: 'Assistant',
+        zh: '對話助理',
+        es: 'Asistente',
+        fr: 'Assistant',
+        de: 'Assistent',
+        ja: 'アシスタント'
+      }
     }
   }
 
