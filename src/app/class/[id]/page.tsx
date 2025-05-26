@@ -16,6 +16,15 @@ import LanguageToggle from "@/app/components/LanguageToggle";
 import * as utils from '../utils'
 
 async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
+  // Generate a cache key based on text and target language
+  const cacheKey = `translation_${targetLang}_${btoa(text)}`;
+  
+  // Check cache first
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const response = await fetch('/api/translate', {
       method: 'POST',
@@ -33,6 +42,8 @@ async function translateToLanguage(text: string, targetLang: Language): Promise<
     }
 
     const result = await response.json();
+    // Cache the result
+    localStorage.setItem(cacheKey, result.translatedText);
     return result.translatedText;
   } catch (error) {
     console.error('Translation error:', error);
