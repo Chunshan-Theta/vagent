@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import TimelineContainer from "./TimelineContainer";
 import { ReportV1, Timeline } from '@/app/types/ai-report'
+import _ from '@/app/vendor/lodash'
 
 type TimelineData = ReportV1.TimelineData
 
@@ -22,6 +23,11 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
       border: "1px solid rgba(255, 255, 255, 0.05)",
       color: "white",
     }
+  }
+
+  const trimText = (text:string)=>{
+    text = text || ''
+    return _.trim(text, ' \n\r\t"\'-「」')
   }
 
   const timelineItems = useMemo<Timeline.TimelineItem[]>(() => {
@@ -60,7 +66,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                 <p style={{ marginBottom: "10px", fontWeight: 600 }}>分析：</p>
                 <ul style={{ listStyleType: "disc", paddingLeft: "20px", marginBottom: "10px" }}>
                   {item.analysis?.map((text, index) => (
-                    <li key={index}>{text}</li>
+                    <li key={index}>{trimText(text)}</li>
                   ))}
                 </ul>
               </div>
@@ -73,7 +79,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                       <div className="key-point">
                         <p style={{ fontWeight: 600, marginBottom: "5px" }}>❌ 關鍵句整理</p>
                         {keyPoint.sentences.map((text, index) => (
-                          <li key={index}>{text}</li>
+                          <li key={index}>{trimText(text)}</li>
                         ))}
                       </div>
                     }
@@ -81,7 +87,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                       <div className="key-point">
                         <p style={{ fontWeight: 600, marginBottom: "5px" }}>📉 問題</p>
                         {keyPoint.problems.map((text, index) => (
-                          <li key={index}>{text}</li>
+                          <li key={index}>{trimText(text)}</li>
                         ))}
                       </div>
                     }

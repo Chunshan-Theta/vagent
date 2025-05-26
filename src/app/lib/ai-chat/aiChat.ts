@@ -328,6 +328,7 @@ export function useAiChat(){
     keepNextMsgCount?: number;
     keepSystemMessage?: boolean;  /** 是否保留最後一則對話，因為是最後一則該則對話不會有另一個對象的回應 */
     keepLastMessage?: boolean;
+
   }
 
   /**
