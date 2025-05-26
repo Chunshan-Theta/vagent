@@ -248,6 +248,7 @@ function ClassChatPage() {
             criteria,
             weights,
           },
+          detectedLanguage: clientLanguage,
         }),
       });
 
