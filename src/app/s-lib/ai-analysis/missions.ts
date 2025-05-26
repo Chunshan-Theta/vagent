@@ -6,6 +6,7 @@ import * as landbankProblems from './landbank/problems'
 import * as landbankKeyPoints from './landbank/key_points'
 import * as landbankHighlight from './landbank/highlights'
 
+import * as srtChatRoleDetect from './srt/chat_role_detect'
 
 export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/context': landbankContext,
@@ -14,4 +15,6 @@ export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/problems': landbankProblems,
   'landbank/highlights': landbankHighlight,
   'landbank/rubric': landbankRubric,
+
+  'srt/chat_role_detect': srtChatRoleDetect,
 }

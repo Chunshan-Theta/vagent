@@ -9,6 +9,7 @@ import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
+import trim from 'lodash/trim';
 
 // import 部分的 lodash 函数並匯出
 
@@ -23,7 +24,8 @@ export const lodash = {
   groupBy,
   mapValues,
   pick,
-  omit
+  omit,
+  trim
 };
 
 export default lodash;

@@ -44,6 +44,7 @@ export type MessagesContextValue = {
   messageItems: MessageItem[];
   inputText: string;
   addMessageItem: (msg: MessageItem) => void;
+  setMessages: (messages: MessageItem[]) => void;
   insertMessageItem: (msgId: string, place: 'before' | 'after', msg: MessageItem) => void;
   updateMessageContent: (msgId: string, newContent: string) => void;
   updateMessageData: (msgId: string, patch: Partial<MessageItem['data']>) => void;
@@ -150,6 +151,7 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
         hideMessage,
         updateInputText,
         submitInputText,
+        setMessages
       }}
     >
       {children}
