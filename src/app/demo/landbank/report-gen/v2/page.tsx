@@ -886,6 +886,9 @@ function ReportGenPage() {
     parsed: [] as SrtData['parsed']
   });
 
+  useEffect(() => {
+    document.title = 'SRT 轉換器 - 報告生成';
+  }, [])
 
   const pageState: PageState = {
     scene,
