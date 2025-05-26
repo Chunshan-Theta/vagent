@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import type { AnalysisResponse } from '@/app/api/analysis/route';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } from 'react-icons/fa';
@@ -11,21 +11,28 @@ import { getTranslation } from '@/app/i18n/translations'
 import type { Language } from '@/app/i18n/translations'
 
 function AnalysisReportContent() {
-  const { lang = localStorage.getItem('client-language') as Language || 'zh' } = useParams() as { lang?: Language }
+  const [lang, setLang] = useState<Language>('zh');
   const [message, setMessage] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const roleMap = {
+  const roleMap = useMemo(() => ({
     user: getTranslation(lang, 'chat_view.participants.user'),
     assistant: getTranslation(lang, 'chat_view.participants.assistant')
-  }
+  }), [lang]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedLang = localStorage.getItem('client-language') as Language || 'zh';
+      setLang(storedLang);
+    }
+  }, []);
 
   // Check for history parameter in URL and retrieve analysis from localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Get the analysis result and chat history from localStorage
     const storedAnalysis = localStorage.getItem('analysisResult');
     const storedChatMessages = localStorage.getItem('chatMessages');
@@ -67,7 +74,7 @@ function AnalysisReportContent() {
       setError('No analysis results or chat history found');
       setLoading(false);
     }
-  }, []);
+  }, [roleMap]);
 
 
   // Function to get overall score color
