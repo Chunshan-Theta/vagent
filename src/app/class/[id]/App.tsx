@@ -329,7 +329,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       .join('\n\n');
 
     if (chatHistory) {
-      sendSimulatedUserMessage(`之前的對話紀錄:\n${chatHistory}\n\n你的角色是 assistant`, {
+      sendSimulatedUserMessage(`${getTranslation(lang, 'ai_chatbot_action.chatHistory')}\n\n${chatHistory}\n\n${getTranslation(lang, 'ai_chatbot_action.assistantRole')}`, {
         hide: true,
         role: "system",
       })
@@ -337,14 +337,12 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     }
 
     if (shouldTriggerResponse) {
-      // Use shared config for startAsk
-      const { startAsk } = sharedConfig;
-      sendSimulatedUserMessage('請開始對話', { hide: true, triggerResponse: true, });
+      sendSimulatedUserMessage(getTranslation(lang, 'ai_chatbot_action.startAsk'), { hide: true, triggerResponse: true, });
     }
     if (sessionStartTimes === 0) {
       onSessionOpen();
     } else {
-      sendSimulatedUserMessage('通話已恢復', { hide: false, triggerResponse: false, });
+      sendSimulatedUserMessage(getTranslation(lang, 'ai_chatbot_action.sessionResume'), { hide: false, triggerResponse: false, });
       onSessionResume();
     }
     setSessionStartTimes((prev) => prev + 1);

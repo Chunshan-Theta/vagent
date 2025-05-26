@@ -143,6 +143,38 @@ export const translations = {
       fr: 'Le locuteur de l\'audio suivant est un locuteur natif de français. Veuillez convertir l\'audio en texte.',
       de: 'Der Sprecher des folgenden Audios ist ein nativer Sprecher von deutsch. Bitte konvertieren Sie den Audio in Text.',
       ja: '以下の音声は日本語ネイティブスピーカーです。音声をテキストに変換してください。'
+    },
+    chatHistory: {
+      en: 'Previous conversation history:',
+      zh: '之前的對話紀錄:',
+      es: 'Historial de conversación anterior:',
+      fr: 'Historique de la conversation précédente:',
+      de: 'Vorherige Konversationshistorie:',
+      ja: '前回の会話履歴:'
+    },
+    assistantRole: {
+      en: 'Your role is assistant',
+      zh: '你的角色是對話助理',
+      es: 'Tu rol es asistente',
+      fr: 'Votre rôle est assistant',
+      de: 'Ihr Rollen ist Assistent',
+      ja: 'あなたの役割はアシスタントです'
+    },
+    startAsk: {
+      en: 'Please start the conversation',
+      zh: '請開始對話',
+      es: 'Por favor, comience la conversación',
+      fr: 'Veuillez commencer la conversation',
+      de: 'Bitte starten Sie die Konversation',
+      ja: '会話を開始してください'
+    },
+    sessionResume: {
+      en: 'Call resumed',
+      zh: '通話已恢復',
+      es: 'Llamada reanudada',
+      fr: 'Appel repris',
+      de: 'Anruf fortgesetzt',
+      ja: '通話が再開されました'
     }
   },
 
@@ -172,6 +204,7 @@ export const translations = {
       de: 'Beenden und Analyse starten',
       ja: '終了して分析を開始'
     },
+
     participants: {
       user: {
         en: 'Me',
