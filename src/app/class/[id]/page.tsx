@@ -17,7 +17,7 @@ import * as utils from '../utils'
 
 async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
   // Generate a cache key based on text and target language
-  const cacheKey = `translation_${targetLang}_${btoa(text)}`;
+  const cacheKey = `translation_${targetLang}_${encodeURIComponent(text)}`;
   
   // Check cache first
   const cached = localStorage.getItem(cacheKey);
