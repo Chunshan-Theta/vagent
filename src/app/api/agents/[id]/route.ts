@@ -8,8 +8,9 @@ export async function GET(
   request: Request,
   { params }: { params: any }
 ) {
+  const query = await params
   try {
-    const result = await pool.query('SELECT * FROM agents WHERE id = $1', [params.id]);
+    const result = await pool.query('SELECT * FROM agents WHERE id = $1', [query.id]);
     
     if (result.rows.length === 0) {
       return NextResponse.json(

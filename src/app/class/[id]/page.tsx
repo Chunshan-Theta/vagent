@@ -20,7 +20,7 @@ async function translateToLanguage(text: string, targetLang: Language): Promise<
   const isBrowser = typeof window !== 'undefined';
   // Generate a cache key based on text and target language
   const cacheKey = `translation_${targetLang}_${encodeURIComponent(text)}`;
-  
+
   if (isBrowser) {
     // Check cache first
     const cached = localStorage.getItem(cacheKey);
@@ -60,7 +60,7 @@ async function translateToLanguage(text: string, targetLang: Language): Promise<
 async function createAgentConfig(apiResult: any, lang?: Language): Promise<AgentConfig> {
   // Convert tools to full Tool objects and build toolLogic
   const toolConfig = utils.handleApiTools(apiResult.tools)
-  
+
   const promptName = apiResult.prompt_name;
   const promptPersonas = apiResult.prompt_personas;
   const promptCustomers = apiResult.prompt_customers;
@@ -110,7 +110,14 @@ function ClassChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [localLoading, setLocalLoading] = useState(false);
-  const [clientLanguage, setClientLanguage] = useState<Language>(localStorage.getItem('client-language') as Language || 'zh');
+  const [clientLanguage, setClientLanguage] = useState<Language>('zh');
+
+  useEffect(() => {
+    const lang = localStorage.getItem('client-language') as Language
+    if (lang) {
+      setClientLanguage(lang);
+    }
+  }, [])
 
   const {
     router,
@@ -206,8 +213,8 @@ function ClassChatPage() {
 
       // Perform analysis here before redirecting
       const criteria = agentConfig?.criteria
-      
-      
+
+
       console.log('agentConfig', agentConfig);
       console.log('anaylyze criteria:', criteria);
       const weights = [0.5, 0.5, 0.5, 0.5];
@@ -319,7 +326,7 @@ function ClassChatPage() {
       <LanguageToggle
         currentLanguage={clientLanguage}
         onLanguageChange={(lang) => {
-          console.log('lang', lang); 
+          console.log('lang', lang);
           setLanguage(lang as Language);
           setClientLanguage(lang as Language);
           localStorage.setItem('client-language', lang);
