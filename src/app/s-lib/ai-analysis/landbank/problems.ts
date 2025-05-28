@@ -1,12 +1,20 @@
 import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../types"
 import getOpts from "./_config"
+import { getLangConfig } from "../_lang"
 
-export type SentimentParams = {
+export type ProblemsParams = {
   history?: string
+  lang?: string
 }
 
 export function defineParams() : MissionParamsDefineMap {
   return {
+    lang: {
+      type: 'text',
+      title: '內容語系',
+      description: '請輸入內容的語系，例如：zh、en 等等',
+      default: 'zh',
+    },
     history: {
       type: 'textarea',
       title: '對話紀錄',
@@ -20,7 +28,8 @@ export function moduleOptions() : ModelOptions{
   return getOpts()
 }
 
-export function getMessages(params: SentimentParams){
+export function getMessages(params: ProblemsParams){
+  const lang = params.lang || 'zh-TW';
   const template = `
 根據以下對話，請分析業務員的回應是否合適，並簡要說明理由。請根據以下判斷方向進行：
 
@@ -30,6 +39,8 @@ export function getMessages(params: SentimentParams){
 
 如果回應的不合適，請條列出原因。
 如果回應合適，請簡要說明為什麼合適。
+
+注意：內容語系為 "${lang}"，且你的回應也需要用 "${lang}" 語系撰寫。
 
 對話如下：
 ${params.history}
@@ -45,7 +56,7 @@ ${params.history}
   return messages;
 }
 
-export function expectSchema(params: SentimentParams){
+export function expectSchema(params: ProblemsParams){
   return {
     schema: {
       type: 'object',

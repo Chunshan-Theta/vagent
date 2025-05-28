@@ -1,8 +1,8 @@
 'use client';
 
 import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
-import App, { AppRef } from "@/app/App";
-import { useRouter, useSearchParams } from "next/navigation";
+import App from "@/app/class/[id]/App";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import ChatView from "@/app/components/chat/ChatView";
 import AskForm from "@/app/components/AskForm";
@@ -13,13 +13,16 @@ import { v4 as uuidv4 } from "uuid";
 
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
+import { getTranslation, Language } from "@/app/i18n/translations";
+import LanguageToggle from "@/app/components/LanguageToggle";
 import { startAIMission, getAIMissionList } from '@/app/lib/ai-mission/missionAnalysis'
 import { handleAnalysisExamples } from '@/app/lib/ai-chat/utils'
 
 import { toast } from 'react-toastify';
 
+import { fetchAgentConfig } from '@/app/lib/ai-chat/aiAgent';
 
-const LABEL = 'landbank_v2';
+const LABEL = 'demo_agent';
 
 const settingsMap = {
   default: {
@@ -61,16 +64,21 @@ function LandbankChatV2Page() {
 
     onSessionOpen,
     onSessionResume,
-    onSessionClose
-  } = useAiChat();
+    onSessionClose,
 
+    setLanguage
+  } = useAiChat();
+  const params = useParams();
   const query = useSearchParams();
+  // styles start
+  const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
+  const [chatBackground] = useState("linear-gradient(rgb(46, 74, 63) 0%, rgb(26, 42, 52) 100%)")
   // ------
   const pageInfo = {
     title: '業務陪練劇本',
     reportUrl: '/demo/landbank/report/v2'
   }
-  const lang = useMemo(() => query.get('lang') || 'zh-TW', [query]);
+  const lang = useMemo(() => query.get('lang') || 'zh', [query]);
   const roleMap = {
     user: '我',
     assistant: 'AI客戶'
@@ -86,20 +94,30 @@ function LandbankChatV2Page() {
   useEffect(() => {
     document.title = pageInfo.title;
   }, []);
+  const agentId = useMemo(() => {
+    return Array.isArray(params.id) ? params.id[0] : params.id || '';
+  }, [])
+  const [clientLanguage, setClientLanguage] = useState<Language>('zh');
+  const [agentConfig, setAgentConfig] = useState<any>(null);
   const [localLoading, setLocalLoading] = useState(false);
   const loading = useMemo(() => {
     return localLoading || isLoading || isAnalyzing;
   }, [localLoading, isLoading, isAnalyzing])
   const errors = useRef<any[]>([])
   const settings = settingsMap.default
-
+  useEffect(() => {
+    setClientLanguage(lang as any || 'zh');
+  }, [])
+  useEffect(() => {
+    fetchAgentConfig(agentId, clientLanguage).then((config)=>{
+      setAgentConfig(config);
+      console.log('[landbank_v2] agentConfig:', config);
+    })
+  }, [clientLanguage])
   useEffect(() => {
     console.log('[landbank_v2] loading', loading);
   }, [loading])
-  // styles start
-  const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
-  const [chatBackground] = useState("linear-gradient(rgb(46, 74, 63) 0%, rgb(26, 42, 52) 100%)")
-  const missions = useRef<any[]>([]);
+  
   const [scene, setScene] = useState("init");
   const askItems = useRef([
     {
@@ -241,6 +259,7 @@ function LandbankChatV2Page() {
         return _runAnalyze({
           missionId,
           params: {
+            lang,
             role: analysisRole,
             history: chatHistory,
           },
@@ -304,6 +323,7 @@ function LandbankChatV2Page() {
     const res = await _runAnalyze({
       missionId: 'landbank/rubric',
       params: {
+        lang,
         criteria: getCriteria(),
         history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
       },
@@ -418,7 +438,7 @@ function LandbankChatV2Page() {
       <div style={{ display: 'none' }}>
         <App
           ref={appRef}
-          agentSetKey="landbankAgent"
+          agentConfig={agentConfig}
           onSessionOpen={onSessionOpen}
           onSessionResume={onSessionResume}
           onSessionClose={onSessionClose}

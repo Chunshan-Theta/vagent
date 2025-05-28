@@ -8,6 +8,8 @@ import * as landbankHighlight from './landbank/highlights'
 
 import * as srtChatRoleDetect from './srt/chat_role_detect'
 
+import * as translatePrompt from './translate/simple'
+
 export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/context': landbankContext,
   'landbank/sentiment': landbankSentiment,
@@ -17,4 +19,6 @@ export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/rubric': landbankRubric,
 
   'srt/chat_role_detect': srtChatRoleDetect,
+
+  'translate/simple': translatePrompt,
 }

@@ -4,10 +4,17 @@ import getOpts from "./_config"
 export type SentimentParams = {
   role?: string
   history?: string
+  lang?: string
 }
 
 export function defineParams() : MissionParamsDefineMap {
   return {
+    lang: {
+      type: 'text',
+      title: '內容語系',
+      description: '請輸入內容的語系，例如：zh、en 等等',
+      default: 'zh',
+    },
     role: {
       type: 'text',
       title: '角色',
@@ -28,6 +35,7 @@ export function moduleOptions() : ModelOptions{
 }
 
 export function getMessages(params: SentimentParams){
+  const lang = params.lang || 'zh-TW';
   const template = `
 你是一位專業的對話情緒分析師。請根據以下對話內容，判斷"${params.role || '對方'}"的主要情緒傾向，結果僅需回傳以下四種其中一種：
 
@@ -36,6 +44,7 @@ neutral（中立/並無特別的情緒）
 angry（生氣/不喜歡對方的答覆）
 frustrated（沮喪/對當前的情況感到失望）
 
+內容語系為："${lang}"
 對話如下：
 ${params.history}
 `.trim()

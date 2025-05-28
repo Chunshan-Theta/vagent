@@ -1,13 +1,22 @@
 import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../types"
 import getOpts from "./_config"
+import { getLangConfig } from "../_lang"
+import * as utils from '../utils'
 
-export type SentimentParams = {
+export type KeyPointsParams = {
   role?: string
   history?: string
+  lang?: string
 }
 
 export function defineParams() : MissionParamsDefineMap {
   return {
+    lang: {
+      type: 'text',
+      title: '內容語系',
+      description: '請輸入內容的語系，例如：zh、en 等等',
+      default: 'zh',
+    },
     role: {
       type: 'text',
       title: '角色',
@@ -27,13 +36,17 @@ export function moduleOptions() : ModelOptions{
   return getOpts()
 }
 
-export function getMessages(params: SentimentParams){
+export function getMessages(params: KeyPointsParams){
+  const lang = params.lang || 'zh';
+  const prompt1 = utils.translatePrompt(`
+請依據底下的對話，分別找出：
+- 客戶說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）
+- 業務回應中可能存在的溝通問題或不足之處
+  `.trim(), 'zh', lang);
   const template = `
-請依據以下對話，找出：
+${prompt1}
 
-客戶說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）
-
-業務回應中可能存在的溝通問題或不足之處
+注意：內容語系為 "${lang}"，且你的回應也需要用 "${lang}" 語系撰寫。
 
 對話如下：
 ${params.history}
@@ -49,7 +62,7 @@ ${params.history}
   return messages;
 }
 
-export function expectSchema(params: SentimentParams){
+export function expectSchema(params: KeyPointsParams){
   return {
     schema: {
       type: 'object',

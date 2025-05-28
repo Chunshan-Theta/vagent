@@ -1,15 +1,24 @@
 import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../types"
 import getOpts from "./_config"
+import { getLangConfig } from "../_lang"
+import * as utils from '../utils'
 
 export type RubricParams = {
   criteriaTitles?: string[]
   criteria?: string[]|string
   /** 注: 此處的 history 內講話的對象名稱必須是 user 和 assistant 而不是取代過後的其他字眼 */
   history?: string
+  lang?: string
 }
 
 export function defineParams() : MissionParamsDefineMap {
   return {
+    lang: {
+      type: 'text',
+      title: '內容語系',
+      description: '請輸入內容的語系，例如：zh、en 等等',
+      default: 'zh',
+    },
     criteria: {
       type: 'textarea',
       title: '對話紀錄',
@@ -41,9 +50,12 @@ export function moduleOptions() : ModelOptions{
   return getOpts()
 }
 
-export function getMessages(params: RubricParams){
+export async function getMessages(params: RubricParams){
+  const lang = params.lang || 'zh';
+  const langConfig = getLangConfig(lang);
   const criteria = typeof params.criteria === 'string' ? params.criteria.split('---') : (params.criteria || [])
-  const template = `
+
+  const prompt1 = await utils.translatePrompt(`
 # 任務目標
 根據這些標準(criteria)分析以下訊息：
 對於每個標準(criteria)，請提供：
@@ -53,11 +65,8 @@ export function getMessages(params: RubricParams){
 4. 針對此標準提出2-3個具體的改進建議，改進建議要包含引導例句。
 5. 簡單概括整個對話（2-3 句）
 6. 3-5條針對整個對話的整體改進建議，改進建議要包含引導例句。
-
-# criteria
-${criteria.join(', ')}。
-
-
+`.trim(), 'zh', lang)
+  const prompt2 = await utils.translatePrompt(`
 # 重要提示：
 1. 一切分析都應該以「user的文本」為基礎（忽略assistant的文字），主要著重分析使用者在當前對話中的表現。
 2. examples中只包含user的文字。如果user的文字中沒有好的例子，就說「沒有找到相關的例子」並給出低分。
@@ -101,6 +110,23 @@ ${criteria.join(', ')}。
   ### h. 提出改進建議
   - 根據分析，提出加強對話的具體方法。
   - 專注於促進同理心、相互理解和協作解決問題（例如，使用反思性傾聽、提出澄清問題、避免使用評判性語言）。
+`.trim(), 'zh', lang)
+
+  const template = `
+${prompt1.text}
+
+# criteria
+${criteria.join(', ')}。
+
+${prompt2.text}
+
+# 以下是對話內容：
+"""
+${params.history || ''}
+"""
+
+注意：內容語系為 "${lang}"，且評分結果也需要用 "${lang}" 語系撰寫。
+${langConfig.instructions || ''}
 
 `.trim()
 
