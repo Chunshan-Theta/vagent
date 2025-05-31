@@ -6,19 +6,18 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent } from '@/app/types/agent';
 
-export default function ViewAgentPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+export default function ViewAgentPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     fetchAgent();
-  }, [resolvedParams.id]);
+  }, [params.id]);
 
   const fetchAgent = async () => {
     try {
-      const response = await fetch(`/api/agents/${resolvedParams.id}`);
+      const response = await fetch(`/api/agents/${params.id}`);
       if (!response.ok) throw new Error('Failed to fetch agent');
       const data = await response.json();
       if (!data.success || !data.agent) {
@@ -46,7 +45,7 @@ export default function ViewAgentPage({ params }: { params: Promise<{ id: string
         <h1 className="text-2xl font-bold text-gray-900">Agent Details</h1>
         <div className="space-x-3">
           <Link
-            href={`/admin/agents/${resolvedParams.id}/edit`}
+            href={`/admin/agents/${params.id}/edit`}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Edit
