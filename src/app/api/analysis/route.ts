@@ -8,7 +8,7 @@ const openai = new OpenAI({
 export interface AnalysisRequest {
   message: string;
   rubric: {
-    criteria: string[];
+    criteria: string[] | string;
     weights?: number[];
   };
   detectedLanguage?: string;
@@ -39,6 +39,11 @@ export async function POST(request: Request) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+    if (Array.isArray(rubric.criteria)) {
+      rubric.criteria = rubric.criteria.join(', ');
+    } else {
+      rubric.criteria = rubric.criteria;
     }
 
     // Detect the language of the conversation
@@ -85,7 +90,7 @@ export async function POST(request: Request) {
     6. 3-5條針對整個對話的整體改進建議，改進建議要包含引導例句。
     
     # criteria
-    ${rubric.criteria.join(', ')}。
+    ${rubric.criteria}。
     
    
     # 重要提示：
