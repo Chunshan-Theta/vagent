@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import redis from '@/lib/redis';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const CACHE_TTL = 60 * 60 * 24; // 24 hours
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +17,15 @@ export async function POST(request: Request) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    // Generate cache key
+    const cacheKey = `translate:${targetLang}:${text}`;
+
+    // Try to get from cache
+    const cachedResult = await redis.get(cacheKey);
+    if (cachedResult) {
+      return NextResponse.json({ translatedText: cachedResult, info: "from cache" });
     }
 
     const completion = await openai.chat.completions.create({
@@ -33,7 +45,10 @@ export async function POST(request: Request) {
 
     const translatedText = completion.choices[0].message.content || text;
 
-    return NextResponse.json({ translatedText });
+    // Cache the result
+    await redis.setex(cacheKey, CACHE_TTL, translatedText);
+
+    return NextResponse.json({ translatedText, info: "from openai" });
   } catch (error) {
     console.error('Translation error:', error);
     return NextResponse.json(

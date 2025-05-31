@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent } from '@/app/types/agent';
 
-export default function ViewAgentPage({ params }: { params: { id: string } }) {
+export default function ViewAgentPage({ params }: { params: any }) {
   const router = useRouter();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [error, setError] = useState<string | null>(null);
