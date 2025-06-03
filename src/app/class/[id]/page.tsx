@@ -57,7 +57,7 @@ async function translateToLanguage(text: string, targetLang: Language): Promise<
   }
 }
 
-async function createAgentConfig(apiResult: any, lang?: Language): Promise<AgentConfig> {
+async function createAgentConfig(apiResult: any, lang: Language): Promise<AgentConfig> {
   // Convert tools to full Tool objects and build toolLogic
   const toolConfig = utils.handleApiTools(apiResult.tools)
 
@@ -88,7 +88,7 @@ async function createAgentConfig(apiResult: any, lang?: Language): Promise<Agent
   `;
   console.log('instructions source', instructions);
 
-  instructions = await translateToLanguage(instructions, lang || 'zh');
+  instructions = await translateToLanguage(instructions, lang);
   console.log('instructions translated', instructions);
 
 
@@ -110,14 +110,45 @@ function ClassChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [localLoading, setLocalLoading] = useState(false);
-  const [clientLanguage, setClientLanguage] = useState<Language>('zh');
+  const [clientLanguage, setClientLanguage] = useState<Language>();
 
   useEffect(() => {
     const lang = localStorage.getItem('client-language') as Language
+
     if (lang) {
       setClientLanguage(lang);
+      setLanguage(lang);
+    } else {
+      setClientLanguage('zh');
+      setLanguage('zh');
     }
   }, [])
+  
+  useEffect(() => {
+    if (!clientLanguage) {
+      console.error('clientLanguage is not set');
+      return;
+    }
+
+    const fetchAgentConfig = async () => {
+      try {
+        const response = await fetch(`/api/agents/${params.id}`);
+        if (!response.ok) {
+          throw new Error(getTranslation(clientLanguage, 'errors.failed_to_load'));
+        }
+        const data = await response.json();
+        console.log('fetchAgentConfig data', data);
+        const agentConfig = await createAgentConfig(data.agent, clientLanguage);
+        console.log('agentConfig', agentConfig);
+        setAgentConfig(agentConfig);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load'));
+      }
+    };
+
+    fetchAgentConfig();
+  }, [params.id, clientLanguage]);
+
 
   const {
     router,
@@ -147,33 +178,10 @@ function ClassChatPage() {
   } = useAiChat();
 
 
-  useEffect(() => {
-    setClientLanguage(localStorage.getItem('client-language') as Language || 'zh');
-    setLanguage(localStorage.getItem('client-language') as Language || 'zh');
-  }, []);
-
   const loading = useMemo(() => {
     return localLoading || isLoading || isAnalyzing;
   }, [localLoading, isLoading, isAnalyzing]);
-  useEffect(() => {
-    const fetchAgentConfig = async () => {
-      try {
-        const response = await fetch(`/api/agents/${params.id}`);
-        if (!response.ok) {
-          throw new Error(getTranslation(clientLanguage, 'errors.failed_to_load'));
-        }
-        const data = await response.json();
-        console.log('fetchAgentConfig data', data);
-        const agentConfig = await createAgentConfig(data.agent, clientLanguage);
-        console.log('agentConfig', agentConfig);
-        setAgentConfig(agentConfig);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load'));
-      }
-    };
 
-    fetchAgentConfig();
-  }, [params.id, clientLanguage]);
 
   useEffect(() => {
     if (agentConfig) {
@@ -292,7 +300,7 @@ function ClassChatPage() {
   };
 
   if (error || !agentConfig) {
-    return <div>{error || getTranslation(clientLanguage, 'info.try_to_load_agent')}</div>;
+    return <div>{error || getTranslation(clientLanguage || 'zh', 'info.try_to_load_agent')}</div>;
   }
 
   function chatScene() {
@@ -324,7 +332,7 @@ function ClassChatPage() {
         />
       </div>
       <LanguageToggle
-        currentLanguage={clientLanguage}
+        currentLanguage={clientLanguage || 'zh'}
         onLanguageChange={(lang) => {
           console.log('lang', lang);
           setLanguage(lang as Language);
