@@ -2,7 +2,7 @@ import * as convApi from '@/db/api/conv';
 import { NextResponse } from 'next/server';
 
 // 新增訊息
-export async function POST(req: Request, { params }: { params: { convId: string } }) {
+export async function POST(req: Request, { params }: RouteContext<{ convId: string }>) {
   try {
     const body = await req.json();
     const { convId } = await params;
