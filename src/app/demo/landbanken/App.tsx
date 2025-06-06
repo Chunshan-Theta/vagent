@@ -60,7 +60,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const onSessionClose = props.onSessionClose ?? noop;
 
 
-  const { transcriptItems, addTranscriptMessage, addTranscriptBreadcrumb } =
+  const { transcriptItems, addTranscriptMessage, updateTranscriptItemStatus, addTranscriptBreadcrumb } =
     useTranscript();
 
   // Use a try-catch to handle the case when EventContext is not available
@@ -205,13 +205,21 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       }
       audioElementRef.current.autoplay = isAudioPlaybackEnabled;
 
-      const { pc, dc } = await createRealtimeConnection(
+      const { pc, dc, getLS, getRS, getInfo } = await createRealtimeConnection(
         EPHEMERAL_KEY,
         audioElementRef
       );
       pcRef.current = pc;
       dcRef.current = dc;
       safeAppContext.setDataChannel(dc);
+
+      const rec = safeAppContext.recorder;
+      rec.quickSetup(
+        getLS(),
+        await getRS(),
+        getInfo().sampleRate,
+        getInfo().channels
+      )
 
       dc.addEventListener("open", () => {
         logClientEvent({}, "data_channel.open");
@@ -244,6 +252,10 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       pcRef.current.close();
       pcRef.current = null;
     }
+
+    const rec = safeAppContext.recorder;
+    rec.toggleRecorder(false);
+
     setDataChannel(null);
     setSessionStatus("DISCONNECTED");
     setIsPTTUserSpeaking(false);
@@ -266,6 +278,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
 
     if (!opts.noAppendToTranscript) {
       addTranscriptMessage(id, role as any, text, !!opts.hide);
+      updateTranscriptItemStatus(id, "DONE")
     }
 
     sendClientEvent(

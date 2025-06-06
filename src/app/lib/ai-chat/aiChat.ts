@@ -17,7 +17,9 @@ import * as utils from "./utils";
 import { toast } from 'react-toastify';
 import { getTranslation, Language } from "@/app/i18n/translations";
 
+import * as convApi from '@/app/lib/ai-chat/convApi'
 
+import _ from '@/app/vendor/lodash';
 
 /**
  * 聊天介面基本需要的狀態
@@ -28,7 +30,7 @@ export function useAiChat(){
   const chatContext = useChat();
   const { inputText, updateInputText } = chatContext;
   const transcript = useTranscript();
-  const { transcriptItems, clearTranscript, addTranscriptMessage } = transcript;
+  const { transcriptItems, clearTranscript, addTranscriptMessage, updateTranscriptItemStatus } = transcript;
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
@@ -49,6 +51,12 @@ export function useAiChat(){
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
   const [waitRealtimeConnection, setWaitRealtimeConnection] = useState(false);
 
+  const uploadPromises = useRef<Promise<any>[]>([]);
+
+  const msgIdMap = useRef<{ [key: string]: string }>({});
+  // 每一個 Conv 對應一次完整的互動紀錄
+  const convInfo = useRef<{ convId : string | null, audioCount: number }>({ convId: null, audioCount: 0 });
+
   const isLoading = useMemo(() => {
     return waitRealtimeConnection;
   }, [waitRealtimeConnection])
@@ -62,13 +70,65 @@ export function useAiChat(){
     clearTranscript();
   }, []);
 
-  
+  const throttledUpdateRef = useRef<{ [id: string]: (id: string, content: string) => void }>({});
+  type initConvOptions = {
+    email?: string;
+    uname?: string;
+    agentType: string;
+    agentId: string;
+  }
+  const initConv = async (opts: initConvOptions) => {
+    const conv = await convApi.createConv({
+      email: opts.email,
+      uname: opts.uname,
+      agentType: opts.agentType,
+      agentId: opts.agentId,
+    })
+    convInfo.current.convId = conv.id;
+    convInfo.current.audioCount = 0; // 初始化音訊計數
+    
+    console.log('conv created', conv);
+  }
+  type addConvMessageOpts = Parameters<typeof convApi.addConvMessage>[1]
+  const addConvMessage = (opts: addConvMessageOpts & { itemId?: string }) => {
+    if (convInfo.current.convId) {
+      const mOpts = { ...opts, itemId: undefined };
+      convApi.addConvMessage(
+        convInfo.current.convId,
+        mOpts
+      ).then((res)=>{
+        console.log('addConvMessage', res);
+        if (opts.itemId) {
+          // 如果有 itemId，則更新 msgIdMap
+          msgIdMap.current[opts.itemId] = res.id;
+        }
+      })
+      .catch((err)=>{
+        console.error('addConvMessage error', err);
+      })
+    }
+  }
+  const updateConvMessageContent = (itemId: string, content: string) => {
+    if (convInfo.current.convId && msgIdMap.current[itemId]) {
+      const convId = convInfo.current.convId;
+      const messageId = msgIdMap.current[itemId];
+      if (messageId) {
+        convApi.updateConvMessageContent(convId, messageId, content)
+          .catch((err) => {
+            console.error('updateConvMessageContent error', err);
+          });
+      } else {
+        console.warn('No message ID found for itemId:', itemId);
+      }
+    }
+  }
 
   const handleTalkOn = async () => {
     // alert("handleTalkOn");
     setWaitRealtimeConnection(true);
 
     if (appRef.current) {
+      // 開始錄音的設定會在 connectToRealtime 裡面
       await appRef.current.connectToRealtime();
       setIsSessionStarted(true);
     }
@@ -160,13 +220,49 @@ export function useAiChat(){
     }
 
     const end_id = uuidv4().slice(0, 32);
+    const content = getTranslation(language, 'ai_chatbot_action.stop_call')
     chatContext.addMessageItem({
       id: end_id,
       type: 'text',
       role: 'user',
-      data: { content: getTranslation(language, 'ai_chatbot_action.stop_call') },
+      data: { content },
       createdAtMs: Date.now(),
     });
+    
+    if( convInfo.current.convId){
+      // 添加到對話紀錄
+      addConvMessage({
+        type: 'text',
+        role: 'user',
+        content,
+        audioRef: null, // 根據音訊的 index 做紀錄
+      })
+      // 暫不套用上傳音檔
+      if(false){
+        // 每當結束通話時都把音訊存起來
+        const rec = appContext.recorder
+        rec.toggleRecorder(false);
+        const uploadFN = async (type: 'las'|'ras')=>{
+          const blob = rec.getAudioBlob(type)
+          if (!blob) {
+            console.warn('No audio blob to upload');
+            return;
+          }
+          return convApi.uploadConvAudio(
+            blob,
+            convInfo.current.convId!,
+            'audio/wav',
+            Date.now() - rec.state.current.startTime
+          )
+        }
+        
+        convInfo.current.audioCount++;
+        uploadPromises.current.push(uploadFN('las'));
+        uploadPromises.current.push(uploadFN('ras'));
+      }
+        
+    }
+    
   };
 
   const handleMicrophoneClick = () => {
@@ -175,6 +271,7 @@ export function useAiChat(){
       if(canPause){
         handleTalkOff();  // 掛斷電話
       } else {
+        // 顯示 "系統回應中，請稍候..."
         toast.info(getTranslation(language, 'ai_chatbot_action.wait_for_response'), {
           position: 'top-center',
           autoClose: 700,
@@ -224,6 +321,14 @@ export function useAiChat(){
           createdAtMs: Date.now(),
           hide: !!newItem.isHidden || newItem.role === 'system',
         })
+        addConvMessage({
+          itemId: newItem.itemId,
+          type: 'text',
+          role: newItem.role!,
+          content: newItem.title || '',
+          audioRef: `conv:${convInfo.current.audioCount}`, // 根據音訊的 index 做紀錄
+          audioDuration: newItem.createdAtMs - appContext.recorder.state.current.startTime,
+        })
       }
     })
     const h2 = transcript.on('update_item', (data) => {
@@ -235,9 +340,15 @@ export function useAiChat(){
         }else{
           chatContext.updateMessageContent(itemId, title!);
         }
-          
+        // 每個 ID 要套用 throttle 避免更新過快
+        if (!throttledUpdateRef.current[itemId]) {
+          throttledUpdateRef.current[itemId] = _.throttle((id: string, content: string) => {
+            updateConvMessageContent(id, content);
+          }, 1000, { leading: true, trailing: true });
+        }
+        throttledUpdateRef.current[itemId](item.itemId, item.title || '');
       } else if (action === 'update_status') {
-        // console.log('update_status', data);
+        // 當訊息狀態更新，通常是 IN_PROGRESS -> DONE
       } else if (action === 'toggle_expand') {
         // console.log('toggle_expand', data);
       }
@@ -273,6 +384,7 @@ export function useAiChat(){
 
     if (!opts.noAppendToTranscript) {
       addTranscriptMessage(id, role as any, text, !!opts.hide);
+      updateTranscriptItemStatus(id, "DONE")
     }
 
     sendClientEvent(
@@ -401,6 +513,7 @@ export function useAiChat(){
     router,
     isClient,
     appRef,
+    initConv,
 
     onSessionOpen,
     onSessionResume,

@@ -2,9 +2,13 @@
 import type { TranscriptItem } from "@/app/types";
 
 import { sharedConfig } from "@/app/agentConfigs";
-
+import { translations } from '@/app/i18n/translations';
 
 const { sttPrompt, startAsk } = sharedConfig;
+
+const invalidSttText = _initInvalidSttText()
+
+
 /**
  * 確保文字並不是直接重複 stt prompt 的內容
  * @param text 
@@ -66,4 +70,24 @@ export function handleAnalysisExamples(examples:string[], opts: handleAnalysisEx
 
     return example
   })
+}
+
+
+
+
+
+
+
+
+
+function _initInvalidSttText(){
+  const stopCall = translations.ai_chatbot_action.stop_call;
+  const sessionResume = translations.ai_chatbot_action.sessionResume;
+
+  const list = [
+    ...Object.keys(stopCall).map(lang => stopCall[lang as keyof typeof stopCall]),
+    ...Object.keys(sessionResume).map(lang => sessionResume[lang as keyof typeof sessionResume]),
+  ]
+
+  return new Set(list.map(text => text.trim()).filter(text => text.length > 0))
 }

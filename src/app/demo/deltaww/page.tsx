@@ -16,6 +16,7 @@ import AskForm from "@/app/components/AskForm";
 function DynamicAnalysisContent() {
   const {
     router,
+    initConv,
 
     inputText,
     updateInputText,
@@ -54,7 +55,7 @@ function DynamicAnalysisContent() {
   const loading = useMemo(() => {
     return localLoading || isLoading || isAnalyzing;
   }, [localLoading, isLoading, isAnalyzing])
-  useEffect(()=>{
+  useEffect(() => {
     console.log('[deltaww] loading', loading);
   }, [loading])
 
@@ -199,35 +200,45 @@ function DynamicAnalysisContent() {
       return
     }
     setLocalLoading(true);
-    fetch('/api/deltaww/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        account: account,
-        password: password,
-      }),
-      signal: AbortSignal.timeout(3000)
-    }).then((res) => {
-      return res.json();
-    }).then((data) => {
-      if (data.error) {
-        // 登入失敗，得到錯誤訊息
-        alert(data.message);
-        return;
-      } else {
-        // 登入成功
-        // TODO 後續或許要實現保留 token 等操作
-        setScene('chat');
-        return;
-      }
-    }).catch(() => {
-      alert('登入失敗，請稍後再試');
-    }).finally(() => {
-      setLocalLoading(false);
-    })
+    Promise.resolve()
+      .then(() => {
+        return fetch('/api/deltaww/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            account: account,
+            password: password,
+          }),
+          signal: AbortSignal.timeout(3000)
+        })
+      })
+      .then((res) => {
+        return res.json();
+      }).then((data) => {
+        if (data.error) {
+          // 登入失敗，得到錯誤訊息
+          alert(data.message);
+          return;
+        } else {
+          // 登入成功
+          return onAfterLogin(data.account);
+        }
+      }).catch(() => {
+        alert('登入失敗，請稍後再試');
+      }).finally(() => {
+        setLocalLoading(false);
+      })
+  }
 
+  async function onAfterLogin(email: string) {
+    await initConv({
+      email,
+      agentType: 'static',
+      agentId: 'deltaww',
+    })
+    setScene('chat');
   }
   // 等切換到 chat 之後要自動開 mic
   useEffect(() => {
