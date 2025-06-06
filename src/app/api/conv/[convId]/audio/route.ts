@@ -10,7 +10,7 @@ import suuid from 'short-uuid'
 
 const tmpDir = './local/tmp';
 
-export async function POST(req: Request, { params }: RouteContext<{ convId: string }>) {
+export async function POST(req: Request, { params }: AsyncRouteContext<{ convId: string }>) {
   try {
     const { convId } = await params;
     const fd = await req.formData();

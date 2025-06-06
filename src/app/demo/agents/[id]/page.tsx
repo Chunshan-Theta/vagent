@@ -38,6 +38,7 @@ const settingsMap = {
 function LandbankChatV2Page() {
   const {
     router,
+    initConv,
 
     inputText,
     updateInputText,
@@ -142,8 +143,18 @@ function LandbankChatV2Page() {
       return
     }
     userInfo.current = { name }
+    onAfterLogin(name).catch(console.error);
+  }
+
+  async function onAfterLogin(name: string) {
+    await initConv({
+      uname: name,
+      agentType: 'class',
+      agentId: agentId,
+    })
     setScene('chat');
   }
+
   // 等切換到 chat 之後要自動開 mic
   useEffect(() => {
     if (scene === 'chat') {

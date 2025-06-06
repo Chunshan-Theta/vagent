@@ -1,7 +1,7 @@
 import * as convApi from '@/db/api/conv';
 import { NextResponse } from 'next/server';
 
-export async function PATCH(req: Request, { params }: RouteContext<{ convId: string; msgId: string }>) {
+export async function PATCH(req: Request, { params }: AsyncRouteContext<{ convId: string; msgId: string }>) {
   try {
     const body = await req.json();
     const { convId, msgId } = await params;

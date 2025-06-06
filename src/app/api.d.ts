@@ -1,5 +1,5 @@
 declare global {
-  type RouteContext<PT> = {
+  type AsyncRouteContext<PT> = {
     params: Promise<PT>;
   }
 }

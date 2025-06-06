@@ -123,7 +123,7 @@ function ClassChatPage() {
       setLanguage('zh');
     }
   }, [])
-  
+
   useEffect(() => {
     if (!clientLanguage) {
       console.error('clientLanguage is not set');
@@ -152,6 +152,7 @@ function ClassChatPage() {
 
   const {
     router,
+    initConv,
     inputText,
     updateInputText,
     sendSimulatedUserMessage,
@@ -186,8 +187,16 @@ function ClassChatPage() {
   useEffect(() => {
     if (agentConfig) {
       console.log('clearTranscript!!! ');
-      clearTranscript();
-      handleTalkOn();
+      initConv({
+        agentType: 'class',
+        agentId: agentConfig.name
+      }).then(() => {
+        clearTranscript();
+        handleTalkOn();
+      }).catch((err) => {
+        console.error('Error initializing conversation:', err);
+        setError(getTranslation(clientLanguage || 'zh', 'errors.failed_to_load'));
+      });
     }
   }, [agentConfig]);
 

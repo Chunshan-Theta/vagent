@@ -166,7 +166,7 @@ function DynamicAnalysisContent() {
     await initConv({
       email,
       agentType: 'static',
-      agentId: 'deltaww',
+      agentId: 'deltaww-v2',
     })
     setScene('chat');
   }

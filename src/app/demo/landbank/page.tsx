@@ -19,6 +19,7 @@ import AskForm from "@/app/components/AskForm";
 function LandbankChatPage() {
   const {
     router,
+    initConv,
 
     inputText,
     updateInputText,
@@ -263,6 +264,15 @@ function LandbankChatPage() {
       return
     }
 
+    onAfterLogin(name).catch(console.error);
+  }
+  
+  async function onAfterLogin(name: string) {
+    await initConv({
+      uname: name,
+      agentType: 'static',
+      agentId: 'landbank',
+    })
     setScene('chat');
   }
   // 等切換到 chat 之後要自動開 mic

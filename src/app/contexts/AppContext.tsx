@@ -1,7 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from 'react';
+import MediaRecorderPolyfill from "@/app/lib/MediaRecorderPolyfill"; // 確保這個路徑正確
 import { useEvent } from "@/app/contexts/EventContext";
+
 
 interface AppContextProps {
   dataChannel: RTCDataChannel | null;
@@ -103,6 +105,22 @@ export const useAppContext = (): AppContextProps => {
 
 
 function useRecorderState() {
+  type MRecorder = {
+    start: () => void;
+    stop: () => void;
+    ondataavailable: ((e: BlobEvent) => any) | null;
+  }
+  const getRecorder = ()=>{
+    if (typeof window === 'undefined') return null;
+    if (window.MediaRecorder) {
+      return window.MediaRecorder;
+    } else if (MediaRecorderPolyfill) {
+      return MediaRecorderPolyfill;
+    } else {
+      console.error("MediaRecorder is not supported in this environment.");
+      return null;
+    }
+  }
   const chunks = useRef({
     las: [] as BlobPart[], // Local Audio Stream
     ras: [] as BlobPart[], // Remote Audio Stream
@@ -116,8 +134,8 @@ function useRecorderState() {
     las: null as MediaStream | null, // Local Audio Stream
     ras: null as MediaStream | null, // Remote Audio Stream
 
-    lasRecorder: null as MediaRecorder | null, // Local Audio Stream Recorder
-    rasRecorder: null as MediaRecorder | null, // Remote Audio Stream Recorder
+    lasRecorder: null as MRecorder | null, // Local Audio Stream Recorder
+    rasRecorder: null as MRecorder | null, // Remote Audio Stream Recorder
 
     open: false, // 是否開啟錄音功能
   });
@@ -200,8 +218,10 @@ function useRecorderState() {
   }
 
   function startRecording() {
+    const Recorder = getRecorder();
+    if (!Recorder) { return; }
     if (state.current.las && !state.current.lasRecorder) {
-      state.current.lasRecorder = new MediaRecorder(state.current.las);
+      state.current.lasRecorder = new Recorder(state.current.las);
       state.current.lasRecorder.ondataavailable = (e) => {
         addChunk('las', e.data);
       };
@@ -209,7 +229,7 @@ function useRecorderState() {
     }
 
     if (state.current.ras && !state.current.rasRecorder) {
-      state.current.rasRecorder = new MediaRecorder(state.current.ras);
+      state.current.rasRecorder = new Recorder(state.current.ras);
       state.current.rasRecorder.ondataavailable = (e) => {
         addChunk('ras', e.data);
       };
