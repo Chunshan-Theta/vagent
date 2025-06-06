@@ -57,6 +57,7 @@ export async function getMessages(params: ContextParams){
 注意：內容語系為 "${lang}"，且你的回應也需要用 "${lang}" 語系撰寫。
 
 待分析對話紀錄如下：
+${history}
 `.trim(), 'zh', lang);
   const template = `
 ${prompt1.text}

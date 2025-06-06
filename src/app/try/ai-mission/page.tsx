@@ -113,14 +113,14 @@ export default function Page() {
     <div
       style={{
         display: "flex",
-        height: "100vh",
+        minHeight: "100vh",
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
         background: "#f0f2f5",
       }}
     >
-      <div style={{ width: 400, marginBottom: 16 }}>
+      <div style={{ maxWidth: "100%", width: 600, marginTop: 16, marginBottom: 16 }}>
         <label htmlFor="missionId-input" style={{ fontWeight: 500, marginBottom: 4, display: "block" }}>
           任務 MissionId
         </label>
@@ -163,7 +163,7 @@ export default function Page() {
       </div>
       {/* 動態產生 params 欄位 */}
       {selectedMission && selectedMission.params && selectedMission.params.length > 0 && (
-        <div style={{ width: 400, marginBottom: 16 }}>
+        <div style={{ maxWidth: "100%", width: 600, marginBottom: 16 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>參數設定</div>
           <form
             style={{ display: "flex", flexDirection: "column", gap: 10 }}
@@ -302,7 +302,8 @@ export default function Page() {
             marginTop: 16,
             background: "#fff",
             padding: 12,
-            width: 400,
+            maxWidth: "100%",
+            width: 600,
             overflow: "auto",
             borderRadius: 6,
             border: "1px solid #eee",
