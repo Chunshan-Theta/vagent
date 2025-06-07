@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
+import React, { Suspense, useState, useEffect, useRef, useMemo, ChangeEvent } from "react";
 import { TranscriptProvider } from "@/app/contexts/TranscriptContext";
 import { EventProvider } from "@/app/contexts/EventContext";
 import { ChatProvider } from "@/app/contexts/ChatContext";
@@ -51,6 +51,11 @@ interface TimelineItem {
     problems: string[];
   };
   time: number;
+}
+
+interface UserInfo {
+  email: string;
+  uname: string;
 }
 
 async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
@@ -149,6 +154,8 @@ function ClassChatPage() {
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [localLoading, setLocalLoading] = useState(false);
   const [clientLanguage, setClientLanguage] = useState<Language>();
+  const [userInfo, setUserInfo] = useState<UserInfo>({ email: '', uname: '' });
+  const [isUserInfoValid, setIsUserInfoValid] = useState(false);
 
   useEffect(() => {
     const lang = localStorage.getItem('client-language') as Language
@@ -222,22 +229,6 @@ function ClassChatPage() {
     return localLoading || isLoading || isAnalyzing;
   }, [localLoading, isLoading, isAnalyzing]);
 
-
-  useEffect(() => {
-    if (agentConfig) {
-      console.log('clearTranscript!!! ');
-      initConv({
-        agentType: 'class',
-        agentId: agentConfig.name
-      }).then(() => {
-        clearTranscript();
-        handleTalkOn();
-      }).catch((err) => {
-        console.error('Error initializing conversation:', err);
-        setError(getTranslation(clientLanguage || 'zh', 'errors.failed_to_load'));
-      });
-    }
-  }, [agentConfig]);
 
   const onSubmitText = () => {
     sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true });
@@ -446,8 +437,106 @@ function ClassChatPage() {
     return `"${mContent}"`
   }
 
+  const startConversation = async () => {
+    if (!userInfo.email || !userInfo.uname || !agentConfig) return;
+    setIsUserInfoValid(true);
+
+    try {
+      await initConv({
+        email: userInfo.email,
+        uname: userInfo.uname,
+        agentType: 'class',
+        agentId: agentConfig.name
+      });
+      clearTranscript();
+      handleTalkOn();
+    } catch (err) {
+      console.error('Error initializing conversation:', err);
+      setError(getTranslation(clientLanguage || 'zh', 'errors.failed_to_load'));
+    }
+  };
+
   if (error || !agentConfig) {
     return <div>{error || getTranslation(clientLanguage || 'zh', 'info.try_to_load_agent')}</div>;
+  }
+
+  if (!isUserInfoValid) {
+    return (
+      <div style={{ 
+        background: pageBackground,
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          padding: '2rem',
+          borderRadius: '8px',
+          width: '100%',
+          maxWidth: '400px',
+          margin: '1rem'
+        }}>
+          <h2 style={{ color: 'white', marginBottom: '1.5rem', textAlign: 'center' }}>
+            {getTranslation(clientLanguage || 'zh', 'info.please_enter_info')}
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <input
+              type="email"
+              placeholder={getTranslation(clientLanguage || 'zh', 'info.email')}
+              value={userInfo.email}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setUserInfo(prev => ({
+                  ...prev,
+                  email: e.target.value
+                }));
+              }}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '4px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'white'
+              }}
+            />
+            <input
+              type="text"
+              placeholder={getTranslation(clientLanguage || 'zh', 'info.username')}
+              value={userInfo.uname}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setUserInfo(prev => ({
+                  ...prev,
+                  uname: e.target.value
+                }));
+              }}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '4px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'white'
+              }}
+            />
+            <button
+              onClick={() => startConversation()}
+              disabled={!userInfo.email || !userInfo.uname}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '4px',
+                background: '#06D6A0',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                marginTop: '1rem',
+                opacity: !userInfo.email || !userInfo.uname ? 0.5 : 1
+              }}
+            >
+              {getTranslation(clientLanguage || 'zh', 'info.start')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   function chatScene() {
