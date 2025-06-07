@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS conv_audio (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   conv_id VARCHAR(64) NOT NULL,
   mime VARCHAR(32) NOT NULL,
-  duration DOUBLE NOT NULL, -- Duration in seconds
+  duration DECIMAL(10, 2) NOT NULL, -- Duration in seconds
   uri TEXT DEFAULT NULL,
   state VARCHAR(24) NOT NULL DEFAULT 'pending',
   info TEXT DEFAULT NULL, -- 補充資料
