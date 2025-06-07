@@ -12,8 +12,46 @@ import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 import ChatView from "@/app/components/chat/ChatView";
 import { getTranslation, Language } from "@/app/i18n/translations";
 import LanguageToggle from "@/app/components/LanguageToggle";
+import _ from 'lodash'
+import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'
 
 import * as utils from '../utils'
+
+interface Message {
+  role: string;
+  data: {
+    content: string;
+  };
+  createdAtMs: number;
+}
+
+interface MessagePair {
+  messages: Array<{
+    role: string;
+    data: {
+      content: string;
+    };
+    createdAtMs: number;
+  }>;
+  time: number;
+}
+
+interface TimelineItem {
+  mainColor: string;
+  title: string;
+  subtitleColor: string;
+  subtitle: string;
+  aiRole: string;
+  userRole: string;
+  aiSay: string;
+  userSay: string;
+  analysis: string[];
+  keyPoint: {
+    sentences: string[];
+    problems: string[];
+  };
+  time: number;
+}
 
 async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
   // Only use cache in browser environment
@@ -175,7 +213,8 @@ function ClassChatPage() {
     onSessionResume,
     onSessionClose,
     clearTranscript,
-    setLanguage
+    setLanguage,
+    getMessagePairs
   } = useAiChat();
 
 
@@ -223,78 +262,163 @@ function ClassChatPage() {
       });
     }, 300); // Increment every 300ms
 
-    const chatHistory = getChatHistoryText()
-
     try {
       setAnalysisProgress(30);
 
-      // Perform analysis here before redirecting
-      const criteria = agentConfig?.criteria
+      const { startAt, pairs } = getMessagePairs({
+        spRole: 'assistant',
+        keepSystemMessage: false,
+        keepNextMsgCount: 1,
+      });
 
+      // Initialize timelineItems
+      const timelineItems = pairs.map((item) => {
+        const aiMsg = item.messages[0]
+        const userMsgs = item.messages.slice(1).filter((msg) => msg.role === 'user')
 
-      console.log('agentConfig', agentConfig);
-      console.log('anaylyze criteria:', criteria);
-      const weights = [0.5, 0.5, 0.5, 0.5];
+        const aiRole = 'assistant'
+        const userRole = 'user'
+        const aiSay = aiMsg.data.content || ''
+        const userSay = userMsgs.map((msg) => msg.data.content).join('\n\n')
 
-      const response = await fetch('/api/analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: chatHistory,
-          rubric: {
-            criteria,
-            weights,
+        const timeStr = parseTime(item.time - (startAt || 0))
+
+        return {
+          mainColor: '#ffd166',
+          title: `🕒 ${timeStr}`,
+          subtitleColor: '#ffd166',
+          subtitle: '情緒：......',
+          aiRole,
+          userRole,
+          aiSay,
+          userSay,
+          analysis: [] as string[],
+          keyPoint: {
+            sentences: [] as string[],
+            problems: [] as string[]
           },
-          detectedLanguage: clientLanguage,
-        }),
+          time: item.time - (startAt || 0)
+        } as TimelineItem
+      }).filter((item) => {
+        return item.aiSay && item.userSay
       });
 
-      setAnalysisProgress(70);
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze conversation');
+      if (timelineItems.length < 1) {
+        throw new Error('No timeline items found');
       }
 
-      const analysisResult = await response.json();
-
-      // Ensure the analysis result has the expected structure
-      if (!analysisResult.scores || !analysisResult.overallScore || !analysisResult.feedback) {
-        throw new Error('Invalid analysis result format');
+      const settingsMap = {
+        default: {
+          sentimentColors: {
+            netural: '#fff',
+            angry: '#EF8354',
+            frustrated: '#FFD166',
+            open: '#06D6A0',
+          }
+        }
       }
 
-      // Ensure each score has the required fields
-      analysisResult.scores.forEach((score: any) => {
-        if (!score.examples) score.examples = [];
-        if (!score.improvementTips) score.improvementTips = [];
-      });
+      for (const item of timelineItems) {
+        const { aiSay, userSay } = item
 
-      // Ensure summary and overallImprovementTips exist
-      if (!analysisResult.summary) analysisResult.summary = "No summary available.";
-      if (!analysisResult.overallImprovementTips) analysisResult.overallImprovementTips = ["No improvement tips available."];
+        const analysisRole = 'user'
+        const chatHistory = [
+          `assistant: ${parseHistoryContent(aiSay)}`,
+          `user: ${userSay}`
+        ].join('\n')
 
-      // Ensure language field exists
-      if (!analysisResult.language) analysisResult.language = "en";
+        const missions = [
+          'report-v1/sentiment',
+          'report-v1/key_points',
+          'report-v1/context'
+        ]
 
-      // Clear the progress timer
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-        progressTimerRef.current = null;
+        const collect = {
+          done: 0,
+          error: 0,
+          get end() { return collect.done + collect.error },
+          total: missions.length
+        }
+        const updateProgress = () => {
+          setAnalysisProgress((collect.end / collect.total) * 100 * 0.6) // 0 ~ 60%
+        }
+
+        const gptParams = {
+          analysis: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`,
+          context: agentConfig?.criteria || '',
+        }
+
+        const promises = missions.map((missionId) => {
+          return startAIMission({
+            missionId,
+            params: {
+              lang: clientLanguage,
+              ...gptParams,
+              role: analysisRole,
+              history: chatHistory,
+            },
+            responseType: 'json_schema'
+          }).then((res) => {
+            collect.done++
+            updateProgress()
+            return res
+          }).catch((err) => {
+            collect.error++
+            console.error('Error in analyze:', err)
+            updateProgress()
+            return null
+          })
+        })
+
+        const results = await Promise.all(promises)
+        const resMap = _.keyBy(results, 'missionId')
+
+        if (resMap['report-v1/sentiment']) {
+          const sentimentRes = resMap['report-v1/sentiment']
+          const sentimentType = (sentimentRes.json.sentiment || '').toLowerCase()
+          if (sentimentType) {
+            item.subtitle = `情緒：${sentimentType}`
+            type SentimentColor = keyof typeof settingsMap.default.sentimentColors
+            item.mainColor = settingsMap.default.sentimentColors[sentimentType as SentimentColor]
+          }
+        }
+        if (resMap['report-v1/key_points']) {
+          const keyPointsRes = resMap['report-v1/key_points']
+          const keyPoints = keyPointsRes.json.keyPoints
+          if (typeof keyPoints === 'object') {
+            const { problems, sentences } = keyPoints
+            if (Array.isArray(problems)) {
+              item.keyPoint!.problems = problems as string[]
+            }
+            if (Array.isArray(sentences)) {
+              item.keyPoint!.sentences = sentences as string[]
+            }
+          }
+        }
+        if (resMap['report-v1/context']) {
+          const contextRes = resMap['report-v1/context']
+          const context = contextRes.json.sentences
+          if (Array.isArray(context)) {
+            item.analysis = context as string[]
+          }
+        }
       }
 
       setAnalysisProgress(90);
 
+      const report = {
+        timeline: timelineItems
+      }
+
       // Store the analysis result and chat history in localStorage
-      localStorage.setItem('analysisResult', JSON.stringify(analysisResult));
-      localStorage.setItem('chatHistory', chatHistory);
+      localStorage.setItem('report', JSON.stringify(report));
+      localStorage.setItem('chatHistory', getChatHistoryText());
       localStorage.setItem('chatMessages', JSON.stringify(getChatHistory()));
 
       setAnalysisProgress(100);
 
-      // Redirect to the analysis report page
-      const back = encodeURIComponent(`/class/${params.id}`);
-      router.push(`/class/report?back=${back}`);
+      // Navigate to report page
+      router.push('/class/report');
     } catch (error) {
       // Clear the progress timer on error
       if (progressTimerRef.current) {
@@ -307,6 +431,20 @@ function ClassChatPage() {
       setIsAnalyzing(false);
     }
   };
+
+  function parseTime(time: number) {
+    const timeSec = Math.floor(time / 1000)
+    const timeMin = Math.floor(timeSec / 60)
+    const min = `${timeMin}`
+    const sec = `${timeSec % 60}`
+    return `${min.padStart(2, '0')}:${sec.padStart(2, '0')}`
+  }
+
+  function parseHistoryContent(content: string | undefined | null) {
+    if (content == null) return ''
+    const mContent = (content || '').trim().replace(/\n/g, ' ')
+    return `"${mContent}"`
+  }
 
   if (error || !agentConfig) {
     return <div>{error || getTranslation(clientLanguage || 'zh', 'info.try_to_load_agent')}</div>;
