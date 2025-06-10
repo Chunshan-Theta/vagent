@@ -7,7 +7,7 @@ This endpoint processes audio files and returns a detailed analysis including tr
 ### Endpoint
 
 ```
-POST /api/analysis/llm
+POST /api/analysis/audio-emotion
 ```
 
 ### Request
@@ -42,7 +42,7 @@ Returns a JSON object with the following structure:
 ### Example
 
 ```bash
-curl -X POST http://your-domain/api/analysis/llm \
+curl -X POST http://your-domain/api/analysis/audio-emotion \
   -F "audioFile=@/path/to/audio.mp3" \
   -H "Content-Type: multipart/form-data"
 ```
