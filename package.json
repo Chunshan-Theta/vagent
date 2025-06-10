@@ -11,6 +11,7 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.44.0",
     "@google-cloud/storage": "^7.16.0",
+    "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.7.0",
     "@radix-ui/react-label": "^2.1.6",
@@ -22,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "formidable": "^3.5.4",
+    "i": "^0.3.7",
     "ioredis": "^5.6.1",
     "knex": "^3.1.0",
     "lodash": "^4.17.21",

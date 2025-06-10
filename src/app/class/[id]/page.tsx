@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
+import React, { Suspense, useState, useEffect, useRef, useMemo, ChangeEvent } from "react";
 import { TranscriptProvider } from "@/app/contexts/TranscriptContext";
 import { EventProvider } from "@/app/contexts/EventContext";
 import { ChatProvider } from "@/app/contexts/ChatContext";
@@ -12,8 +12,32 @@ import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 import ChatView from "@/app/components/chat/ChatView";
 import { getTranslation, Language } from "@/app/i18n/translations";
 import LanguageToggle from "@/app/components/LanguageToggle";
+import _ from 'lodash'
+import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'
 
 import * as utils from '../utils'
+
+interface TimelineItem {
+  mainColor: string;
+  title: string;
+  subtitleColor: string;
+  subtitle: string;
+  aiRole: string;
+  userRole: string;
+  aiSay: string;
+  userSay: string;
+  analysis: string[];
+  keyPoint: {
+    sentences: string[];
+    problems: string[];
+  };
+  time: number;
+}
+
+interface UserInfo {
+  email: string;
+  uname: string;
+}
 
 async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
   // Only use cache in browser environment
@@ -111,6 +135,8 @@ function ClassChatPage() {
   const [pageBackground] = useState("linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)");
   const [localLoading, setLocalLoading] = useState(false);
   const [clientLanguage, setClientLanguage] = useState<Language>();
+  const [userInfo, setUserInfo] = useState<UserInfo>({ email: '', uname: '' });
+  const [isUserInfoValid, setIsUserInfoValid] = useState(false);
 
   useEffect(() => {
     const lang = localStorage.getItem('client-language') as Language
@@ -175,7 +201,8 @@ function ClassChatPage() {
     onSessionResume,
     onSessionClose,
     clearTranscript,
-    setLanguage
+    setLanguage,
+    getMessagePairs
   } = useAiChat();
 
 
@@ -184,32 +211,46 @@ function ClassChatPage() {
   }, [localLoading, isLoading, isAnalyzing]);
 
 
-  useEffect(() => {
-    if (agentConfig) {
-      console.log('clearTranscript!!! ');
-      initConv({
-        agentType: 'class',
-        agentId: agentConfig.name
-      }).then(() => {
-        clearTranscript();
-        handleTalkOn();
-      }).catch((err) => {
-        console.error('Error initializing conversation:', err);
-        setError(getTranslation(clientLanguage || 'zh', 'errors.failed_to_load'));
-      });
-    }
-  }, [agentConfig]);
-
   const onSubmitText = () => {
     sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true });
     updateInputText('');
   }
+
+
+
+const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
+    if (!criteria) {
+      criteria = '使用者本身是否是進行良性的溝通';
+    }
+
+    const weights = [0.5, 0.5, 0.5, 0.5];
+
+    const response = await fetch('/api/analysis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: chatHistory,
+        rubric: {
+          criteria,
+          weights,
+        },
+        detectedLanguage: clientLanguage,
+      }),
+    });
+
+    return response.json();
+  }
+
 
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
       return;
     }
+
+
     endConversation();
 
     // Start a timer to increment progress over time
@@ -223,78 +264,167 @@ function ClassChatPage() {
       });
     }, 300); // Increment every 300ms
 
-    const chatHistory = getChatHistoryText()
-
     try {
       setAnalysisProgress(30);
+      const chatHistory = getChatHistoryText()
+      const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria, chatHistory, clientLanguage || 'zh')
+      localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
+  
 
-      // Perform analysis here before redirecting
-      const criteria = agentConfig?.criteria
+      const { startAt, pairs } = getMessagePairs({
+        spRole: 'assistant',
+        keepSystemMessage: false,
+        keepNextMsgCount: 1,
+      });
 
+      // Initialize timelineItems
+      const timelineItems = pairs.map((item) => {
+        const aiMsg = item.messages[0]
+        const userMsgs = item.messages.slice(1).filter((msg) => msg.role === 'user')
 
-      console.log('agentConfig', agentConfig);
-      console.log('anaylyze criteria:', criteria);
-      const weights = [0.5, 0.5, 0.5, 0.5];
+        const aiRole = 'assistant'
+        const userRole = 'user'
+        const aiSay = aiMsg.data.content || ''
+        const userSay = userMsgs.map((msg) => msg.data.content).join('\n\n')
 
-      const response = await fetch('/api/analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: chatHistory,
-          rubric: {
-            criteria,
-            weights,
+        const timeStr = parseTime(item.time - (startAt || 0))
+
+        return {
+          mainColor: '#ffd166',
+          title: `🕒 ${timeStr}`,
+          subtitleColor: '#ffd166',
+          subtitle: '情緒：......',
+          aiRole,
+          userRole,
+          aiSay,
+          userSay,
+          analysis: [] as string[],
+          keyPoint: {
+            sentences: [] as string[],
+            problems: [] as string[]
           },
-          detectedLanguage: clientLanguage,
-        }),
+          time: item.time - (startAt || 0)
+        } as TimelineItem
+      }).filter((item) => {
+        return item.aiSay && item.userSay
       });
 
-      setAnalysisProgress(70);
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze conversation');
+      if (timelineItems.length < 1) {
+        throw new Error('No timeline items found');
       }
 
-      const analysisResult = await response.json();
-
-      // Ensure the analysis result has the expected structure
-      if (!analysisResult.scores || !analysisResult.overallScore || !analysisResult.feedback) {
-        throw new Error('Invalid analysis result format');
+      const settingsMap = {
+        default: {
+          sentimentColors: {
+            netural: '#fff',
+            angry: '#EF8354',
+            frustrated: '#FFD166',
+            open: '#06D6A0',
+          }
+        }
       }
 
-      // Ensure each score has the required fields
-      analysisResult.scores.forEach((score: any) => {
-        if (!score.examples) score.examples = [];
-        if (!score.improvementTips) score.improvementTips = [];
-      });
+      for (const item of timelineItems) {
+        const { aiSay, userSay } = item
 
-      // Ensure summary and overallImprovementTips exist
-      if (!analysisResult.summary) analysisResult.summary = "No summary available.";
-      if (!analysisResult.overallImprovementTips) analysisResult.overallImprovementTips = ["No improvement tips available."];
+        const analysisRole = 'user'
+        const chatHistory = [
+          `assistant: ${parseHistoryContent(aiSay)}`,
+          `user: ${userSay}`
+        ].join('\n')
 
-      // Ensure language field exists
-      if (!analysisResult.language) analysisResult.language = "en";
+        const missions = [
+          'report-v1/sentiment',
+          'report-v1/key_points',
+          'report-v1/context'
+        ]
 
-      // Clear the progress timer
-      if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-        progressTimerRef.current = null;
+        const collect = {
+          done: 0,
+          error: 0,
+          get end() { return collect.done + collect.error },
+          total: missions.length
+        }
+        const updateProgress = () => {
+          setAnalysisProgress((collect.end / collect.total) * 100 * 0.6) // 0 ~ 60%
+        }
+
+        const gptParams = {
+          analysis: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`,
+          context: agentConfig?.criteria || '',
+        }
+
+        const promises = missions.map((missionId) => {
+          return startAIMission({
+            missionId,
+            params: {
+              lang: clientLanguage,
+              ...gptParams,
+              role: analysisRole,
+              history: chatHistory,
+            },
+            responseType: 'json_schema'
+          }).then((res) => {
+            collect.done++
+            updateProgress()
+            return res
+          }).catch((err) => {
+            collect.error++
+            console.error('Error in analyze:', err)
+            updateProgress()
+            return null
+          })
+        })
+
+        const results = await Promise.all(promises)
+        const resMap = _.keyBy(results, 'missionId')
+
+        if (resMap['report-v1/sentiment']) {
+          const sentimentRes = resMap['report-v1/sentiment']
+          const sentimentType = (sentimentRes.json.sentiment || '').toLowerCase()
+          if (sentimentType) {
+            item.subtitle = `情緒：${sentimentType}`
+            type SentimentColor = keyof typeof settingsMap.default.sentimentColors
+            item.mainColor = settingsMap.default.sentimentColors[sentimentType as SentimentColor]
+          }
+        }
+        if (resMap['report-v1/key_points']) {
+          const keyPointsRes = resMap['report-v1/key_points']
+          const keyPoints = keyPointsRes.json.keyPoints
+          if (typeof keyPoints === 'object') {
+            const { problems, sentences } = keyPoints
+            if (Array.isArray(problems)) {
+              item.keyPoint!.problems = problems as string[]
+            }
+            if (Array.isArray(sentences)) {
+              item.keyPoint!.sentences = sentences as string[]
+            }
+          }
+        }
+        if (resMap['report-v1/context']) {
+          const contextRes = resMap['report-v1/context']
+          const context = contextRes.json.sentences
+          if (Array.isArray(context)) {
+            item.analysis = context as string[]
+          }
+        }
       }
 
       setAnalysisProgress(90);
 
+      const report = {
+        timeline: timelineItems
+      }
+
       // Store the analysis result and chat history in localStorage
-      localStorage.setItem('analysisResult', JSON.stringify(analysisResult));
-      localStorage.setItem('chatHistory', chatHistory);
+      localStorage.setItem('report', JSON.stringify(report));
+      localStorage.setItem('chatHistory', getChatHistoryText());
       localStorage.setItem('chatMessages', JSON.stringify(getChatHistory()));
 
       setAnalysisProgress(100);
 
-      // Redirect to the analysis report page
-      const back = encodeURIComponent(`/class/${params.id}`);
-      router.push(`/class/report?back=${back}`);
+      // Navigate to report page
+      router.push('/class/report');
     } catch (error) {
       // Clear the progress timer on error
       if (progressTimerRef.current) {
@@ -308,8 +438,120 @@ function ClassChatPage() {
     }
   };
 
+  function parseTime(time: number) {
+    const timeSec = Math.floor(time / 1000)
+    const timeMin = Math.floor(timeSec / 60)
+    const min = `${timeMin}`
+    const sec = `${timeSec % 60}`
+    return `${min.padStart(2, '0')}:${sec.padStart(2, '0')}`
+  }
+
+  function parseHistoryContent(content: string | undefined | null) {
+    if (content == null) return ''
+    const mContent = (content || '').trim().replace(/\n/g, ' ')
+    return `"${mContent}"`
+  }
+
+  const startConversation = async () => {
+    if (!userInfo.email || !userInfo.uname || !agentConfig) return;
+    setIsUserInfoValid(true);
+
+    try {
+      await initConv({
+        email: userInfo.email,
+        uname: userInfo.uname,
+        agentType: 'class',
+        agentId: agentConfig.name
+      });
+      clearTranscript();
+      handleTalkOn();
+    } catch (err) {
+      console.error('Error initializing conversation:', err);
+      setError(getTranslation(clientLanguage || 'zh', 'errors.failed_to_load'));
+    }
+  };
+
   if (error || !agentConfig) {
     return <div>{error || getTranslation(clientLanguage || 'zh', 'info.try_to_load_agent')}</div>;
+  }
+
+  if (!isUserInfoValid) {
+    return (
+      <div style={{ 
+        background: pageBackground,
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          padding: '2rem',
+          borderRadius: '8px',
+          width: '100%',
+          maxWidth: '400px',
+          margin: '1rem'
+        }}>
+          <h2 style={{ color: 'white', marginBottom: '1.5rem', textAlign: 'center' }}>
+            {getTranslation(clientLanguage || 'zh', 'info.please_enter_info')}
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <input
+              type="email"
+              placeholder={getTranslation(clientLanguage || 'zh', 'info.email')}
+              value={userInfo.email}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setUserInfo(prev => ({
+                  ...prev,
+                  email: e.target.value
+                }));
+              }}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '4px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'white'
+              }}
+            />
+            <input
+              type="text"
+              placeholder={getTranslation(clientLanguage || 'zh', 'info.username')}
+              value={userInfo.uname}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setUserInfo(prev => ({
+                  ...prev,
+                  uname: e.target.value
+                }));
+              }}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '4px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: 'white'
+              }}
+            />
+            <button
+              onClick={() => startConversation()}
+              disabled={!userInfo.email || !userInfo.uname}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '4px',
+                background: '#06D6A0',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                marginTop: '1rem',
+                opacity: !userInfo.email || !userInfo.uname ? 0.5 : 1
+              }}
+            >
+              {getTranslation(clientLanguage || 'zh', 'info.start')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   function chatScene() {

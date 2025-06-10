@@ -6,8 +6,7 @@ import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
 import App, { AppRef } from "@/app/App";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ReportV1, Timeline } from '@/app/types/ai-report';
-
+import { ReportV1 } from '@/app/types/ai-report'
 import ChatView from "@/app/components/chat/ChatView";
 
 import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'

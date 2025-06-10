@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import TimelineContainer from "./TimelineContainer";
-import { ReportV1, Timeline } from '@/app/types/ai-report'
+import type { TimelineItem } from '@/app/types/ai-report/common'
+import { ReportV1 } from '@/app/types/ai-report'
+
 import _ from '@/app/vendor/lodash'
 
 type TimelineData = ReportV1.TimelineData
@@ -30,7 +32,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
     return _.trim(text, ' \n\r\t"\'-「」')
   }
 
-  const timelineItems = useMemo<Timeline.TimelineItem[]>(() => {
+  const timelineItems = useMemo<TimelineItem[]>(() => {
     return timelineDatas.map((item, index) => {
       const keyPoint = {
         sentences: item.keyPoint?.sentences || [],

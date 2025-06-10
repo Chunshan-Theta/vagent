@@ -114,6 +114,42 @@ export const translations = {
       de: 'Versuche, den Agenten zu laden...',
       ja: 'エージェントを読み込んでいます...',
       ko: '에이전트를 로드하는 중...'
+    },
+    please_enter_info: {
+      en: 'Please enter your information',
+      zh: '請輸入您的資訊',
+      es: 'Por favor, ingrese su información',
+      fr: 'Veuillez entrer votre information',
+      de: 'Bitte geben Sie Ihre Informationen ein',
+      ja: '情報を入力してください',
+      ko: '정보를 입력해 주세요'
+    },
+    email: {
+      en: 'Email',
+      zh: '電子郵件',
+      es: 'Correo electrónico',
+      fr: 'Email',
+      de: 'Email',
+      ja: 'メールアドレス',
+      ko: '이메일'
+    },
+    username: {
+      en: 'Name',
+      zh: '姓名',
+      es: 'Nombre',
+      fr: 'Nom',
+      de: 'Name',
+      ja: '名前',
+      ko: '이름'
+    },
+    start: {
+      en: 'Start',
+      zh: '開始',
+      es: 'Iniciar',
+      fr: 'Démarrer',
+      de: 'Starten',
+      ja: '開始',
+      ko: '시작'
     }
   },
 
