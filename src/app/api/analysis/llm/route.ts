@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line);
     
     const emotions = [];
-    let currentSentence = '';
     let currentEmotion = '';
     
     for (const line of lines) {

@@ -1,87 +1,121 @@
 'use client';
 
-import { Suspense, useRef, useState, useEffect, useMemo } from 'react';
-import ReportView from '@/app/components/ai-report/ReportViewV1';
-import { ReportV1 } from '@/app/types/ai-report';
-import LoadingIcon from '@/app/components/LoadingIcon';
+import { Suspense, useState, useEffect } from 'react';
+import ClassReportComponent from '@/app/components/ai-report/ClassReportComponent';
+import ReportViewV2 from '@/app/components/ai-report/ReportViewV2';
+import { AnalysisResponse, ReportDatas } from '@/app/types/ai-report/common';
 
-const settingsMap = {
-  default: {
-    naturalColor: '#fff',
-    angryColor: '#EF8354',
-    frustratedColor: '#FFD166',
-    openColor: '#06D6A0',
-  }
-};
+type ReportTab = 'v1' | 'v2';
 
-function ClassReport() {
-  const reportData = useRef<ReportV1.ReportDatas | null>(null);
-  const [localLoading, setLocalLoading] = useState(true);
-  const loading = useMemo(() => localLoading, [localLoading]);
+function ReportContent() {
+  const [activeTab, setActiveTab] = useState<ReportTab>('v1');
+  const [reportData, setReportData] = useState<ReportDatas | null>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisResponse | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    changeRootCssVar('--background', '#173944');
-  });
+    init();
+  }, []);
 
-  /** 修改 :root 內的 css var */
-  function changeRootCssVar(key: string, value: string) {
-    const root = document.documentElement;
-    root.style.setProperty(key, value);
-  }
-
-  async function fetchReportData(): Promise<ReportV1.ReportDatas> {
-    const settings = settingsMap.default;
+  async function fetchReportData(): Promise<ReportDatas> {
     const reportDataStr = localStorage.getItem('report');
     if (!reportDataStr) {
       throw new Error('No report data found in local storage');
     }
-    const reportData = JSON.parse(reportDataStr) as ReportV1.ReportDatas;
-    const { timeline } = reportData;
+    const reportData = JSON.parse(reportDataStr) as ReportDatas;
+    return reportData;
+  }
 
-    const timelineDatas: ReportV1.TimelineData[] = timeline;
-    return {
-      timeline: timelineDatas
-    };
+  async function fetchAnalysisData(): Promise<AnalysisResponse> {
+    const analysisStr = localStorage.getItem('analysisResult');
+    if (!analysisStr) {
+      throw new Error('No analysis data found in local storage');
+    }
+    const analysisData = JSON.parse(analysisStr) as AnalysisResponse;
+    return analysisData;
   }
 
   async function init() {
-    const data = await fetchReportData();
-    reportData.current = data;
-    console.log('[report_page]', {
-      report: reportData.current
-    });
+    try {
+      const [report, analysis] = await Promise.all([
+        fetchReportData(),
+        fetchAnalysisData()
+      ]);
+      setReportData(report);
+      setAnalysisData(analysis);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => {
-    setLocalLoading(true);
-    init()
-      .catch((e) => {
-        console.error(e);
-      })
-      .finally(() => {
-        setLocalLoading(false);
-      });
-  }, []);
+  // Render tab buttons
+  const renderTabs = () => (
+    <div className="flex justify-between items-center mb-6">
+      <button
+        onClick={() => window.history.back()}
+        className="px-4 py-2 rounded-lg transition-colors duration-200 bg-[#173944] text-gray-300 hover:bg-[#194A54]"
+      >
+        ← Back
+      </button>
+      <div className="flex space-x-2">
+        <button
+          onClick={() => setActiveTab('v1')}
+          className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'v1'
+              ? 'bg-[#00A3E0] text-white'
+              : 'bg-[#173944] text-gray-300 hover:bg-[#194A54]'
+          }`}
+        >
+          時間序列
+        </button>
+        <button
+          onClick={() => setActiveTab('v2')}
+          className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'v2'
+              ? 'bg-[#00A3E0] text-white'
+              : 'bg-[#173944] text-gray-300 hover:bg-[#194A54]'
+          }`}
+        >
+          總體分析
+        </button>
+      </div>
+    </div>
+  );
 
-  function createReportView() {
-    if (reportData.current) {
-      // 限制寬度
+  // Render content based on active tab
+  const renderContent = () => {
+    if (loading) {
       return (
-        <div className="max-w-4xl w-full">
-          <ReportView data={reportData.current} />
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#00A3E0]"></div>
         </div>
       );
     }
-    return null;
-  }
+
+    if (!reportData || !analysisData) {
+      return (
+        <div className="text-white text-center p-8">
+          No report data found
+        </div>
+      );
+    }
+
+    return activeTab === 'v1' ? (
+      <ClassReportComponent />
+    ) : (
+      <ReportViewV2 
+        data={analysisData} 
+        message={localStorage.getItem('chatMessages') || ''} 
+      />
+    );
+  };
 
   return (
-    <div className="ai-report-page flex flex-col items-center min-h-screen">
-      {/* 內容區 */}
-      <div className="flex justify-center items-center flex-1 w-full">
-        {loading && <LoadingIcon />}
-        {reportData.current && createReportView()}
-      </div>
+    <div className="min-h-screen bg-[#0F2D38] p-4">
+      {renderTabs()}
+      {renderContent()}
     </div>
   );
 }
@@ -89,7 +123,7 @@ function ClassReport() {
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ClassReport />
+      <ReportContent />
     </Suspense>
   );
 } 

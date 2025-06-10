@@ -50,7 +50,9 @@ async function loadAccountList() : Promise<DemoAccount[]> {
   const fs = await import('fs')
   const filePath = process.env.DELTAWW_ACCOUNT_LIST_FILE;
   if (!filePath) {
-    return [];
+    return [
+      { account: 'test', password: 'test' }
+    ];
   }
 
   try {

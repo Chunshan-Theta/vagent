@@ -1,5 +1,3 @@
-
-
 // 該元件的功能：
 // 1. 左側顯示類似時間軸的UI，時間線最上方有預留一個圓圈顯示數字
 // 2. 右側 content 由 childrens 決定
@@ -7,10 +5,10 @@
 // 4. 須確保 childrens size 與 timelineItems size 一致，否則會報錯
 
 import { useMemo } from "react"
-import type { Timeline } from '@/app/types/ai-report'
+import type { TimelineItem, TimelineContainerProps } from '@/app/types/ai-report/common'
 
 
-function TimelineContainer(props: Timeline.TimelineContainerProps) {
+function TimelineContainer(props: TimelineContainerProps) {
   const { items, className } = props
   const defaultColor = '#ffd166'
 
@@ -27,13 +25,13 @@ function TimelineContainer(props: Timeline.TimelineContainerProps) {
     )
   }
 
-  const getItemStyle = (item: Timeline.TimelineItem) => {
+  const getItemStyle = (item: TimelineItem) => {
     return {
       borderLeftColor: item.meta?.timelineColor ?? defaultColor,
     } as React.CSSProperties
   }
 
-  const getMarkerStyle = (item: Timeline.TimelineItem) => {
+  const getMarkerStyle = (item: TimelineItem) => {
     return {
       backgroundColor: item.meta?.timelineColor ?? defaultColor,
     } as React.CSSProperties

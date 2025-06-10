@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import ChatView from "@/app/components/chat/ChatView";
 import AskForm from "@/app/components/AskForm";
-import { ReportV1, Timeline } from '@/app/types/ai-report';
+import { ReportV1 } from '@/app/types/ai-report';
 
 import _ from '@/app/vendor/lodash';
 import { v4 as uuidv4 } from "uuid";

@@ -17,25 +17,6 @@ import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'
 
 import * as utils from '../utils'
 
-interface Message {
-  role: string;
-  data: {
-    content: string;
-  };
-  createdAtMs: number;
-}
-
-interface MessagePair {
-  messages: Array<{
-    role: string;
-    data: {
-      content: string;
-    };
-    createdAtMs: number;
-  }>;
-  time: number;
-}
-
 interface TimelineItem {
   mainColor: string;
   title: string;
@@ -235,11 +216,41 @@ function ClassChatPage() {
     updateInputText('');
   }
 
+
+
+const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
+    if (!criteria) {
+      criteria = '使用者本身是否是進行良性的溝通';
+    }
+
+    const weights = [0.5, 0.5, 0.5, 0.5];
+
+    const response = await fetch('/api/analysis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: chatHistory,
+        rubric: {
+          criteria,
+          weights,
+        },
+        detectedLanguage: clientLanguage,
+      }),
+    });
+
+    return response.json();
+  }
+
+
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
       return;
     }
+
+
     endConversation();
 
     // Start a timer to increment progress over time
@@ -255,6 +266,10 @@ function ClassChatPage() {
 
     try {
       setAnalysisProgress(30);
+      const chatHistory = getChatHistoryText()
+      const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria, chatHistory, clientLanguage || 'zh')
+      localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
+  
 
       const { startAt, pairs } = getMessagePairs({
         spRole: 'assistant',
