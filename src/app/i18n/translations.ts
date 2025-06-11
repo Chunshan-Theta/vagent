@@ -101,6 +101,24 @@ export const translations = {
       de: 'Fehler beim Laden des Agenten',
       ja: 'エージェントの読み込みに失敗しました',
       ko: '에이전트 로드에 실패했습니다'
+    },
+    failed_to_save_settings: {
+      en: 'Failed to save settings',
+      zh: '無法儲存設定',
+      es: 'Error al guardar la configuración',
+      fr: 'Échec de la sauvegarde des paramètres',
+      de: 'Fehler beim Speichern der Einstellungen',
+      ja: '設定の保存に失敗しました',
+      ko: '설정 저장에 실패했습니다'
+    },
+    invalid_settings_format: {
+      en: 'Invalid settings format',
+      zh: '無效的設定格式',
+      es: 'Formato de configuración inválido',
+      fr: 'Format de paramètres invalide',
+      de: 'Ungültiges Einstellungsformat',
+      ja: '無効な設定形式です',
+      ko: '잘못된 설정 형식입니다'
     }
   },
 

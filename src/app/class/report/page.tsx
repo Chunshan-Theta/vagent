@@ -102,12 +102,16 @@ function ReportContent() {
       );
     }
 
-    return activeTab === 'v1' ? (
-      <ClassReportComponent />
-    ) : (
-      <ReportViewV2 
+    if (activeTab === 'v1') {
+      return (
+        <ClassReportComponent />
+      );
+    }
+    const messages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
+    return (
+      <ReportViewV2
         data={analysisData} 
-        message={localStorage.getItem('chatMessages') || ''} 
+        message={messages} 
       />
     );
   };

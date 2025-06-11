@@ -23,13 +23,25 @@ export default function ReportViewV2({ data: analysis, onBack, message = '' }: P
     if (typeof window === 'undefined') return;
 
     // Get the analysis result and chat history from localStorage
-    const storedAnalysis = localStorage.getItem('analyzeChatHistoryByRubric');
-    const storedChatMessages = localStorage.getItem('chatMessages');
+    const storedAnalysis = analysis ? JSON.stringify(analysis) : localStorage.getItem('analyzeChatHistoryByRubric');
+    const storedChatMessages = message ? JSON.stringify(message) : localStorage.getItem('chatMessages');
+    // console.log("Stored Analysis:", {
+    //   analysis,
+    //   message
+    // });
 
-    const storedChatHistory = storedChatMessages ? 
+    const getMsgContent = (msg: any) => {
+      if (typeof msg === 'string') return msg;
+      if (msg && typeof msg === 'object') {
+        return (msg.content ?? msg.title) || '';
+      }
+      return '';
+    }
+
+    const storedChatHistory = storedChatMessages ?
       JSON.parse(storedChatMessages)
         .filter((msg: any) => msg.role !== 'system')
-        .map((msg: any) => `${msg.role}: ${msg.content}`)
+        .map((msg: any) => `${msg.role}: ${getMsgContent(msg)}`)
         .join('\n\n') : '';
 
     if (storedAnalysis && storedChatHistory) {
@@ -260,7 +272,7 @@ export default function ReportViewV2({ data: analysis, onBack, message = '' }: P
               ))}
             </div>
 
-            {message && (
+            {localMessage && (
               <div className="mt-8 p-6 bg-[#173944] rounded-[20px] border border-[#2D5A67]">
                 <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
                   <FaHistory className="mr-2 text-[#FFE066]" />
