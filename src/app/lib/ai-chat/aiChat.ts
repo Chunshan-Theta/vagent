@@ -54,6 +54,7 @@ export function useAiChat(){
   const [waitRealtimeConnection, setWaitRealtimeConnection] = useState(false);
 
   const uploadPromises = useRef<Promise<any>[]>([]);
+
   const isUploading = useMemo(() => {
     return uploadPromises.current.length > 0;
   }, [uploadPromises.current.length]);
@@ -61,11 +62,14 @@ export function useAiChat(){
   
   const addUploadPromise = (promise: Promise<any>) => {
     uploadPromises.current = [...uploadPromises.current, promise];
-    promise.then(()=>{
-      uploadPromises.current = uploadPromises.current.filter(p => p !== promise);
-    }).catch((err)=>{
-      throw err;
-    })
+    promise
+      .then(()=>{
+        uploadPromises.current = uploadPromises.current.filter(p => p !== promise);
+      })
+      .catch((err)=>{
+        uploadPromises.current = uploadPromises.current.filter(p => p !== promise);
+        throw err;
+      })
   }
 
   const waitPostTask = async ()=>{
@@ -171,7 +175,7 @@ export function useAiChat(){
   const onSessionClose = ()=>{
     setIsPTTUserSpeaking(false);
   }
-  
+
   const canInterrupt = useMemo(() => {
     // 如果原先並沒有連線，則不需要 pause ，所以狀態一律是 false
     // 需要確保 AI 講完他想講的話，才可以掛斷電話
@@ -183,6 +187,8 @@ export function useAiChat(){
         // 如果最後一則訊息是 assistant 的話，則可以掛斷電話
         return true;
       }
+    } else {
+      return true; // 如果沒有接通通話，仍然視為可以中斷
     }
     return false;
   }, [isPTTUserSpeaking, transcriptItems])
@@ -354,12 +360,15 @@ export function useAiChat(){
     const h1 = transcript.on('new_item', (data) => {
       const { type, item: newItem } = data;
       if (type === 'MESSAGE') {
+        const audioRef = `conv:${convInfo.current.audioCount}`; // 根據音訊的 index 做紀錄
+        const createdTime = newItem.createdAtMs ?? Date.now();
+        const audioDuration = (createdTime - appContext.recorder.state.current.startTime) / 1000;
         chatContext.addMessageItem({
           id: newItem.itemId,
           type: 'text',
           role: newItem.role!,
-          data: { content: newItem.title },
-          createdAtMs: Date.now(),
+          data: { content: newItem.title, audioRef, audioDuration },
+          createdAtMs: newItem.createdAtMs,
           hide: !!newItem.isHidden || newItem.role === 'system',
         })
         addConvMessage({
@@ -367,8 +376,8 @@ export function useAiChat(){
           type: 'text',
           role: newItem.role!,
           content: newItem.title || '',
-          audioRef: `conv:${convInfo.current.audioCount}`, // 根據音訊的 index 做紀錄
-          audioDuration: (newItem.createdAtMs - appContext.recorder.state.current.startTime) / 1000,
+          audioRef, 
+          audioDuration,
         })
       }
     })
