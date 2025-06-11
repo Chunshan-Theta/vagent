@@ -27,7 +27,7 @@ function ReportContent() {
   }
 
   async function fetchAnalysisData(): Promise<AnalysisResponse> {
-    const analysisStr = localStorage.getItem('analysisResult');
+    const analysisStr = localStorage.getItem('analyzeChatHistoryByRubric');
     if (!analysisStr) {
       throw new Error('No analysis data found in local storage');
     }
