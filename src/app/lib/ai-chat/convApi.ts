@@ -48,11 +48,13 @@ export interface UploadConvAudioResult {
 export async function uploadConvAudio(
   audio: Blob | File,
   convId: string,
+  name: string,
   type: string = 'audio/wav',
   duration?: number
 ): Promise<UploadConvAudioResult> {
   const formData = new FormData();
   formData.append('audio', audio);
+  formData.append('name', name);
   formData.append('type', type);
   if (duration !== undefined) formData.append('duration', String(duration));
   const res = await fetch(`/api/conv/${convId}/audio`, {
@@ -104,6 +106,14 @@ export async function updateConvMessageContent(convId: string, msgId: string, co
  */
 export async function getConvMessages(convId: string): Promise<any[]> {
   const res = await fetch(`/api/conv/${convId}/message`, {
+    method: 'GET',
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+export async function getConvAudioByIndex(convId: string, index: number): Promise<any> {
+  const res = await fetch(`/api/conv/${convId}/audio?index=${index}`, {
     method: 'GET',
   });
   if (!res.ok) throw new Error(await res.text());

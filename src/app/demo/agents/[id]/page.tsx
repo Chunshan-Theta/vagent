@@ -44,6 +44,7 @@ function LandbankChatV2Page() {
 
     sendSimulatedUserMessage,
     isPTTUserSpeaking,
+    canInterrupt,
     handleMicrophoneClick,
     handleTalkOn,
     transcriptItems,
@@ -66,7 +67,9 @@ function LandbankChatV2Page() {
     onSessionResume,
     onSessionClose,
 
-    setLanguage
+    setLanguage,
+
+    showSystemToast
   } = useAiChat();
   const params = useParams();
   const query = useSearchParams();
@@ -184,6 +187,10 @@ function LandbankChatV2Page() {
   async function startGenerateAiReport() {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
+      return;
+    }
+    if (!canInterrupt) {
+      showSystemToast('wait_for_response');
       return;
     }
     // const storedChatMessages = localStorage.setItem('analysis_report')

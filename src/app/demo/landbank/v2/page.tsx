@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import ChatView from "@/app/components/chat/ChatView";
 import AskForm from "@/app/components/AskForm";
-import { ReportV1 } from '@/app/types/ai-report'
+import { ReportV1, Timeline } from '@/app/types/ai-report';
 
 import _ from '@/app/vendor/lodash';
 import { v4 as uuidv4 } from "uuid";
@@ -42,6 +42,7 @@ function LandbankChatV2Page() {
 
     sendSimulatedUserMessage,
     isPTTUserSpeaking,
+    canInterrupt,
     handleMicrophoneClick,
     handleTalkOn,
     transcriptItems,
@@ -62,7 +63,9 @@ function LandbankChatV2Page() {
 
     onSessionOpen,
     onSessionResume,
-    onSessionClose
+    onSessionClose,
+
+    showSystemToast
   } = useAiChat();
 
   const query = useSearchParams();
@@ -166,6 +169,10 @@ function LandbankChatV2Page() {
   async function startGenerateAiReport() {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
+      return;
+    }
+    if (!canInterrupt) {
+      showSystemToast('wait_for_response');
       return;
     }
     // const storedChatMessages = localStorage.setItem('analysis_report')
@@ -392,7 +399,29 @@ function LandbankChatV2Page() {
         <div style={{ maxWidth: '400px', width: '100%' }}>
           <AskForm
             items={askItems.current}
-            submitText="送出並開始"
+            submitText="送出"
+            onSubmit={onSubmitAskForm}
+            theme="landbank"
+          ></AskForm>
+        </div>
+      </div>
+    )
+  }
+
+  function prepareStart(){
+    const bgStyles = {
+      background: 'linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)',
+      minHeight: '100dvh',
+      display: 'flex',
+      justifyContent: 'center',
+      paddingTop: '20vh',
+    }
+    return (
+      <div style={bgStyles}>
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <AskForm
+            items={[]}
+            submitText="開始通話"
             onSubmit={onSubmitAskForm}
             theme="landbank"
           ></AskForm>
@@ -409,6 +438,7 @@ function LandbankChatV2Page() {
         isEnd={isCallEnded}
         isLoading={loading}
         isRecording={isPTTUserSpeaking}
+        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => startGenerateAiReport()}
         onMicrophoneClick={handleMicrophoneClick}

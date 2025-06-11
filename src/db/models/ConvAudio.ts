@@ -5,6 +5,7 @@ import { snakeCaseMappers } from 'objection';
 export class ConvAudio extends Model {
   id!: string;
   convId!: string;
+  name!: string;
   mime!: string;
   duration!: number;
   uri?: string;

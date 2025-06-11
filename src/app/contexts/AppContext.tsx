@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from 'react';
 import MediaRecorderPolyfill from "@/app/lib/MediaRecorderPolyfill"; // 確保這個路徑正確
 import { useEvent } from "@/app/contexts/EventContext";
-
+import mitt from 'mitt';
+import { clear } from 'console';
 
 interface AppContextProps {
   dataChannel: RTCDataChannel | null;
@@ -110,7 +111,7 @@ function useRecorderState() {
     stop: () => void;
     ondataavailable: ((e: BlobEvent) => any) | null;
   }
-  const getRecorder = ()=>{
+  const getRecorder = () => {
     if (typeof window === 'undefined') return null;
     if (window.MediaRecorder) {
       return window.MediaRecorder;
@@ -125,11 +126,21 @@ function useRecorderState() {
     las: [] as BlobPart[], // Local Audio Stream
     ras: [] as BlobPart[], // Remote Audio Stream
   })
+  const events = useRef(mitt());
+  useEffect(() => {
+    events.current = mitt();
+  }, [])
   const state = useRef({
     sampleRate: 44100, // 預設採樣率
     channels: 1, // 預設聲道數
 
     startTime: -1, // 開始錄音的時間戳 (通常是 Date.now() 毫秒)
+    stopTime: -1,
+    lastReceivedTime: -1, // 最後收到資料的時間戳
+    waitData: {
+      las: false, // 是否需要等待本地音訊資料
+      ras: false, // 是否需要等待遠端音訊資料
+    },
 
     las: null as MediaStream | null, // Local Audio Stream
     ras: null as MediaStream | null, // Remote Audio Stream
@@ -139,6 +150,8 @@ function useRecorderState() {
 
     open: false, // 是否開啟錄音功能
   });
+
+
 
   const setStartTime = (time: number) => {
     state.current.startTime = time;
@@ -150,10 +163,16 @@ function useRecorderState() {
   };
 
   const addChunk = (type: 'las' | 'ras', chunk: BlobPart) => {
+    console.log('add chunk', type, chunk);
     if (type === 'las') {
       chunks.current.las.push(chunk);
+      state.current.waitData.las = false;
+      events.current.emit('las-chunk-added', chunk);
+
     } else if (type === 'ras') {
       chunks.current.ras.push(chunk);
+      state.current.waitData.ras = false;
+      events.current.emit('ras-chunk-added', chunk);
     }
   };
   const setLocalAudioStream = (stream: MediaStream) => {
@@ -190,7 +209,34 @@ function useRecorderState() {
     toggleRecorder(true);
   }
 
-  const getAudioBlob = (type: 'las' | 'ras') => {
+  function _waitForData(type: 'las' | 'ras', timeout: number = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let timer = null as any;
+      const eventName = type === 'las' ? 'las-chunk-added' : 'ras-chunk-added';
+
+      const resolveFN = () => {
+        clear();
+        resolve();
+      }
+      const clear = () => {
+        events.current.off(eventName, resolveFN);
+        if (timer) {
+          clearTimeout(timer);
+        }
+      }
+      timer = setTimeout(() => {
+        clear();
+        reject(new Error(`timeout`));
+      }, timeout);
+      events.current.on(eventName, resolveFN);
+    })
+  }
+
+  const getAudioBlob = async (type: 'las' | 'ras') => {
+    const { las: waitLas, ras: waitRas } = state.current.waitData;
+    const p1 = waitLas ? _waitForData('las') : Promise.resolve();
+    const p2 = waitRas ? _waitForData('ras') : Promise.resolve();
+    await Promise.all([p1, p2]);
     const mChunks = type === 'las' ? chunks.current.las : chunks.current.ras;
     if (mChunks.length === 0) {
       return null;
@@ -207,17 +253,26 @@ function useRecorderState() {
   }
 
   function stopRecording() {
+    let stop = false
     if (state.current.lasRecorder) {
       state.current.lasRecorder.stop();
       state.current.lasRecorder = null;
+      stop = true;
     }
     if (state.current.rasRecorder) {
       state.current.rasRecorder.stop();
       state.current.rasRecorder = null;
+      stop = true;
+    }
+    if (stop) {
+      state.current.stopTime = Date.now();
+      state.current.waitData.las = true;
+      state.current.waitData.ras = true;
     }
   }
 
   function startRecording() {
+    console.log('recorder.start')
     const Recorder = getRecorder();
     if (!Recorder) { return; }
     if (state.current.las && !state.current.lasRecorder) {

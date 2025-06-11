@@ -25,6 +25,7 @@ function LandbankChatPage() {
     addTranscriptMessage,
     sendSimulatedUserMessage,
     isPTTUserSpeaking,
+    canInterrupt,
     handleMicrophoneClick,
     handleTalkOn,
     transcriptItems,
@@ -46,7 +47,9 @@ function LandbankChatPage() {
 
     onSessionOpen,
     onSessionResume,
-    onSessionClose
+    onSessionClose,
+
+    showSystemToast
   } = useAiChat();
 
 
@@ -98,6 +101,10 @@ function LandbankChatPage() {
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
+      return;
+    }
+    if (!canInterrupt) {
+      showSystemToast('wait_for_response');
       return;
     }
     endConversation();
@@ -308,6 +315,7 @@ Cannot Judge: Not mentioned or cannot be determined.
         isEnd={isCallEnded}
         isLoading={loading}
         isRecording={isPTTUserSpeaking}
+        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}

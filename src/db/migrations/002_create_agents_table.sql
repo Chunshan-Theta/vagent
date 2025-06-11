@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS agents (
-    id TEXT PRIMARY KEY,
+    id VARCHAR(64) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     public_description TEXT NOT NULL,
     prompt_name TEXT NOT NULL,

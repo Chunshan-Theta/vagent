@@ -184,6 +184,7 @@ function ClassChatPage() {
     sendSimulatedUserMessage,
     handleMicrophoneClick,
     isPTTUserSpeaking,
+    canInterrupt,
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
@@ -202,7 +203,9 @@ function ClassChatPage() {
     onSessionClose,
     clearTranscript,
     setLanguage,
-    getMessagePairs
+    getMessagePairs,
+
+    showSystemToast
   } = useAiChat();
 
 
@@ -247,6 +250,10 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
+      return;
+    }
+    if (!canInterrupt) {
+      showSystemToast('wait_for_response');
       return;
     }
 
@@ -562,6 +569,7 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
         isEnd={isCallEnded}
         isLoading={loading}
         isRecording={isPTTUserSpeaking}
+        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}

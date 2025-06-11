@@ -41,6 +41,7 @@ function DynamicAnalysisContent() {
     sendSimulatedUserMessage,
     handleMicrophoneClick,
     isPTTUserSpeaking,
+    canInterrupt,
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
@@ -63,7 +64,9 @@ function DynamicAnalysisContent() {
 
     onSessionOpen,
     onSessionResume,
-    onSessionClose
+    onSessionClose,
+
+    showSystemToast
   } = useAiChat();
 
   useEffect(() => {
@@ -199,6 +202,10 @@ function DynamicAnalysisContent() {
   async function startGenerateAiReport() {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
+      return;
+    }
+    if (!canInterrupt) {
+      showSystemToast('wait_for_response');
       return;
     }
     // const storedChatMessages = localStorage.setItem('analysis_report')

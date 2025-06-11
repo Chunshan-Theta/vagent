@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_conv_analysis__name ON conv_analysis(name);
 CREATE TABLE IF NOT EXISTS conv_audio (
   id VARCHAR(64) NOT NULL PRIMARY KEY,
   conv_id VARCHAR(64) NOT NULL,
+  name VARCHAR(64) NOT NULL,
   mime VARCHAR(32) NOT NULL,
   duration DECIMAL(10, 2) NOT NULL, -- Duration in seconds
   uri TEXT DEFAULT NULL,
@@ -58,4 +59,5 @@ CREATE TABLE IF NOT EXISTS conv_audio (
 );
 
 CREATE INDEX IF NOT EXISTS idx_conv_audio__conv_id ON conv_audio(conv_id);
+CREATE INDEX IF NOT EXISTS idx_conv_audio__name ON conv_audio(name);
 CREATE INDEX IF NOT EXISTS idx_conv_audio__created_at ON conv_audio(created_at);

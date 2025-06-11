@@ -1,5 +1,5 @@
 import * as orm from '../orm'
-import * as fs from 'fs';
+import path from 'path';
 
 import { getStorage } from '../storage'
 
@@ -58,13 +58,14 @@ export async function patchConvMessageContent(messageId: string, content: string
   return res;
 }
 
-export async function uploadConvAudio(filepath: string, convId: string, mime: string, duration: number = 0){
+export async function uploadConvAudio(filepath: string, convId: string, name: string, mime: string, duration: number = 0){
   // 建立 ConvAudio 記錄
   const res = await conflitRetry(async () => {
     return await M.ConvAudio.query().insert({
       id: suuid.generate(),
-      convId: convId,
-      duration: 1000 * duration,
+      convId,
+      name,
+      duration,
       mime: mime || 'audio/wav',
       state: 'pending',
       createdAt: orm.fn.now(),
@@ -78,6 +79,7 @@ export async function uploadConvAudio(filepath: string, convId: string, mime: st
     
     // 上傳至 storage
     const destPath = `${dest.path}/${res.id}`;
+    console.log(`Uploading audio file: ${path.basename(filepath)} to ${destPath}`);
     await storage.uploadFile(filepath, destPath, {
       contentType: mime,
     });
@@ -101,6 +103,22 @@ export async function uploadConvAudio(filepath: string, convId: string, mime: st
   return res;
 }
 
+
+export async function getConvAudios(convId: string){
+  const res = await M.ConvAudio.query().where('conv_id', convId).orderBy('created_at', 'asc');
+  return res;
+}
+
+export async function getConvAudioByIndex(convId: string, name: string, index: number){
+  const res = await M.ConvAudio.query()
+    .where('conv_id', convId)
+    .where('name', name)
+    .orderBy('created_at', 'asc').offset(index).limit(1);
+  if(res.length === 0){
+    return null;
+  }
+  return res[0];
+}
 
 async function conflitRetry<T>(
   func: () => Promise<T>,

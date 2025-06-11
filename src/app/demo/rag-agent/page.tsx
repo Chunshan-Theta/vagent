@@ -26,14 +26,19 @@ function LandbankChatPage() {
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
+    
     isCallEnded,
+    isPTTUserSpeaking,
     isAnalyzing,
+    canInterrupt,
     setAnalysisProgress,
     appRef,
 
     progressTimerRef,
 
-    endConversation
+    endConversation,
+
+    showSystemToast
   } = useAiChat();
 
   // styles start
@@ -45,6 +50,10 @@ function LandbankChatPage() {
   const handleAnalyzeChatHistory = async () => {
     if (transcriptItems.length === 0) {
       alert("No chat history available to analyze");
+      return;
+    }
+    if (!canInterrupt) {
+      showSystemToast('wait_for_response');
       return;
     }
     endConversation();
@@ -220,6 +229,8 @@ function LandbankChatPage() {
         background={chatBackground}
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
+        isRecording={isPTTUserSpeaking}
+        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}

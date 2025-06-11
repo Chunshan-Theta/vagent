@@ -42,6 +42,8 @@ export function useAiChat(){
   
   const { sttPrompt, startAsk } = sharedConfig;
 
+  // 是否套用錄音上傳功能
+  const enableAudioRecording = true;
   // styles end
 
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,6 +54,29 @@ export function useAiChat(){
   const [waitRealtimeConnection, setWaitRealtimeConnection] = useState(false);
 
   const uploadPromises = useRef<Promise<any>[]>([]);
+  const isUploading = useMemo(() => {
+    return uploadPromises.current.length > 0;
+  }, [uploadPromises.current.length]);
+
+  
+  const addUploadPromise = (promise: Promise<any>) => {
+    uploadPromises.current = [...uploadPromises.current, promise];
+    promise.then(()=>{
+      uploadPromises.current = uploadPromises.current.filter(p => p !== promise);
+    }).catch((err)=>{
+      throw err;
+    })
+  }
+
+  const waitPostTask = async ()=>{
+    if (uploadPromises.current.length === 0) {
+      return;
+    }
+    // 等待所有上傳完成
+    await Promise.all(uploadPromises.current);
+    uploadPromises.current = [];
+  }
+
 
   const msgIdMap = useRef<{ [key: string]: string }>({});
   // 每一個 Conv 對應一次完整的互動紀錄
@@ -74,13 +99,14 @@ export function useAiChat(){
   type initConvOptions = {
     email?: string;
     uname?: string;
+    name?: string; // uname 的別名
     agentType: string;
     agentId: string;
   }
   const initConv = async (opts: initConvOptions) => {
     const conv = await convApi.createConv({
       email: opts.email,
-      uname: opts.uname,
+      uname: opts.uname ?? opts.name,
       agentType: opts.agentType,
       agentId: opts.agentId,
     })
@@ -146,7 +172,7 @@ export function useAiChat(){
     setIsPTTUserSpeaking(false);
   }
   
-  const canPause = useMemo(() => {
+  const canInterrupt = useMemo(() => {
     // 如果原先並沒有連線，則不需要 pause ，所以狀態一律是 false
     // 需要確保 AI 講完他想講的話，才可以掛斷電話
     if(isPTTUserSpeaking){
@@ -204,8 +230,24 @@ export function useAiChat(){
     );
   };
 
+  const showCanNotInterruptToast = () => {
+    toast.info(getTranslation(language, 'ai_chatbot_action.wait_for_response'), {
+      position: 'top-center',
+      autoClose: 700,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: false,
+    });
+  }
+  const showSystemToast = (id: 'wait_for_response')=>{
+    if(id === 'wait_for_response'){
+      showCanNotInterruptToast();
+    }
+  } 
+
+
   const handleTalkOff = async () => {
-    // alert("handleTalkOff");
     setIsPTTUserSpeaking(false);
 
 
@@ -229,7 +271,7 @@ export function useAiChat(){
       createdAtMs: Date.now(),
     });
     
-    if( convInfo.current.convId){
+    if(convInfo.current.convId){
       // 添加到對話紀錄
       addConvMessage({
         type: 'text',
@@ -237,28 +279,33 @@ export function useAiChat(){
         content,
         audioRef: null, // 根據音訊的 index 做紀錄
       })
-      // 暫不套用上傳音檔
-      if(false){
+      if(enableAudioRecording){
         // 每當結束通話時都把音訊存起來
         const rec = appContext.recorder
         rec.toggleRecorder(false);
         const uploadFN = async (type: 'las'|'ras')=>{
-          const blob = rec.getAudioBlob(type)
+          const blob = await rec.getAudioBlob(type)
           if (!blob) {
             console.warn('No audio blob to upload');
+            return;
+          }
+          const name = type === 'las' ? 'user_audio' : type === 'ras' ? 'assistant_audio' : 'unknown_audio'
+          if(name === 'unknown_audio'){
+            throw new Error('Unknown audio name');
             return;
           }
           return convApi.uploadConvAudio(
             blob,
             convInfo.current.convId!,
+            name,
             'audio/wav',
             Date.now() - rec.state.current.startTime
           )
         }
         
         convInfo.current.audioCount++;
-        uploadPromises.current.push(uploadFN('las'));
-        uploadPromises.current.push(uploadFN('ras'));
+        addUploadPromise(uploadFN('las').catch(console.error));
+        addUploadPromise(uploadFN('ras').catch(console.error));
       }
         
     }
@@ -268,18 +315,12 @@ export function useAiChat(){
   const handleMicrophoneClick = () => {
     if (isLoading) {return;}
     if (isPTTUserSpeaking) {
-      if(canPause){
+      if(canInterrupt){
         handleTalkOff();  // 掛斷電話
       } else {
         // 顯示 "系統回應中，請稍候..."
-        toast.info(getTranslation(language, 'ai_chatbot_action.wait_for_response'), {
-          position: 'top-center',
-          autoClose: 700,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: false,
-          draggable: false,
-        });
+        showCanNotInterruptToast();
+        return;  // 如果不能中斷，則不做任何事
       }
     } else {
       handleTalkOn();  // 開始講話
@@ -327,7 +368,7 @@ export function useAiChat(){
           role: newItem.role!,
           content: newItem.title || '',
           audioRef: `conv:${convInfo.current.audioCount}`, // 根據音訊的 index 做紀錄
-          audioDuration: newItem.createdAtMs - appContext.recorder.state.current.startTime,
+          audioDuration: (newItem.createdAtMs - appContext.recorder.state.current.startTime) / 1000,
         })
       }
     })
@@ -557,12 +598,13 @@ export function useAiChat(){
     addTranscriptMessage,
     clearTranscript,
     transcriptItems,
-    canPause,
+    canInterrupt: canInterrupt,
 
     progressTimerRef,
     isLoading: isLoading,
 
     endConversation,
+    showSystemToast
     
   }
 }
