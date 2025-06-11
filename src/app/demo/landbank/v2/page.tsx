@@ -438,7 +438,6 @@ function LandbankChatV2Page() {
         isEnd={isCallEnded}
         isLoading={loading}
         isRecording={isPTTUserSpeaking}
-        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => startGenerateAiReport()}
         onMicrophoneClick={handleMicrophoneClick}

@@ -230,7 +230,6 @@ function LandbankChatPage() {
         isEnd={isCallEnded}
         isLoading={isAnalyzing}
         isRecording={isPTTUserSpeaking}
-        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}

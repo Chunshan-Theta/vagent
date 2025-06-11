@@ -315,7 +315,6 @@ Cannot Judge: Not mentioned or cannot be determined.
         isEnd={isCallEnded}
         isLoading={loading}
         isRecording={isPTTUserSpeaking}
-        canInterrupt={canInterrupt}
         onSubmit={() => onSubmitText()}
         onClickEnd={() => handleAnalyzeChatHistory()}
         onMicrophoneClick={handleMicrophoneClick}
