@@ -23,7 +23,7 @@ type OReportDatas = {
 }
 
 function DeltawwReportV2() {
-  const reportData = useRef<ReportV1.ReportDatas | null>(null)
+  // const reportData = useRef<ReportV1.ReportDatas | null>(null)
   const oreportData = useRef<OReportDatas | null>(null)
 
   useEffect(() => {
@@ -40,7 +40,7 @@ function DeltawwReportV2() {
   }, [])
 
   const [localLoading, setLocalLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'report' | 'oreport'>('report')
+  const [activeTab, setActiveTab] = useState<'report' | 'oreport'>('oreport')
 
   const loading = useMemo(() => localLoading, [localLoading])
 
@@ -66,26 +66,10 @@ function DeltawwReportV2() {
     root.style.setProperty(key, value)
   }
 
-  async function fetchReportData(): Promise<ReportV1.ReportDatas> {
-
-    const settings = settingsMap.default
-    const reportDataStr = localStorage.getItem('deltaww/v2/report')
-    if (!reportDataStr) {
-      throw new Error('No report data found in local storage')
-    }
-    const reportData = JSON.parse(reportDataStr) as ReportV1.ReportDatas
-    const { timeline } = reportData
-
-    const timelineDatas: ReportV1.TimelineData[] = timeline
-    return {
-      timeline: timelineDatas
-    }
-  }
-
   async function fetchOReportData(): Promise<OReportDatas> {
 
     const settings = settingsMap.default
-    const reportDataStr = localStorage.getItem('deltaww/v2/oreport')
+    const reportDataStr = localStorage.getItem('deltaww/v1/oreport')
     if (!reportDataStr) {
       throw new Error('No oreport data found in local storage')
     }
@@ -94,12 +78,10 @@ function DeltawwReportV2() {
   }
 
   async function init() {
-    const data = await fetchReportData()
-    reportData.current = data
-    // const oreport = await fetchOReportData()
-    // oreportData.current = oreport
+    const oreport = await fetchOReportData()
+    oreportData.current = oreport
     console.log('[report_page]', {
-      report: reportData.current,
+      oreport: oreportData.current
     })
   }
 
@@ -116,31 +98,21 @@ function DeltawwReportV2() {
   }, [])
 
   function createReportView() {
-    if (reportData.current) {
-      if (activeTab === 'report') {
-        // 限制寬度
-        return (
-          <div className="max-w-4xl w-full">
-            <ReportView data={reportData.current} />
-          </div>
-        )
-      }
-      if (activeTab === 'oreport') {
-        const data = oreportData.current
-        return (
-          <>
-            {data &&
-              <OReportView
-                user={data.user}
-                rubric={data.scores}
-                adviceItems={advanceItems}
-                playLogText={data.history}
+    if (activeTab === 'oreport') {
+      const data = oreportData.current
+      return (
+        <>
+          {data &&
+            <OReportView
+              user={data.user}
+              rubric={data.scores}
+              adviceItems={advanceItems}
+              playLogText={data.history}
 
-              />
-            }
-          </>
-        )
-      }
+            />
+          }
+        </>
+      )
     }
     return null
   }
@@ -179,8 +151,8 @@ function DeltawwReportV2() {
         >
           對話分析
         </button> */}
-        <button style={getTabStatus('report').style} onClick={() => setActiveTab('report')}>對話分析</button>
-        {/* <button style={getTabStatus('oreport').style} onClick={() => setActiveTab('oreport')}>分析統計</button> */}
+        {/* <button style={getTabStatus('report').style} onClick={() => setActiveTab('report')}>對話分析</button> */}
+        <button style={getTabStatus('oreport').style} onClick={() => setActiveTab('oreport')}>分析統計</button>
         {/* <button
           className={`px-4 py-2 rounded ${activeTab === 'oreport' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
           onClick={() => setActiveTab('oreport')}
@@ -191,7 +163,7 @@ function DeltawwReportV2() {
       {/* 內容區 */}
       <div className="flex justify-center items-center flex-1 w-full">
         {loading && <LoadingIcon />}
-        {reportData.current && createReportView()}
+        {createReportView()}
       </div>
     </div>
   )

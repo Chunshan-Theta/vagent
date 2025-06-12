@@ -20,11 +20,14 @@ type LoginCheckProps = {
 
 export async function POST(request: Request) {
   try {
+    // get query params
+    const url = new URL(request.url);
+    const v = url.searchParams.get('v') || 'v2'; // 預設使用 v2
     const accList: DemoAccount[] = [];
     if(process.env.NODE_ENV === 'development'){
       accList.push({ account: 'test', password: 'test' });
     }
-    accList.push(...(await loadAccountList()))
+    accList.push(...(await loadAccountList(v)))
     const body: LoginCheckProps = await request.json();
     const { account, password } = body;
 
@@ -46,9 +49,16 @@ export async function POST(request: Request) {
 }
 
 
-async function loadAccountList() : Promise<DemoAccount[]> {
+async function loadAccountList(v:string) : Promise<DemoAccount[]> {
   const fs = await import('fs')
-  const filePath = process.env.DELTAWW_ACCOUNT_LIST_FILE;
+  let filePath = '';
+  if( process.env.DELTAWW_ACCOUNT_LIST_FILE_V1 && v === 'v1' ){
+    filePath = process.env.DELTAWW_ACCOUNT_LIST_FILE_V1;
+  } else if( process.env.DELTAWW_ACCOUNT_LIST_FILE_V2 && v === 'v2' ){
+    filePath = process.env.DELTAWW_ACCOUNT_LIST_FILE_V2;
+  } else if( process.env.DELTAWW_ACCOUNT_LIST_FILE ){
+    filePath = process.env.DELTAWW_ACCOUNT_LIST_FILE;
+  }
   if (!filePath) {
     return [
       { account: 'test', password: 'test' }

@@ -277,11 +277,11 @@ function ClassChatPage() {
       setAnalysisProgress(10);
       const chatHistory = getChatHistoryText()
       const config = {
-        criteria: aiReport.getSetting('reportAnalyze.context') || agentConfig?.criteria || '使用者本身是否是進行良性的溝通',
-        context: aiReport.getSetting('reportAnalyze.context') || '以下是一份我和 ai 的對話紀錄。',
-        analysis: aiReport.getSetting('reportAnalyze.analysis') || '請判斷我的表現，然後給予合適的分析結果',
-        roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || '我',
-        roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'AI',
+        criteria: aiReport.getSetting('reportAnalyze.criteria') || agentConfig?.criteria || 'user 本身是否是進行良性的溝通',
+        context: aiReport.getSetting('reportAnalyze.context') || '以下是一份 user 和 assistant 的對話紀錄。',
+        analysis: aiReport.getSetting('reportAnalyze.analysis') || '請判斷 user 的表現，然後給予合適的分析結果',
+        roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || 'user',
+        roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'assistant',
       }
       const analysis = await analyzeChatHistoryByRubric(config.criteria, chatHistory, clientLanguage || 'zh')
       localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
@@ -353,6 +353,8 @@ function ClassChatPage() {
           }
         }
       }
+
+      const history = chatHistory
       /**
        * 針對不同任務給不同參數
        */

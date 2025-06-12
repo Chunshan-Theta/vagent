@@ -82,10 +82,10 @@ function DynamicAnalysisContent() {
   const query = useSearchParams();
   const lang = useMemo(() => query.get('lang') || 'zh', [query]);
   const reportUrl = useMemo(() => {
-    return `/demo/deltaww/report/v2`;
+    return `/demo/deltaww/report/v1`;
   }, [])
   const nowPageUrl = useMemo(() => {
-    return '/demo/deltaww/v2' + (lang ? `?lang=${lang}` : '');
+    return '/demo/deltaww/v1' + (lang ? `?lang=${lang}` : '');
   }, [lang])
 
   const [localLoading, setLocalLoading] = useState(false);
@@ -143,7 +143,7 @@ function DynamicAnalysisContent() {
     setLocalLoading(true);
     Promise.resolve()
       .then(() => {
-        return fetch('/api/deltaww/login?v=v2', {
+        return fetch('/api/deltaww/login?v=v1', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ function DynamicAnalysisContent() {
     await initConv({
       email,
       agentType: 'static',
-      agentId: 'deltaww-v2',
+      agentId: 'deltaww-v1',
     })
     setScene('chat');
   }
@@ -221,66 +221,14 @@ function DynamicAnalysisContent() {
     // const storedChatMessages = localStorage.setItem('analysis_report')
     // const chatHistory = JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system')
 
-    const { startAt, pairs } = getMessagePairs({
-      spRole: 'assistant',
-      keepSystemMessage: false,
-      keepNextMsgCount: 1,
-    })
-    // console.log('pairs:', pairs)
-
-    // 初始化 timelineItems
-    const timelineItems = pairs.map((item) => {
-      const aiMsg = item.messages[0]
-      const userMsgs = item.messages.slice(1).filter((msg) => msg.role === 'user')
-
-      const aiRole = roleMap.assistant
-      const userRole = roleMap.user
-      const aiSay = aiMsg.data.content || ''
-      const userSay = userMsgs.map((msg) => msg.data.content).join('\n\n')
-
-      const timeStr = parseTime(item.time - (startAt || 0))
-
-      return {
-        mainColor: '#ffd166',
-        title: `🕒 ${timeStr}`,
-        subtitleColor: '#ffd166', // 後續會覆蓋掉
-        subtitle: '小陳情緒：......', // 後續會覆蓋掉
-        aiAudio: {
-          ref: aiMsg.data.audioRef || null,
-          // url: null, 後續非同步填入
-          startTime: aiMsg.data.audioStartTime || 0
-        },
-        userAudio: {
-          ref: userMsgs[0]?.data?.audioRef || null,
-          // url: null, 後續非同步填入
-          startTime: userMsgs[0]?.data?.audioStartTime || 0
-        },
-        aiRole: roleMap.assistant,
-        userRole,
-        aiSay,
-        userSay,
-        analysis: [],
-        keyPoint: {
-          sentences: [],
-          problems: []
-        },
-        time: item.time - (startAt || 0)
-      } as ReportV1.TimelineData
-    }).filter((item) => {
-      return item.aiSay && item.userSay
-    })
-    console.log('timelineItems:', timelineItems)
-
-    if (timelineItems.length < 1) {
-      console.error('No timeline items found')
-      return
-    }
 
     // 基本檢查都跑完之後再確定提交 endConversation
     endConversation();
     
     await waitPostTask();
     setAnalysisProgress(0);
+
+    setAnalysisProgress(90);
 
     const config = {
       criteria: [
@@ -294,135 +242,22 @@ function DynamicAnalysisContent() {
       roleSelf: '我',
       roleTarget: 'AI客戶',
     }
-    for (const item of timelineItems) {
-      const { aiSay, userSay } = item
 
-      const { userAudio, aiAudio } = item
-      if (userAudio && userAudio.ref) {
-        userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId, name: 'user_audio' })) || '';
-      }
-      if (aiAudio && aiAudio.ref) {
-        aiAudio.url = (await convApi.getAudioUrlByRefString(aiAudio.ref, { convId: nowConvId, name: 'assistant_audio' })) || '';
-      }
-      const analysisRole = roleMap.user
-      const chatHistory = [
-        `${roleMap.assistant}: ${parseHistoryContent(aiSay)}`,
-        `${roleMap.user}: ${userSay}`
-      ].join('\n')
+    const res = await _runAnalyze({
+      missionId: 'landbank/rubric',
+      params: {
+        criteria: config.criteria,
+        history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
+      },
+      responseType: 'json_schema'
+    })
 
-      const missions = [
-        // 順序不重要，後續會用 missionId 來對應
-        'report-v1/sentiment',
-        'report-v1/key_points',
-        'report-v1/context'
-      ]
+    console.log('landbank/rubric:', res)
 
-      const collect = {
-        done: 0,
-        error: 0,
-        get end() { return collect.done + collect.error },
-        total: missions.length
-      }
-      const updateProgress = () => {
-        setAnalysisProgress((collect.end / collect.total) * 100 * 0.6) // 0 ~ 60%
-      }
-
-      const history = chatHistory;
-      /**
-       * 針對不同任務給不同參數
-       */
-      const missionParams: { [missionId: string]: { [x: string]: any } } = {
-        'report-v1/sentiment': {
-          role2: config.roleTarget,
-          history
-        },
-        'report-v1/key_points': {
-          context: config.context,
-          criteria: config.criteria,
-          role: config.roleSelf,
-          role2: config.roleTarget,
-          history
-        },
-        'report-v1/context': {
-          analysis: config.analysis,
-          context: config.context,
-          criteria: config.criteria,
-          role: config.roleSelf,
-          history
-        },
-      }
-      const promises = missions.map((missionId) => {
-        if (!missionParams[missionId]) {
-          throw new Error(`Mission parameters for ${missionId} are not defined`);
-        }
-        return _runAnalyze({
-          missionId,
-          params: {
-            lang,
-            history: chatHistory,
-            ...missionParams[missionId],
-          },
-          responseType: 'json_schema'
-        }).then((res) => {
-          collect.done++
-          updateProgress()
-          return res
-        }).catch((err) => {
-          collect.error++
-          console.error('Error in analyze:', err)
-          errors.current = [...errors.current, err]
-          updateProgress()
-          return null
-        })
-      })
-      const results = await Promise.all(promises)
-      const resMap = _.keyBy(results, 'missionId')
-      console.log('resMap:', resMap)
-
-      if (resMap['deltaww/sentiment']) {
-        const sentimentRes = resMap['deltaww/sentiment']
-        const sentimentType = (sentimentRes.json.sentiment || '').toLowerCase()
-        if (sentimentType) {
-          item.subtitle = `小陳情緒：${sentimentType}`
-          type SentimentColor = keyof typeof settings.sentimentColors
-          item.mainColor = settings.sentimentColors[sentimentType as SentimentColor]
-        }
-      }
-      if (resMap['deltaww/key_points']) {
-        const keyPointsRes = resMap['deltaww/key_points']
-        const keyPoints = keyPointsRes.json.keyPoints
-        if (typeof keyPoints === 'object') {
-          const { problems, sentences } = keyPoints
-          if (Array.isArray(problems)) {
-            item.keyPoint!.problems = problems
-          }
-          if (Array.isArray(sentences)) {
-            item.keyPoint!.sentences = sentences
-          }
-        }
-      }
-      if (resMap['deltaww/highlights']) {
-        const highlightsRes = resMap['deltaww/highlights']
-        const highlights = highlightsRes.json.sentences
-        if (Array.isArray(highlights)) {
-          item.analysis = highlights
-        }
-      }
-      if (resMap['deltaww/context']) {
-        const contextRes = resMap['deltaww/context']
-        const context = contextRes.json.sentences
-        if (Array.isArray(context)) {
-          item.analysis = context
-        }
-      }
-
-    }
-
-    setAnalysisProgress(90);
-
-
-    const report = {
-      timeline: timelineItems
+    const oreport = {
+      user: userInfo.current,
+      scores: res.json.scores || [],
+      history: getFullChatHistory().map((msg) => `${roleMap[msg.role as 'user' | 'assistant']}: ${msg.content}`).join('\n\n'),
     }
 
     // const oreport = {
@@ -432,9 +267,9 @@ function DynamicAnalysisContent() {
     // }
 
     // Store the analysis result and chat history in localStorage
-    localStorage.setItem('deltaww/v2/report', JSON.stringify(report));
-    // localStorage.setItem('deltaww/v2/oreport', JSON.stringify(oreport));
-    localStorage.setItem('deltaww/v2/messages', JSON.stringify(getFullChatHistory()));
+    // localStorage.setItem('deltaww/v2/report', JSON.stringify(report));
+    localStorage.setItem('deltaww/v1/oreport', JSON.stringify(oreport));
+    localStorage.setItem('deltaww/v1/messages', JSON.stringify(getFullChatHistory()));
 
     setAnalysisProgress(100);
     setIsAnalyzing(false);
