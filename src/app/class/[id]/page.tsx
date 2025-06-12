@@ -221,7 +221,6 @@ function ClassChatPage() {
 
 
   const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
-    await handleTalkOff();
     if (!criteria) {
       criteria = '使用者本身是否是進行良性的溝通';
     }
@@ -256,6 +255,7 @@ function ClassChatPage() {
       showSystemToast('wait_for_response');
       return;
     }
+    await handleTalkOff();
 
 
     endConversation();

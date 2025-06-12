@@ -46,7 +46,10 @@ function DynamicAnalysisContent() {
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
+
     handleTalkOn,
+    handleTalkOff,
+
     isCallEnded,
     isAnalyzing,
     setAnalysisProgress,
@@ -213,6 +216,7 @@ function DynamicAnalysisContent() {
       showSystemToast('wait_for_response');
       return;
     }
+    await handleTalkOff();
     // const storedChatMessages = localStorage.setItem('analysis_report')
     // const chatHistory = JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system')
 
