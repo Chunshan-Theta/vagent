@@ -11,21 +11,21 @@ export type EditField = {
 
 const fields:EditField[] = [
   {
-    type: 'text',
+    type: 'textarea',
     key: 'reportAnalyze.context',
     title: '分析報告 - 情境描述',
     placeholder: '例: 我是小陳的主管，在對話中我希望能夠幫助小陳釐清目標、現況、選項和行動計畫，並給予他適當的建議和支持。',
     description: ''
   },
   {
-    type: 'text',
+    type: 'textarea',
     key: 'reportAnalyze.analysis',
     title: '分析報告 - 分析方向',
     placeholder: '例: 請詳細分析對話紀錄，並根據分析方向和規則給我建議。',
     description: ''
   },
   {
-    type: 'text',
+    type: 'textarea',
     key: 'reportAnalyze.criteria',
     title: '分析報告 - 分析標準',
     placeholder: '請在此貼上完整的評分規則或分析的方向描述，用於判斷 user 的表現。',

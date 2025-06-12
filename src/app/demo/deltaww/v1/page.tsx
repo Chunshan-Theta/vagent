@@ -239,12 +239,12 @@ function DynamicAnalysisContent() {
       ].join('\n'),
       context: '我的角色是小陳的主管，在對話中我希望能夠幫助小陳釐清目標、現況、選項和行動計畫，並給予他適當的建議和支持。',
       analysis: '請詳細分析對話紀錄，並根據分析方向和規則給我建議。',
-      roleSelf: '我',
-      roleTarget: 'AI客戶',
+      roleSelf: 'user',
+      roleTarget: 'assistant',
     }
 
     const res = await _runAnalyze({
-      missionId: 'landbank/rubric',
+      missionId: 'deltaww/rubric',
       params: {
         criteria: config.criteria,
         history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
@@ -252,7 +252,7 @@ function DynamicAnalysisContent() {
       responseType: 'json_schema'
     })
 
-    console.log('landbank/rubric:', res)
+    console.log('deltaww/rubric:', res)
 
     const oreport = {
       user: userInfo.current,

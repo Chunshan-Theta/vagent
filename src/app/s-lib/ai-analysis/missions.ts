@@ -13,6 +13,7 @@ import * as translatePrompt from './translate/simple'
 import * as deltawwKeyPoints from './missions/deltaww/key_points'
 import * as deltawwSentiment from './missions/deltaww/sentiment'
 import * as deltawwContext from './missions/deltaww/context'
+import * as deltawwRubric from './missions/deltaww/rubric'
 
 
 import * as reportV1Sentiment from './missions/report-v1/sentiment'
@@ -30,6 +31,7 @@ export const missionModules: {[missionId:string]: MissionModule} = {
   'deltaww/key_points': deltawwKeyPoints,
   'deltaww/sentiment': deltawwSentiment,
   'deltaww/context': deltawwContext,
+  'deltaww/rubric': deltawwRubric,
 
   'report-v1/sentiment': reportV1Sentiment,
   'report-v1/context': reportV1Context,
