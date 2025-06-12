@@ -18,6 +18,20 @@ export interface Conv {
   // 其他欄位可依需求擴充
 }
 
+export interface ConvAudio {
+  id: string
+  convId: string
+  name: string
+  mime: string
+  duration: number
+  uri?: string
+  info?: string
+  state: string
+  createdAt: Date
+  updatedAt: Date
+  url?: string; // 假設返回的音訊資料中包含 URL
+}
+
 /**
  * 建立新的 conv
  */
@@ -117,5 +131,32 @@ export async function getConvAudioByIndex(convId: string, index: number): Promis
     method: 'GET',
   });
   if (!res.ok) throw new Error(await res.text());
-  return await res.json();
+  return (await res.json()) as ConvAudio;
+}
+
+
+type getAudioByRefStringOptions = {
+  convId?: string;
+};
+export async function getAudioUrlByRefString(ref: string, opts: getAudioByRefStringOptions = {}): Promise<string | null> {
+  if(!ref) {
+    return null
+  }
+  if(ref.startsWith('http://') || ref.startsWith('https://')) {
+    return ref; // 如果已經是完整的 URL，直接返回
+  }
+  if(ref.startsWith('conv:')) {
+    const m = ref.match(/^conv:(\d+)$/);
+    if(m){
+      const indexStr = m[1];
+      const index = parseInt(indexStr, 10);
+      if(!opts.convId){
+        throw new Error('convId is required when ref starts with "conv:"');
+      }
+      const convId = opts.convId;
+      const audioData = await getConvAudioByIndex(convId, index); // 假設只取第一個音訊
+      return audioData?.url || null; // 返回音訊 URL
+    }
+  }
+  return null; // 如果不是有效的 ref，返回 null
 }

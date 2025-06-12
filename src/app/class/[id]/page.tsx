@@ -15,25 +15,12 @@ import LanguageToggle from "@/app/components/LanguageToggle";
 import _ from 'lodash'
 import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'
 
+import { convApi } from '@/app/lib/ai-chat'
+import type { TimelineData } from "@/app/types/ai-report/report-v1";
+
 import * as utils from '../utils'
 
-interface TimelineItem {
-  mainColor: string;
-  title: string;
-  subtitleColor: string;
-  subtitle: string;
-  aiRole: string;
-  userRole: string;
-  aiSay: string;
-  userSay: string;
-  analysis: string[];
-  keyPoint: {
-    sentences: string[];
-    problems: string[];
-  };
-  time: number;
-}
-
+type TimelineItem = TimelineData
 interface UserInfo {
   email: string;
   uname: string;
@@ -152,7 +139,8 @@ function ClassChatPage() {
 
   useEffect(() => {
     if (!clientLanguage) {
-      console.error('clientLanguage is not set');
+      // 正常情況下也會執行到這，因此只顯示 warn 作為提醒而不是 error
+      console.warn('clientLanguage is not set');
       return;
     }
 
@@ -205,7 +193,8 @@ function ClassChatPage() {
     setLanguage,
     getMessagePairs,
 
-    showSystemToast
+    showSystemToast,
+    convInfo
   } = useAiChat();
 
 
@@ -219,9 +208,12 @@ function ClassChatPage() {
     updateInputText('');
   }
 
+  const nowConvId = useMemo(() => {
+    return convInfo.current?.convId || '';
+  }, [convInfo.current?.convId]);
 
 
-const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
+  const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
     if (!criteria) {
       criteria = '使用者本身是否是進行良性的溝通';
     }
@@ -276,7 +268,7 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
       const chatHistory = getChatHistoryText()
       const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria, chatHistory, clientLanguage || 'zh')
       localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
-  
+
 
       const { startAt, pairs } = getMessagePairs({
         spRole: 'assistant',
@@ -301,6 +293,16 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
           title: `🕒 ${timeStr}`,
           subtitleColor: '#ffd166',
           subtitle: '情緒：......',
+          aiAudio: {
+            ref: aiMsg.data.audioRef || null,
+            // url: null, 後續非同步填入
+            startTime: aiMsg.data.audioStartTime || 0
+          },
+          userAudio: {
+            ref: userMsgs[0]?.data?.audioRef || null,
+            // url: null, 後續非同步填入
+            startTime: userMsgs[0]?.data?.audioStartTime || 0
+          },
           aiRole,
           userRole,
           aiSay,
@@ -346,6 +348,14 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
           'report-v1/context'
         ]
 
+        const { userAudio, aiAudio } = item
+        if (userAudio && userAudio.ref) {
+          userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId })) || '';
+        }
+        if (aiAudio && aiAudio.ref) {
+          aiAudio.url = (await convApi.getAudioUrlByRefString(aiAudio.ref, { convId: nowConvId })) || '';
+        }
+
         const collect = {
           done: 0,
           error: 0,
@@ -358,7 +368,8 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
 
         const gptParams = {
           analysis: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`,
-          context: agentConfig?.criteria || '',
+
+          criteria: agentConfig?.criteria || '',
         }
 
         const promises = missions.map((missionId) => {
@@ -484,7 +495,7 @@ const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHist
 
   if (!isUserInfoValid) {
     return (
-      <div style={{ 
+      <div style={{
         background: pageBackground,
         minHeight: '100vh',
         display: 'flex',

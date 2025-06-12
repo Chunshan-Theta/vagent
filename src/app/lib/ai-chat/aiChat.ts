@@ -362,12 +362,12 @@ export function useAiChat(){
       if (type === 'MESSAGE') {
         const audioRef = `conv:${convInfo.current.audioCount}`; // 根據音訊的 index 做紀錄
         const createdTime = newItem.createdAtMs ?? Date.now();
-        const audioDuration = (createdTime - appContext.recorder.state.current.startTime) / 1000;
+        const audioStartTime = (createdTime - appContext.recorder.state.current.startTime) / 1000;
         chatContext.addMessageItem({
           id: newItem.itemId,
           type: 'text',
           role: newItem.role!,
-          data: { content: newItem.title, audioRef, audioDuration },
+          data: { content: newItem.title, audioRef, audioStartTime },
           createdAtMs: newItem.createdAtMs,
           hide: !!newItem.isHidden || newItem.role === 'system',
         })
@@ -377,7 +377,7 @@ export function useAiChat(){
           role: newItem.role!,
           content: newItem.title || '',
           audioRef, 
-          audioDuration,
+          audioDuration: audioStartTime,
         })
       }
     })
@@ -613,7 +613,9 @@ export function useAiChat(){
     isLoading: isLoading,
 
     endConversation,
-    showSystemToast
+    showSystemToast,
+
+    convInfo: convInfo,
     
   }
 }

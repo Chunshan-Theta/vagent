@@ -7,6 +7,16 @@ export type TimelineData = {
   aiRole?: string
   userRole?: string
   aiSay?: string
+  userAudio?: {
+    ref?: string
+    url?: string
+    startTime?: number
+  }
+  aiAudio?: {
+    ref?: string
+    url?: string
+    startTime?: number
+  }
   userSay?: string
   analysis?: string[]
   keyPoint?: {

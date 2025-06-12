@@ -2,15 +2,16 @@
 
 import { useState, useEffect, use } from 'react';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent } from '@/app/types/agent';
 
-export default function ViewAgentPage({ params }: { params: any }) {
+export default function ViewAgentPage() {
+  const params = useParams();
   const router = useRouter();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     fetchAgent();
   }, [params.id]);
@@ -58,7 +59,7 @@ export default function ViewAgentPage({ params }: { params: any }) {
           </Link>
         </div>
       </div>
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}

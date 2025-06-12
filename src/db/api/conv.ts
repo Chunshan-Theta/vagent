@@ -58,6 +58,24 @@ export async function patchConvMessageContent(messageId: string, content: string
   return res;
 }
 
+export async function setConvAnalysis(convId: string, name: string, analysis: string){
+  // insert or update conv analysis
+  const res = await M.ConvAnalysis.query().insert({
+    convId: convId,
+    name: name,
+    analysis: analysis
+  })
+  return res;
+}
+
+export async function getConvAnalysis(convId: string, name: string){
+  const res = await M.ConvAnalysis.query()
+    .where('conv_id', convId)
+    .where('name', name)
+    .first();
+  return res;
+}
+
 export async function uploadConvAudio(filepath: string, convId: string, name: string, mime: string, duration: number = 0){
   // 建立 ConvAudio 記錄
   const res = await conflitRetry(async () => {
@@ -146,8 +164,6 @@ async function conflitRetry<T>(
 }
 
 function getAudioDest(){
-  // 這邊檢查一下目前用的環境連哪個 DB
-  
   const storage = getStorage();
   return {
     storage,

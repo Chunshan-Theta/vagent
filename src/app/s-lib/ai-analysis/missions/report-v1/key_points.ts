@@ -60,6 +60,7 @@ export function moduleOptions() : ModelOptions{
 
 export function getMessages(params: KeyPointsParams){
   const lang = params.lang || 'zh';
+  const langConfig = getLangConfig(lang, 'zh');
   const prompt1 = utils.translatePrompt(`
 
 分析情境：
@@ -81,6 +82,7 @@ ${params.criteria || ''}
 ${prompt1}
 
 注意：內容語系為 "${lang}"，且你的回應也需要用 "${lang}" 語系撰寫。
+${langConfig.instructions || ''}
 
 對話如下：
 ${params.history}

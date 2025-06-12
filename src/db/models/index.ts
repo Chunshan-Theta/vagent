@@ -3,4 +3,13 @@ import ConvMessage from "./ConvMessage";
 import ConvAnalysis from "./ConvAnalysis";
 import ConvAudio from "./ConvAudio";
 
-export { Conv, ConvMessage, ConvAnalysis, ConvAudio };
+import AgentSettings from "./AgentSettings";
+
+export {
+  Conv,
+  ConvMessage,
+  ConvAnalysis,
+  ConvAudio,
+
+  AgentSettings,
+};

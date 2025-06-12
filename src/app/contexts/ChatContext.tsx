@@ -24,6 +24,8 @@ export type TextMessage = BaseMessage & {
   type: 'text';
   data: {
     content: string
+    audioRef?: string; // 可能是音訊檔案的 URL 或者其他引用
+    audioStartTime?: number; // 音訊起始位置
   }
 }
 

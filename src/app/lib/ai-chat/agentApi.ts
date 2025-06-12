@@ -4,7 +4,34 @@ import { AgentConfig, Tool, TranscriptItem } from "@/app/types";
 
 import * as utils from '@/app/class/utils';
 
+export async function setAgentSettings(agentId:string, keyVal: Record<string, string>): Promise<void> {
+  if(Array.isArray(keyVal) || typeof keyVal !== 'object') {
+    throw new Error(getTranslation('en', 'errors.invalid_settings_format'));
+  }
+  const response = await fetch(`/api/agents/${agentId}/settings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ values: keyVal }),
+  });
 
+  if (!response.ok) {
+    throw new Error(getTranslation('en', 'errors.failed_to_save_settings'));
+  }
+}
+
+export async function getAgentSettings(agentId: string, keys:string[]): Promise<{ success:boolean, values: Record<string, string> }> {
+  const response = await fetch(`/api/agents/${agentId}/settings?keys=${keys.join(',')}`);
+  if (!response.ok) {
+    throw new Error(getTranslation('en', 'errors.failed_to_load_settings'));
+  }
+  const data = await response.json();
+  return {
+    success: !!data.success,
+    values: data.values || {},
+  };
+}
 
 export async function fetchAgentConfig(agentId: string, clientLanguage: Language): Promise<AgentConfig> {
   const response = await fetch(`/api/agents/${agentId}`);

@@ -19,7 +19,7 @@ import { handleAnalysisExamples } from '@/app/lib/ai-chat/utils'
 
 import { toast } from 'react-toastify';
 
-import { fetchAgentConfig } from '@/app/lib/ai-chat/aiAgent';
+import { fetchAgentConfig } from '@/app/lib/ai-chat/agentApi';
 
 const LABEL = 'demo_agent';
 
