@@ -39,6 +39,9 @@ export type GradingItem = {
 }
 
 export type OReportProps = {
+  variant?: 'landbank' | 'common' | undefined
+
+  reportTitle?: string
   history?: Array<{ role: string, content: string }>
   rubric?: Array<{ criterion: string, score: number, reason: string }>
   playLogText?: string

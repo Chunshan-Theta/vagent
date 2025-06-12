@@ -104,6 +104,8 @@ function DeltawwReportV2() {
         <>
           {data &&
             <OReportView
+              variant={'common'}
+              reportTitle={"主管溝通訓練報告"}
               user={data.user}
               rubric={data.scores}
               adviceItems={advanceItems}

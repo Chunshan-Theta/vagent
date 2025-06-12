@@ -2,6 +2,7 @@
 
 import React, { CSSProperties, useState, useMemo, useEffect, useRef } from 'react'
 import OReportContent from './OReportContent'
+import OCommonReportContent from './OCommonReportContent'
 
 import './oreport.scss'
 
@@ -10,6 +11,8 @@ type OReportProps = Parameters<typeof OReportContent>[0]
 const OReportView: React.FC<OReportProps> = (props) => {
   const [loaded, setLoaded] = useState(0)
 
+  const variant = props.variant || 'landbank'
+  const ReportComponent = variant === 'common' ? OCommonReportContent : variant === 'landbank' ? OReportContent : null
   const injectScripts = [
     'https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js',
     'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js',
@@ -60,16 +63,21 @@ const OReportView: React.FC<OReportProps> = (props) => {
     }
   }, [loaded])
 
+  if (!ReportComponent) {
+    console.error('Invalid variant provided for OReportView:', variant)
+    return null
+  }
   return (
     <div className="landbank-oreport">
-      {loaded >= injectScripts.length &&
-        <OReportContent
+      {loaded >= injectScripts.length && !!ReportComponent &&
+        <ReportComponent
+          reportTitle={props.reportTitle}
           rubric={props.rubric}
           history={props.history}
           playLogText={props.playLogText}
           adviceItems={props.adviceItems}
           user={props.user}
-        ></OReportContent>
+        ></ReportComponent>
       }
     </div>
   )
