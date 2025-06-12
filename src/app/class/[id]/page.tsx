@@ -283,7 +283,8 @@ function ClassChatPage() {
         roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || 'user',
         roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'assistant',
       }
-      const analysis = await analyzeChatHistoryByRubric(config.criteria, chatHistory, clientLanguage || 'zh')
+      // 註：分析 Rubric 的時候優先使用 agentConfig 中的 criteria，其他的分析反之
+      const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh')
       localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
 
       setAnalysisProgress(30);

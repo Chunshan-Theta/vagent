@@ -7,9 +7,15 @@ import { AnalysisResponse } from '@/app/types/ai-report/common';
 
 
 interface Props {
-  data: AnalysisResponse;
+  /**
+   * 分析結果數據，可以是 AnalysisResponse 對象或 JSON 字符串
+   */
+  data: AnalysisResponse | string;
   onBack?: () => void;
-  message?: string;
+  /**
+   * 保存的聊天紀錄 ( 可以是 JSON 字符串或 Array<Message> )
+   */
+  message?: any[] | string;
 }
 
 export default function ReportViewV2({ data: analysis, onBack, message = '' }: Props) {
@@ -18,16 +24,42 @@ export default function ReportViewV2({ data: analysis, onBack, message = '' }: P
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  function getStoredChatMessages() : string {
+    if (typeof message === 'string' && message.trim() !== '') {
+      return message
+    }
+    if (Array.isArray(message)) {
+      return JSON.stringify(message);
+    }
+    if (typeof window === 'undefined') return '[]';
+    return localStorage.getItem('chatMessages') || '[]';
+  }
+  function getStoredAnalysis() {
+    if (typeof analysis === 'string' && analysis.trim() !== '') {
+      return analysis
+    }
+    if (Array.isArray(analysis)) {
+      return JSON.stringify(analysis);
+    }
+    if (typeof window === 'undefined') return '{}';
+    return localStorage.getItem('analyzeChatHistoryByRubric');
+  }
+
+
   // Check for history parameter in URL and retrieve analysis from localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     // Get the analysis result and chat history from localStorage
-    const storedAnalysis = analysis ? JSON.stringify(analysis) : localStorage.getItem('analyzeChatHistoryByRubric');
-    const storedChatMessages = message ? JSON.stringify(message) : localStorage.getItem('chatMessages');
+    const storedAnalysis = getStoredAnalysis();
+    const storedChatMessages = getStoredChatMessages();
     // console.log("Stored Analysis:", {
     //   analysis,
-    //   message
+    //   message,
+    //   stored: {
+    //     analysis: storedAnalysis,
+    //     chatMessages: storedChatMessages
+    //   }
     // });
 
     const getMsgContent = (msg: any) => {
