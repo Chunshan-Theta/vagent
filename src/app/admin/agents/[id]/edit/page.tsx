@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Agent, Tool } from '@/app/types/agent';
 import _ from '@/app/vendor/lodash';
 import { agentApi } from '@/app/lib/ai-chat'
+import { getFieldsMap } from '@/app/lib/ai-chat/reportHelper';
 
 export default function EditAgentPage() {
   const { id } = useParams<{ id: string }>();
@@ -284,13 +285,6 @@ export default function EditAgentPage() {
 
 
 function useAgentSettings(agentId: string) {
-  type EditField = {
-    type: 'text' | 'textarea' | 'json'
-    key: string
-    title: string
-    description?: string
-    placeholder?: string
-  }
   const [updated, setUpdated] = useState(0);
   const doUpdate = () => {
     setUpdated(prev => prev + 1);
@@ -299,14 +293,7 @@ function useAgentSettings(agentId: string) {
    * 這邊列出所有的 agent settings 欄位
    * 這些欄位會在 Edit Details 下顯示
    */
-  const fields: { [key: string]: EditField } = {
-    abc: {
-      type: 'text',
-      key: 'abc',
-      title: 'ABC Setting',
-      description: 'This is a sample setting for ABC'
-    }
-  }
+  const fields = getFieldsMap()
   const values = useRef<{ [key: string]: any }>({});
   const fieldStates = useRef<{ [key: string]: { loading?: boolean, error?: string } }>({})
 
@@ -341,7 +328,7 @@ function useAgentSettings(agentId: string) {
     const res = await agentApi.getAgentSettings(agentId, keys);
     const nValues = res.values || {};
     console.log('refresh fields:', nValues);
-    for(const key in nValues) {
+    for (const key in nValues) {
       setField(key, nValues[key])
     }
   }

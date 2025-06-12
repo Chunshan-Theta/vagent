@@ -25,9 +25,7 @@ export function defineParams() : MissionParamsDefineMap {
     analysis: {
       type: 'text',
       title: '分析目標',
-      default: `
-請詳細分析對話紀錄，並根據分析方向和規則給我建議。
-      `.trim()
+      default: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`.trim()
     },
     context: {
       type: 'text',
@@ -43,7 +41,7 @@ export function defineParams() : MissionParamsDefineMap {
     },
     role: {
       type: 'text',
-      title: '角色',
+      title: '要分析的角色',
       description: '請輸入角色名稱(要和對話紀錄中的對象相同',
       default: '我',
     },
@@ -86,8 +84,8 @@ ${params.analysis || ''}
 注意：內容語系為 "${lang}"，且你的回應也需要用 "${lang}" 語系撰寫。
 ${langConfig.instructions || ''}
 
-輸出結果請條列出 3 到 5 條建議。
-格式如下：
+輸出結果請嚴格依照回應格式，給出 3 到 5 條建議，然後轉換成 json 格式。
+回應格式：
 - <建議內容>
 - <建議內容>
 - <建議內容>
@@ -118,7 +116,7 @@ export function expectSchema(params: ContextParams){
           type: 'array',
           items: {
             type: 'string',
-            description: '一條給予主管的建議',
+            description: '一條建議',
           },
         }
       },

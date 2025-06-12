@@ -12,10 +12,11 @@ import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 import ChatView from "@/app/components/chat/ChatView";
 import { getTranslation, Language } from "@/app/i18n/translations";
 import LanguageToggle from "@/app/components/LanguageToggle";
-import _ from 'lodash'
+import _, { get } from 'lodash'
 import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'
 
-import { convApi } from '@/app/lib/ai-chat'
+import { agentApi, convApi } from '@/app/lib/ai-chat'
+import { fetchAllAgentSettings } from '@/app/lib/ai-chat/reportHelper'
 import type { TimelineData } from "@/app/types/ai-report/report-v1";
 
 import * as utils from '../utils'
@@ -125,6 +126,8 @@ function ClassChatPage() {
   const [userInfo, setUserInfo] = useState<UserInfo>({ email: '', uname: '' });
   const [isUserInfoValid, setIsUserInfoValid] = useState(false);
 
+  const agentId = params.id as string;
+
   useEffect(() => {
     const lang = localStorage.getItem('client-language') as Language
 
@@ -163,6 +166,7 @@ function ClassChatPage() {
     fetchAgentConfig();
   }, [params.id, clientLanguage]);
 
+  const aiReport = useAiReport(agentId || '');
 
   const {
     router,
@@ -176,7 +180,7 @@ function ClassChatPage() {
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
-    
+
     handleTalkOn,
     handleTalkOff,
 
@@ -256,6 +260,8 @@ function ClassChatPage() {
 
     endConversation();
 
+    await aiReport.waitReady(10000);
+
     // Start a timer to increment progress over time
     progressTimerRef.current = setInterval(() => {
       setAnalysisProgress(prev => {
@@ -268,11 +274,19 @@ function ClassChatPage() {
     }, 300); // Increment every 300ms
 
     try {
-      setAnalysisProgress(30);
+      setAnalysisProgress(10);
       const chatHistory = getChatHistoryText()
-      const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria, chatHistory, clientLanguage || 'zh')
+      const config = {
+        criteria: aiReport.getSetting('reportAnalyze.context') || agentConfig?.criteria || '使用者本身是否是進行良性的溝通',
+        context: aiReport.getSetting('reportAnalyze.context') || '以下是一份我和 ai 的對話紀錄。',
+        analysis: aiReport.getSetting('reportAnalyze.analysis') || '請判斷我的表現，然後給予合適的分析結果',
+        roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || '我',
+        roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'AI',
+      }
+      const analysis = await analyzeChatHistoryByRubric(config.criteria, chatHistory, clientLanguage || 'zh')
       localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
 
+      setAnalysisProgress(30);
 
       const { startAt, pairs } = getMessagePairs({
         spRole: 'assistant',
@@ -339,8 +353,32 @@ function ClassChatPage() {
           }
         }
       }
+      /**
+       * 針對不同任務給不同參數
+       */
+      const missionParams: { [missionId: string]: { [x: string]: any } } = {
+        'report-v1/sentiment': {
+          role2: config.roleTarget,
+          history
+        },
+        'report-v1/key_points': {
+          context: config.context,
+          criteria: config.criteria,
+          role: config.roleSelf,
+          role2: config.roleTarget,
+          history
+        },
+        'report-v1/context': {
+          analysis: config.analysis,
+          context: config.context,
+          criteria: config.criteria,
+          role: config.roleSelf,
+          history
+        },
+      }
 
-      for (const item of timelineItems) {
+      for (let index = 0; index < timelineItems.length; index += 1) {
+        const item = timelineItems[index]
         const { aiSay, userSay } = item
 
         const analysisRole = 'user'
@@ -373,21 +411,18 @@ function ClassChatPage() {
           setAnalysisProgress((collect.end / collect.total) * 100 * 0.6) // 0 ~ 60%
         }
 
-        const gptParams = {
-          analysis: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`,
-
-          criteria: agentConfig?.criteria || '',
-        }
-
         const promises = missions.map((missionId) => {
+          if(!missionParams[missionId]){
+            throw new Error(`Mission parameters for ${missionId} are not defined`);
+          }
+          const mParams = {
+            lang: clientLanguage,
+            history: chatHistory,
+            ...missionParams[missionId],
+          }
           return startAIMission({
             missionId,
-            params: {
-              lang: clientLanguage,
-              ...gptParams,
-              role: analysisRole,
-              history: chatHistory,
-            },
+            params: mParams,
             responseType: 'json_schema'
           }).then((res) => {
             collect.done++
@@ -433,6 +468,9 @@ function ClassChatPage() {
             item.analysis = context as string[]
           }
         }
+
+        // index / timelineItems.length
+        setAnalysisProgress(timelineItems.length > 0 ? 60 : 100);
       }
 
       setAnalysisProgress(90);
@@ -486,7 +524,7 @@ function ClassChatPage() {
         email: userInfo.email,
         uname: userInfo.uname,
         agentType: 'class',
-        agentId: agentConfig.name
+        agentId: agentId
       });
       clearTranscript();
       handleTalkOn();
@@ -627,4 +665,86 @@ export default function Page() {
       <ClassChatPage />
     </Suspense>
   );
-} 
+}
+
+
+/**
+ * 用於蒐集 agent_settings
+ * @param agentId 
+ * @returns 
+ */
+function useAiReport(agentId: string) {
+  const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  const settings = useRef<{ [key: string]: string }>({});
+  useEffect(() => {
+    fetchAndUpdate();
+  }, []);
+
+  function fetchAndUpdate() {
+    if (loading) return;
+    setLoading(true);
+    retryOnError(async () => {
+      settings.current = {};
+      const res = await fetchAllAgentSettings(agentId)
+      for (const key in res.values) {
+        settings.current[key] = res.values[key];
+      }
+      setReady(true);
+    })
+      .finally(() => {
+        setLoading(false);
+      })
+  }
+
+  function retryOnError<T>(fn: () => Promise<T>, retries = 3, delay = 1000) {
+    return new Promise<T>((resolve, reject) => {
+      const attempt = (n: number) => {
+        fn().then(resolve).catch((error) => {
+          if (n <= 0) {
+            reject(error);
+          } else {
+            // console.warn(`Retrying... (${retries - n + 1}/${retries})`);
+            setTimeout(() => attempt(n - 1), delay);
+          }
+        });
+      };
+      attempt(retries);
+    });
+  }
+
+  function waitReady(timeout = 10000): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      let timeoutTimerId: any = null;
+      let lastTimeout: any = null;
+      const checkReady = () => {
+        if (ready) {
+          clearTimeout(timeoutTimerId);
+          clearTimeout(lastTimeout);
+          resolve();
+        } else {
+          lastTimeout = setTimeout(checkReady, 600);
+        }
+      };
+      timeoutTimerId = setTimeout(() => {
+        if (!ready) {
+          clearTimeout(timeoutTimerId);
+          clearTimeout(lastTimeout);
+          reject(new Error('timeout'));
+        }
+      }, timeout);
+      checkReady();
+    });
+  }
+
+  function getSetting(key: string): string {
+    return settings.current[key] || '';
+  }
+
+  return {
+    ready,
+    settings,
+    waitReady,
+    getSetting
+  }
+}

@@ -16,8 +16,6 @@ type ReportSectionProps = {
 const ReportSection: React.FC<ReportSectionProps> = (props) => {
   props = props || {}
   const timelineDatas = props.items || []
-  console.log('[update]')
-
 
   const styles = {
     analysis: {
