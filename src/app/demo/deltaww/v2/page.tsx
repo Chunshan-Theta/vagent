@@ -379,8 +379,8 @@ function DynamicAnalysisContent() {
       const resMap = _.keyBy(results, 'missionId')
       console.log('resMap:', resMap)
 
-      if (resMap['deltaww/sentiment']) {
-        const sentimentRes = resMap['deltaww/sentiment']
+      if (resMap['report-v1/sentiment']) {
+        const sentimentRes = resMap['report-v1/sentiment']
         const sentimentType = (sentimentRes.json.sentiment || '').toLowerCase()
         if (sentimentType) {
           item.subtitle = `小陳情緒：${sentimentType}`
@@ -388,8 +388,8 @@ function DynamicAnalysisContent() {
           item.mainColor = settings.sentimentColors[sentimentType as SentimentColor]
         }
       }
-      if (resMap['deltaww/key_points']) {
-        const keyPointsRes = resMap['deltaww/key_points']
+      if (resMap['report-v1/key_points']) {
+        const keyPointsRes = resMap['report-v1/key_points']
         const keyPoints = keyPointsRes.json.keyPoints
         if (typeof keyPoints === 'object') {
           const { problems, sentences } = keyPoints
@@ -401,15 +401,8 @@ function DynamicAnalysisContent() {
           }
         }
       }
-      if (resMap['deltaww/highlights']) {
-        const highlightsRes = resMap['deltaww/highlights']
-        const highlights = highlightsRes.json.sentences
-        if (Array.isArray(highlights)) {
-          item.analysis = highlights
-        }
-      }
-      if (resMap['deltaww/context']) {
-        const contextRes = resMap['deltaww/context']
+      if (resMap['report-v1/context']) {
+        const contextRes = resMap['report-v1/context']
         const context = contextRes.json.sentences
         if (Array.isArray(context)) {
           item.analysis = context
