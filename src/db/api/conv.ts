@@ -35,16 +35,23 @@ export async function createConv(opts: createConvOptions){
   return res;
 }
 
-export async function addConvMessage(
+type addConvMessageOpts = {
+  
   convId: string,
   type: string,
   role: 'user' | 'assistant' | 'system',
+  audioRef?: string, // 音訊檔案的引用
+  audioStartTime?: number, // 音訊長度（豪秒，選填）
   content: string
-){
+}
+export async function addConvMessage(opts: addConvMessageOpts){
+  const { convId, type, role, audioRef, audioStartTime, content } = opts;
   const res = await M.ConvMessage.query().insert({
     convId: convId,
     type,
     role: role,
+    audioRef: audioRef || null,
+    audioStartTime: audioStartTime ?? null,
     content: content,
     createdAt: orm.fn.now(),
   })

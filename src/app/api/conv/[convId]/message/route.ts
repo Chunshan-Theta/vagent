@@ -6,13 +6,15 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
   try {
     const body = await req.json();
     const { convId } = await params;
-    const { type, role, content } = body;
-    const message = await convApi.addConvMessage(
+    const { type, role, content, audioRef, audioStartTime } = body;
+    const message = await convApi.addConvMessage({
       convId,
       type,
       role,
+      audioRef,
+      audioStartTime,
       content
-    );
+    });
     return NextResponse.json(message);
   } catch (error: any) {
     console.error('Error adding conv message:', error);

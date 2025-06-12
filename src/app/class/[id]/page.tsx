@@ -176,7 +176,10 @@ function ClassChatPage() {
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
+    
     handleTalkOn,
+    handleTalkOff,
+
     isCallEnded,
     isAnalyzing,
     setAnalysisProgress,
@@ -214,6 +217,7 @@ function ClassChatPage() {
 
 
   const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
+    await handleTalkOff();
     if (!criteria) {
       criteria = '使用者本身是否是進行良性的溝通';
     }
@@ -285,6 +289,9 @@ function ClassChatPage() {
         const userRole = 'user'
         const aiSay = aiMsg.data.content || ''
         const userSay = userMsgs.map((msg) => msg.data.content).join('\n\n')
+        console.log({
+          aiMsg, userMsgs
+        })
 
         const timeStr = parseTime(item.time - (startAt || 0))
 
@@ -350,10 +357,10 @@ function ClassChatPage() {
 
         const { userAudio, aiAudio } = item
         if (userAudio && userAudio.ref) {
-          userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId })) || '';
+          userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId, name: 'user_audio' })) || '';
         }
         if (aiAudio && aiAudio.ref) {
-          aiAudio.url = (await convApi.getAudioUrlByRefString(aiAudio.ref, { convId: nowConvId })) || '';
+          aiAudio.url = (await convApi.getAudioUrlByRefString(aiAudio.ref, { convId: nowConvId, name: 'assistant_audio' })) || '';
         }
 
         const collect = {

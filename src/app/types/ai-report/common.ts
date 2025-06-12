@@ -33,6 +33,8 @@ export interface TimelineItem {
     subtitle?: string;
     timelineColor?: string;
     subtitleColor?: string;
+    aiAudio?: { url: string; startTime?: number };
+    userAudio?: { url: string; startTime?: number };
   };
 }
 

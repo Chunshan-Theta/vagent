@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS conv_message (
   role VARCHAR(24) NOT NULL,
   content TEXT NOT NULL,
   audio_ref VARCHAR(64) DEFAULT NULL, -- 參考 audio.id , 格式: "conv:<audio_id>"
-  audio_ref_stamp VARCHAR(64) DEFAULT NULL, -- <開始秒數>--<結束秒數>"
+  audio_start_time DECIMAL(10, 2) DEFAULT NULL, -- <開始秒數>
+  audio_end_time DECIMAL(10, 2) DEFAULT NULL, -- <開始秒數>
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (conv_id) REFERENCES conv(id) ON DELETE CASCADE ON UPDATE CASCADE
 );

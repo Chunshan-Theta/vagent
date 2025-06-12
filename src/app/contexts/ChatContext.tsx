@@ -121,7 +121,8 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
   }
 
   const updateMessageData = (msgId: string, patch: Partial<MessageItem['data']>) => {
-    updateMessage(msgId, { data: { ...patch } });
+    const prevData = messageItems.find((msg) => msg.id === msgId)?.data || {};
+    updateMessage(msgId, { data: { ...prevData ,...patch } });
   }
 
   const hideMessage = (msgId: string) => {

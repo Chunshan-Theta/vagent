@@ -1,3 +1,4 @@
+import qq from 'querystring'
 // src/app/lib/ai-chat/convApi.ts
 
 export interface CreateConvParams {
@@ -85,21 +86,21 @@ type addConvMessageOptions = {
   role: 'user' | 'assistant' | 'system';
   content: string; // 對話內容或音訊 URL
   audioRef?: string | null; // 音訊檔案的引用 ID（如果有）
-  audioDuration?: number | null; // 音訊長度（豪秒，選填）
+  audioStartTime?: number | null; // 音訊長度（豪秒，選填）
 };
 
 /**
  * 新增對話訊息
  */
 export async function addConvMessage(convId: string, opts: addConvMessageOptions): Promise<any> {
-  const { type, role, content, audioRef, audioDuration } = opts;
+  const { type, role, content, audioRef, audioStartTime } = opts;
   if (!type || !role) {
     throw new Error('type, role, and content are required fields');
   }
   const res = await fetch(`/api/conv/${convId}/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, role, content, audioRef, audioDuration }),
+    body: JSON.stringify({ type, role, content, audioRef, audioStartTime }),
   });
   if (!res.ok) throw new Error(await res.text());
   return await res.json();
@@ -126,17 +127,23 @@ export async function getConvMessages(convId: string): Promise<any[]> {
   return await res.json();
 }
 
-export async function getConvAudioByIndex(convId: string, index: number): Promise<any> {
-  const res = await fetch(`/api/conv/${convId}/audio?index=${index}`, {
+export async function getConvAudioByIndex(convId: string, name: string, index: number) {
+  const query = qq.encode({
+    name,
+    index
+  })
+
+  const res = await fetch(`/api/conv/${convId}/audio?${query}`, {
     method: 'GET',
   });
   if (!res.ok) throw new Error(await res.text());
-  return (await res.json()) as ConvAudio;
+  return (await res.json()) as { item: ConvAudio };
 }
 
 
 type getAudioByRefStringOptions = {
   convId?: string;
+  name?: string;
 };
 export async function getAudioUrlByRefString(ref: string, opts: getAudioByRefStringOptions = {}): Promise<string | null> {
   if(!ref) {
@@ -150,12 +157,12 @@ export async function getAudioUrlByRefString(ref: string, opts: getAudioByRefStr
     if(m){
       const indexStr = m[1];
       const index = parseInt(indexStr, 10);
-      if(!opts.convId){
-        throw new Error('convId is required when ref starts with "conv:"');
+      if(!opts.convId || !opts.name){
+        throw new Error('convId and name are required for conv audio reference');
       }
       const convId = opts.convId;
-      const audioData = await getConvAudioByIndex(convId, index); // 假設只取第一個音訊
-      return audioData?.url || null; // 返回音訊 URL
+      const audioData = await getConvAudioByIndex(convId, opts.name!, index); // 假設只取第一個音訊
+      return audioData.item?.url || null; // 返回音訊 URL
     }
   }
   return null; // 如果不是有效的 ref，返回 null

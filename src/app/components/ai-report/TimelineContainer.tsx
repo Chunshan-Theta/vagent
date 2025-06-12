@@ -4,7 +4,7 @@
 // 3. childrens 可能有多組，每組 child 的上方都會有個固定標題
 // 4. 須確保 childrens size 與 timelineItems size 一致，否則會報錯
 
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 import type { TimelineItem, TimelineContainerProps } from '@/app/types/ai-report/common'
 
 

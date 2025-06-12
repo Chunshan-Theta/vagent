@@ -10,6 +10,8 @@ export class ConvMessage extends Model {
   type!: string;
   role!: string;
   content!: string;
+  audioRef?: string | null; // 音訊檔案的引用 ID
+  audioStartTime?: number | null; // 音訊長度（豪秒，選填）
   createdAt!: Date;
 
   conv?: Conv;

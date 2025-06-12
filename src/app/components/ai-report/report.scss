@@ -112,5 +112,26 @@
       color: var(--light-gray);
       margin-bottom: 10px;
     }
+
+    .audio-btn{
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--orange);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: white;
+      font-size: 1.2em;
+      box-shadow: 0 2px 8px rgba(67, 97, 238, 0.15);
+
+      &:hover {
+        background: var(--accent);
+        color: var(--black);
+      }
+    }
   }
 }

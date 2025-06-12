@@ -78,7 +78,6 @@ export function useAiChat(){
     }
     // 等待所有上傳完成
     await Promise.all(uploadPromises.current);
-    uploadPromises.current = [];
   }
 
 
@@ -363,21 +362,23 @@ export function useAiChat(){
         const audioRef = `conv:${convInfo.current.audioCount}`; // 根據音訊的 index 做紀錄
         const createdTime = newItem.createdAtMs ?? Date.now();
         const audioStartTime = (createdTime - appContext.recorder.state.current.startTime) / 1000;
-        chatContext.addMessageItem({
+        const chatMsg = {
           id: newItem.itemId,
           type: 'text',
           role: newItem.role!,
           data: { content: newItem.title, audioRef, audioStartTime },
           createdAtMs: newItem.createdAtMs,
           hide: !!newItem.isHidden || newItem.role === 'system',
-        })
+        }
+        chatContext.addMessageItem(chatMsg as any)
+        console.log('add msg', )
         addConvMessage({
           itemId: newItem.itemId,
           type: 'text',
           role: newItem.role!,
           content: newItem.title || '',
           audioRef, 
-          audioDuration: audioStartTime,
+          audioStartTime: audioStartTime,
         })
       }
     })
@@ -612,6 +613,7 @@ export function useAiChat(){
     progressTimerRef,
     isLoading: isLoading,
 
+    waitPostTask,
     endConversation,
     showSystemToast,
 
