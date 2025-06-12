@@ -4,6 +4,7 @@ import { getLangConfig } from "../../_lang"
 import * as utils from '../../utils'
 
 export type KeyPointsParams = {
+  analysis?: string
   context?: string
   criteria?: string
   role?: string
@@ -20,6 +21,11 @@ export function defineParams() : MissionParamsDefineMap {
       title: '內容語系',
       description: '請輸入內容的語系，例如：zh、en 等等',
       default: 'zh',
+    },
+    analysis: {
+      type: 'text',
+      title: '分析目標',
+      default: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`.trim()
     },
     context: {
       type: 'text',
@@ -71,6 +77,11 @@ ${params.context || ''}
 分析規則：
 """
 ${params.criteria || ''}
+"""
+
+分析目標：
+"""
+${params.analysis || ''}
 """
 
 請參考分析規則，然後依據底下的對話，分別找出：

@@ -364,6 +364,7 @@ function ClassChatPage() {
           history
         },
         'report-v1/key_points': {
+          analysis: config.analysis,
           context: config.context,
           criteria: config.criteria,
           role: config.roleSelf,
