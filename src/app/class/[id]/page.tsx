@@ -295,8 +295,9 @@ function ClassChatPage() {
         }
       })
       // 註：分析 Rubric 的時候優先使用 agentConfig 中的 criteria，其他的分析反之
-      const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh')
-      localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
+      const rubtic_analysis = analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh').then((analysis)=>{
+        localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
+      })
 
       setAnalysisProgress(30);
 
@@ -510,6 +511,9 @@ function ClassChatPage() {
       setAnalysisProgress(100);
 
       // Navigate to report page
+      Promise.all([
+        rubtic_analysis
+      ])
       router.push('/class/report');
     } catch (error) {
       // Clear the progress timer on error
