@@ -83,7 +83,7 @@ export async function getConvAnalysis(convId: string, name: string){
   return res;
 }
 
-export async function uploadConvAudio(filepath: string, convId: string, name: string, mime: string, duration: number = 0){
+export async function uploadConvAudio(filepath: string, convId: string, name: string, mime: string, duration: number = 0, info?: string){
   // 建立 ConvAudio 記錄
   const res = await conflitRetry(async () => {
     return await M.ConvAudio.query().insert({
@@ -92,6 +92,7 @@ export async function uploadConvAudio(filepath: string, convId: string, name: st
       name,
       duration,
       mime: mime || 'audio/wav',
+      info: info || undefined,
       state: 'pending',
       createdAt: orm.fn.now(),
       updatedAt: orm.fn.now(),
