@@ -201,7 +201,8 @@ function ClassChatPage() {
     getMessagePairs,
 
     showSystemToast,
-    convInfo
+    convInfo,
+    waitPostTask
   } = useAiChat();
 
 
@@ -258,7 +259,9 @@ function ClassChatPage() {
 
 
     await handleTalkOff();
-    await delay(1500); // 等待 1.5 秒，確保對話結束
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
 
     await aiReport.waitReady(10000);
