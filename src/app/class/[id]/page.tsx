@@ -255,9 +255,10 @@ function ClassChatPage() {
       showSystemToast('wait_for_response');
       return;
     }
+
+
     await handleTalkOff();
-
-
+    await delay(1500); // 等待 1.5 秒，確保對話結束
     endConversation();
 
     await aiReport.waitReady(10000);
@@ -295,7 +296,7 @@ function ClassChatPage() {
         }
       })
       // 註：分析 Rubric 的時候優先使用 agentConfig 中的 criteria，其他的分析反之
-      const rubtic_analysis = analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh').then((analysis)=>{
+      const rubtic_analysis = analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh').then((analysis) => {
         localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
       })
 
@@ -432,7 +433,7 @@ function ClassChatPage() {
         }
 
         const promises = missions.map((missionId) => {
-          if(!missionParams[missionId]){
+          if (!missionParams[missionId]) {
             throw new Error(`Mission parameters for ${missionId} are not defined`);
           }
           const mParams = {
@@ -774,4 +775,8 @@ function useAiReport(agentId: string) {
     waitReady,
     getSetting
   }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
