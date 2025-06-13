@@ -27,6 +27,10 @@ export type TimelineData = {
 
 export type ReportDatas = {
   timeline: TimelineData[]
+  meta?: {
+    keyPointTitle1?: string
+    keyPointTitle2?: string
+  }
 }
 
 export type GradingItem = {

@@ -3,6 +3,9 @@ import { getTranslation, Language } from "@/app/i18n/translations";
 import { AgentConfig, Tool, TranscriptItem } from "@/app/types";
 
 import * as utils from '@/app/class/utils';
+import _ from '@/app/vendor/lodash'
+
+// AgentSettings : agent 的設定，每一筆都是 key-value 的形式
 
 export async function setAgentSettings(agentId:string, keyVal: Record<string, string>): Promise<void> {
   if(Array.isArray(keyVal) || typeof keyVal !== 'object') {
@@ -22,15 +25,37 @@ export async function setAgentSettings(agentId:string, keyVal: Record<string, st
 }
 
 export async function getAgentSettings(agentId: string, keys:string[]): Promise<{ success:boolean, values: Record<string, string> }> {
-  const response = await fetch(`/api/agents/${agentId}/settings?keys=${keys.join(',')}`);
-  if (!response.ok) {
-    throw new Error(getTranslation('en', 'errors.failed_to_load_settings'));
+  const _get = async (mKeys: string[])=>{
+    const response = await fetch(`/api/agents/${agentId}/settings?keys=${mKeys.join(',')}`);
+    if (!response.ok) {
+      throw new Error(getTranslation('en', 'errors.failed_to_load_settings'));
+    }
+    const data = await response.json();
+    return {
+      success: !!data.success,
+      values: data.values || {},
+    };
   }
-  const data = await response.json();
-  return {
-    success: !!data.success,
-    values: data.values || {},
-  };
+  // 單次獲取設定不超過 10 個 key
+  // 超過時會自動分批獲取
+  const maxCount = 10;
+  const promises = _.chunk(keys, maxCount).map(()=>{
+    return _get(keys);
+  })
+  const collect = {
+    success: false,
+    values: {} as Record<string, string>,
+  }
+  for(const p of promises) {
+    const result = await p;
+    if(result.success) {
+      collect.success = true;
+      collect.values = {...collect.values, ...result.values};
+    } else {
+      console.error('Failed to fetch agent settings:', result);
+    }
+  }
+  return collect;
 }
 
 export async function fetchAgentConfig(agentId: string, clientLanguage: Language): Promise<AgentConfig> {

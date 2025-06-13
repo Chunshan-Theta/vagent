@@ -11,6 +11,10 @@ type TimelineData = ReportV1.TimelineData
 
 type ReportSectionProps = {
   items: TimelineData[];
+  meta?: {
+    keyPointTitle1?: string;
+    keyPointTitle2?: string;
+  }
 }
 
 const ReportSection: React.FC<ReportSectionProps> = (props) => {
@@ -27,6 +31,8 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
       color: "white",
     }
   }
+  const keyPointTitle1 = props.meta?.keyPointTitle1 || '關鍵句整理';
+  const keyPointTitle2 = props.meta?.keyPointTitle2 || '問題';
   const [update, setUpdate] = useState(0);
   const doUpdate = () => {
     setUpdate(prev => prev + 1);
@@ -123,7 +129,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                   (<>
                     {keyPoint.sentences.length > 0 &&
                       <div className="key-point">
-                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>❌ 關鍵句整理</p>
+                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>❌ {keyPointTitle1}</p>
                         {keyPoint.sentences.map((text, index) => (
                           <li key={index}>{trimText(text)}</li>
                         ))}
@@ -131,7 +137,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                     }
                     {keyPoint.problems.length > 0 &&
                       <div className="key-point">
-                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>📉 問題</p>
+                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>📉 {keyPointTitle2}</p>
                         {keyPoint.problems.map((text, index) => (
                           <li key={index}>{trimText(text)}</li>
                         ))}

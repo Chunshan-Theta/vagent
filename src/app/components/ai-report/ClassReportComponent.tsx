@@ -35,9 +35,9 @@ export default function ClassReportComponent() {
     const reportData = JSON.parse(reportDataStr) as ReportV1.ReportDatas;
     const { timeline } = reportData;
 
-    const timelineDatas: ReportV1.TimelineData[] = timeline;
     return {
-      timeline: timelineDatas
+      timeline: timeline as ReportV1.TimelineData[],
+      meta: reportData.meta || {}
     };
   }
 

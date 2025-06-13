@@ -45,7 +45,6 @@ const fields:EditField[] = [
     placeholder: '例: AI客戶, 對方, ...',
     description: ''
   },
-  
   {
     type: 'textarea',
     key: 'reportAnalyze.contextPrompt',
@@ -69,6 +68,20 @@ const fields:EditField[] = [
       '- __role2__ 說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）',
       '- __role__ 回應中可能存在的溝通問題或不足之處'
     ].join('\n'),
+    description: ''
+  },
+  {
+    type: 'textarea',
+    key: 'reportAnalyze.keyPointTitle1',
+    title: '分析報告 - key_points 標題1',
+    placeholder: '關鍵句整理',
+    description: ''
+  },
+  {
+    type: 'textarea',
+    key: 'reportAnalyze.keyPointTitle2',
+    title: '分析報告 - key_points 標題2',
+    placeholder: '問題',
     description: ''
   },
 ]

@@ -17,7 +17,7 @@ export function defineParams() : MissionParamsDefineMap {
     },
     role2: {
       type: 'text',
-      title: '要分析的角色',
+      title: '要分析的角色(role2)',
       description: '請輸入角色名稱(要和對話紀錄中的對象相同',
       default: 'assistant',
     },

@@ -284,6 +284,9 @@ function ClassChatPage() {
 
         contextPrompt: aiReport.getSetting('reportAnalyze.contextPrompt'),
         keyPointsPrompt: aiReport.getSetting('reportAnalyze.keyPointsPrompt'),
+
+        keyPointTitle1: aiReport.getSetting('reportAnalyze.keyPointTitle1') || '關鍵句整理',
+        keyPointTitle2: aiReport.getSetting('reportAnalyze.keyPointTitle2') || '問題',
       }
       const chatHistory = getChatHistoryText({
         roleMap: {
@@ -492,7 +495,11 @@ function ClassChatPage() {
       setAnalysisProgress(90);
 
       const report = {
-        timeline: timelineItems
+        timeline: timelineItems,
+        meta: {
+          keyPointTitle1: config.keyPointTitle1,
+          keyPointTitle2: config.keyPointTitle2,
+        }
       }
 
       // Store the analysis result and chat history in localStorage

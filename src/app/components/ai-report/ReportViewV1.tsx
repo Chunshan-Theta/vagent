@@ -18,11 +18,14 @@ const ReportPage: React.FC<ReportPageProps> = (props) => {
   const timelineItems = useMemo(() => {
     return props.data?.timeline || []
   }, [props.data?.timeline])
+  const meta = useMemo(() => {
+    return props.data?.meta || {}
+  }, [props.data?.meta])
 
   return (
     <div className="report-view v1 default">
       {timelineItems.length > 0 && (
-        <TimelineSection items={timelineItems} />
+        <TimelineSection items={timelineItems} meta={meta} />
       )}
     </div>
   )

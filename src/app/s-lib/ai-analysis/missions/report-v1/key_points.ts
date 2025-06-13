@@ -49,18 +49,18 @@ export function defineParams() : MissionParamsDefineMap {
     prompt: {
       type: 'textarea',
       title: '提示語',
-      description: '這是用於生成分析的提示語，請根據需要進行修改。',
+      description: '這是用於生成分析的提示語，請根據需要進行修改。\n(如果有把關鍵句整理和問題的名稱意義改掉，最好告知 agent 你想把哪個資料放入 sentences 哪個資料放入 problems)',
       default: basePromptTemplate
     },
     role: {
       type: 'text',
-      title: '要分析的角色',
+      title: '要分析的角色(role)',
       description: '請輸入角色名稱(要和對話紀錄中的對象相同',
       default: 'user',
     },
     role2: {
       type: 'text',
-      title: '對方角色',
+      title: '對方角色(role2)',
       description: '請輸入角色名稱(要和對話紀錄中的對象相同',
       default: 'assistant',
     },
