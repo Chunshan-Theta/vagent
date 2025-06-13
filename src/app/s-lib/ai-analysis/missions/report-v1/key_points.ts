@@ -13,6 +13,13 @@ export type KeyPointsParams = {
   lang?: string
 }
 
+
+const basePromptTemplate = `
+請參考分析規則，然後依據底下的對話，分別找出：
+- __role2__ 說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）
+- __role__ 回應中可能存在的溝通問題或不足之處
+`.trim();
+
 export function defineParams() : MissionParamsDefineMap {
   const criteria = defaultCriteria
   return {
@@ -23,38 +30,44 @@ export function defineParams() : MissionParamsDefineMap {
       default: 'zh',
     },
     analysis: {
-      type: 'text',
-      title: '分析目標',
+      type: 'textarea',
+      title: '分析方向',
       default: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`.trim()
     },
     context: {
-      type: 'text',
+      type: 'textarea',
       title: '情境描述',
       description: '請輸入情境描述',
       default: '我的角色是小陳的主管，在對話中我希望能夠幫助小陳釐清目標、現況、選項和行動計畫，並給予他適當的建議和支持。',
     },
     criteria: {
       type: 'textarea',
-      title: '分析方向',
+      title: '分析規則',
       description: '請在此貼上完整的評分規則或分析的方向描述。',
       default: criteria.join('\n'),
+    },
+    prompt: {
+      type: 'textarea',
+      title: '提示語',
+      description: '這是用於生成分析的提示語，請根據需要進行修改。',
+      default: basePromptTemplate
     },
     role: {
       type: 'text',
       title: '要分析的角色',
       description: '請輸入角色名稱(要和對話紀錄中的對象相同',
-      default: '我',
+      default: 'user',
     },
     role2: {
       type: 'text',
       title: '對方角色',
       description: '請輸入角色名稱(要和對話紀錄中的對象相同',
-      default: '對方',
+      default: 'assistant',
     },
     history: {
       type: 'textarea',
       title: '對話紀錄',
-      placeholder: '我: ..........\n對方: ..........\n我: ..........\n對方: ..........',
+      placeholder: 'user: ..........\nassistant: ..........\nuser: ..........\nassistant: ..........',
       default: '',
     },
   }
@@ -64,42 +77,52 @@ export function moduleOptions() : ModelOptions{
   return getOpts()
 }
 
-export function getMessages(params: KeyPointsParams){
+export async function getMessages(params: KeyPointsParams){
   const lang = params.lang || 'zh';
   const langConfig = getLangConfig(lang, 'zh');
-  const prompt1 = utils.translatePrompt(`
+
+  const role = params.role || '我';
+  const role2 = params.role2 || '對方';
+
+  const basePrompt = basePromptTemplate
+    .replace(/__role__/g, role)
+    .replace(/__role2__/g, role2);
+
+  const prompt1 = await utils.translatePrompt(`
 
 分析情境：
 """
-${params.context || ''}
+${textIndent(params.context || '')}
 """
 
 分析規則：
 """
-${params.criteria || ''}
+${textIndent(params.criteria || '')}
 """
 
-分析目標：
+分析方向或目標：
 """
-${params.analysis || ''}
+${textIndent(params.analysis || '')}
 """
-
-請參考分析規則，然後依據底下的對話，分別找出：
-- ${params.role2}說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）
-- ${params.role}回應中可能存在的溝通問題或不足之處
   `.trim(), 'zh', lang);
 
   const template = `
-${prompt1}
+對話紀錄如下：
+"""
+${params.history}
+"""
+
+${basePrompt}
 
 注意：內容語系為 "${lang}"，且你的回應也需要用 "${lang}" 語系撰寫。
 ${langConfig.instructions || ''}
-
-對話如下：
-${params.history}
 `.trim()
 
   const messages = [
+    {
+      role: 'system',
+      content: prompt1.text
+    },
     {
       role: 'user',
       content: template,
@@ -136,4 +159,10 @@ export function expectSchema(params: KeyPointsParams){
       required: ['keyPoints'],
     }
   };
+}
+
+function textIndent(text: string, indent: number = 2): string {
+  const spaces = ' '.repeat(indent);
+  return text.split('\n').map(line => spaces + line).join('\n');
+
 }

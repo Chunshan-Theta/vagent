@@ -275,14 +275,22 @@ function ClassChatPage() {
 
     try {
       setAnalysisProgress(10);
-      const chatHistory = getChatHistoryText()
       const config = {
         criteria: aiReport.getSetting('reportAnalyze.criteria') || agentConfig?.criteria || 'user 本身是否是進行良性的溝通',
         context: aiReport.getSetting('reportAnalyze.context') || '以下是一份 user 和 assistant 的對話紀錄。',
         analysis: aiReport.getSetting('reportAnalyze.analysis') || '請判斷 user 的表現，然後給予合適的分析結果',
         roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || 'user',
         roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'assistant',
+
+        contextPrompt: aiReport.getSetting('reportAnalyze.contextPrompt'),
+        keyPointsPrompt: aiReport.getSetting('reportAnalyze.keyPointsPrompt'),
       }
+      const chatHistory = getChatHistoryText({
+        roleMap: {
+          user: config.roleSelf,
+          assistant: config.roleTarget,
+        }
+      })
       // 註：分析 Rubric 的時候優先使用 agentConfig 中的 criteria，其他的分析反之
       const analysis = await analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh')
       localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
@@ -370,6 +378,8 @@ function ClassChatPage() {
           criteria: config.criteria,
           role: config.roleSelf,
           role2: config.roleTarget,
+          prompt: config.keyPointsPrompt,
+
           history
         },
         'report-v1/context': {
@@ -377,6 +387,8 @@ function ClassChatPage() {
           context: config.context,
           criteria: config.criteria,
           role: config.roleSelf,
+          prompt: config.contextPrompt,
+
           history
         },
       }
@@ -387,8 +399,8 @@ function ClassChatPage() {
 
         const analysisRole = 'user'
         const chatHistory = [
-          `assistant: ${parseHistoryContent(aiSay)}`,
-          `user: ${userSay}`
+          `${config.roleTarget}: ${parseHistoryContent(aiSay)}`,
+          `${config.roleSelf}: ${userSay}`
         ].join('\n')
 
         const missions = [

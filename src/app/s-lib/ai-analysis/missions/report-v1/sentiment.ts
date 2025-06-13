@@ -24,7 +24,7 @@ export function defineParams() : MissionParamsDefineMap {
     history: {
       type: 'textarea',
       title: '對話紀錄',
-      placeholder: '我: ..........\n對方: ..........\n我: ..........\n對方: ..........',
+      placeholder: 'user: ..........\nassistant: ..........\nuser: ..........\nassistant: ..........',
       default: '',
     },
   }

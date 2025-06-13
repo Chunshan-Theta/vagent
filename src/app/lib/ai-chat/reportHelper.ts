@@ -20,7 +20,7 @@ const fields:EditField[] = [
   {
     type: 'textarea',
     key: 'reportAnalyze.analysis',
-    title: '分析報告 - 分析方向',
+    title: '分析報告 - 分析目標',
     placeholder: '例: 請詳細分析對話紀錄，並根據分析方向和規則給我建議。',
     description: ''
   },
@@ -43,6 +43,32 @@ const fields:EditField[] = [
     key: 'reportAnalyze.roleTarget',
     title: '分析報告 - 對方角色',
     placeholder: '例: AI客戶, 對方, ...',
+    description: ''
+  },
+  
+  {
+    type: 'textarea',
+    key: 'reportAnalyze.contextPrompt',
+    title: '分析報告 - context prompt',
+    placeholder: [
+      '請參考分析標準，然後依據對話紀錄，給出對於 __role__ 的相關建議。',
+      '輸出結果請嚴格依照回應格式，給出 3 到 5 條建議，然後轉換成 json 格式。',
+      '回應格式：',
+      '- <建議內容>',
+      '- <建議內容>',
+      '- <建議內容>'
+    ].join('\n'),
+    description: ''
+  },
+  {
+    type: 'textarea',
+    key: 'reportAnalyze.keyPointsPrompt',
+    title: '分析報告 - key_points prompt',
+    placeholder: [
+      '請參考分析規則，然後依據底下的對話，分別找出：',
+      '- __role2__ 說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）',
+      '- __role__ 回應中可能存在的溝通問題或不足之處'
+    ].join('\n'),
     description: ''
   },
 ]
