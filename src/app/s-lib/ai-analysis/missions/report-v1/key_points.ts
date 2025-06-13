@@ -81,8 +81,8 @@ export async function getMessages(params: KeyPointsParams){
   const lang = params.lang || 'zh';
   const langConfig = getLangConfig(lang, 'zh');
 
-  const role = params.role || '我';
-  const role2 = params.role2 || '對方';
+  const role = params.role || 'user';
+  const role2 = params.role2 || 'assistant';
 
   const basePrompt = basePromptTemplate
     .replace(/__role__/g, role)

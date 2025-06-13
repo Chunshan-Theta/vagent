@@ -77,7 +77,7 @@ export function moduleOptions() : ModelOptions{
 export async function getMessages(params: ContextParams){
   const lang = params.lang || 'zh';
   const langConfig = getLangConfig(lang, 'zh');
-  const basePrompt = basePromptTemplate
+  const basePrompt = basePromptTemplate.replace('__role__', params.role || 'user');
   const prompt1 = await utils.translatePrompt(`
 你的任務是根據相關條件，分析對話紀錄然後給出相關建議。
 
