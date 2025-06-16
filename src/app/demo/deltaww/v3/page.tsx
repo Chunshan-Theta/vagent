@@ -16,6 +16,8 @@ import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 import AskForm from "@/app/components/AskForm";
 import _ from '@/app/vendor/lodash';
 
+import { delay } from "@/app/lib/utils";
+
 const settingsMap = {
   default: {
     sentimentColors: {
@@ -34,6 +36,7 @@ function DynamicAnalysisContent() {
   const {
     router,
     initConv,
+    clearHistory,
 
     inputText,
     updateInputText,
@@ -173,6 +176,7 @@ function DynamicAnalysisContent() {
   }
 
   async function onAfterLogin(email: string) {
+    clearHistory();
     await initConv({
       email,
       agentType: 'static',
@@ -249,9 +253,11 @@ function DynamicAnalysisContent() {
 
 
     // 基本檢查都跑完之後再確定提交 endConversation
-    endConversation();
-
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
     await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
+    endConversation();
     setAnalysisProgress(0);
 
 

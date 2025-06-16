@@ -15,11 +15,13 @@ import { v4 as uuidv4 } from "uuid";
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
 import AskForm from "@/app/components/AskForm";
+import { delay } from "@/app/lib/utils";
 
 function LandbankChatPage() {
   const {
     router,
     initConv,
+    clearHistory,
 
     inputText,
     updateInputText,
@@ -40,6 +42,8 @@ function LandbankChatPage() {
     progressTimerRef,
 
     endConversation,
+    handleTalkOff,
+    waitPostTask,
 
     getChatHistoryText,
     getChatHistory,
@@ -53,7 +57,7 @@ function LandbankChatPage() {
     showSystemToast
   } = useAiChat();
 
-  
+
 
   useEffect(() => {
     document.title = '業務陪練劇本';
@@ -71,7 +75,7 @@ function LandbankChatPage() {
       💬 王小姐的疑問與擔心：「保費太貴了，這樣會不會讓我們沒錢用？」
       
       `);
-      addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 你的任務是：
+    addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 你的任務是：
       請試著用專業的說明方式，幫助王小姐釐清他的疑慮，讓他了解這張保單的保障意義，並一起找出最適合他的做法，進而提高他願意購買的可能性。
       這個練習會模擬實際對話，搭配即時回饋，幫助你強化與客戶溝通與說服的能力！
       
@@ -110,6 +114,10 @@ function LandbankChatPage() {
       showSystemToast('wait_for_response');
       return;
     }
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
 
     // Start a timer to increment progress over time
@@ -273,8 +281,9 @@ function LandbankChatPage() {
 
     onAfterLogin(name).catch(console.error);
   }
-  
+
   async function onAfterLogin(name: string) {
+    clearHistory();
     await initConv({
       uname: name,
       agentType: 'static',

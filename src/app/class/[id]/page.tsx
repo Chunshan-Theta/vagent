@@ -172,6 +172,8 @@ function ClassChatPage() {
     router,
     initConv,
     inputText,
+    clearHistory,
+
     updateInputText,
     sendSimulatedUserMessage,
     handleMicrophoneClick,
@@ -202,8 +204,7 @@ function ClassChatPage() {
 
     showSystemToast,
     convInfo,
-    waitPostTask,
-    clearHistory
+    waitPostTask
   } = useAiChat();
 
 

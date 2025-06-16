@@ -18,6 +18,7 @@ import { handleAnalysisExamples } from '@/app/lib/ai-chat/utils'
 import { agentApi, convApi } from '@/app/lib/ai-chat'
 
 import { toast } from 'react-toastify';
+import { delay } from "@/app/lib/utils";
 
 
 const LABEL = 'landbank_v2';
@@ -68,6 +69,9 @@ function LandbankChatV2Page() {
 
     showSystemToast,
     convInfo,
+    handleTalkOff,
+    waitPostTask,
+    clearHistory,
   } = useAiChat();
 
   const query = useSearchParams();
@@ -138,6 +142,7 @@ function LandbankChatV2Page() {
   }
 
   async function onAfterLogin(name: string) {
+    clearHistory();
     await initConv({
       uname: name,
       agentType: 'static',
@@ -240,6 +245,10 @@ function LandbankChatV2Page() {
     }
 
     // 基本檢查都跑完之後再確定提交 endConversation
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
     setAnalysisProgress(0);
 

@@ -108,3 +108,10 @@ export function pendingValue<T>(){
     }
   }
 }
+export function delay(ms: number, floatTime?: number): Promise<void> {
+  floatTime = floatTime ?? 0;
+  if (floatTime > 0) {
+    ms += Math.random() * floatTime;
+  }
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
 import AskForm from "@/app/components/AskForm";
+import { delay } from "@/app/lib/utils";
 
 function LandbankChatPage() {
   const {
@@ -39,6 +40,8 @@ function LandbankChatPage() {
     progressTimerRef,
 
     endConversation,
+    handleTalkOff,
+    waitPostTask,
 
     getChatHistoryText,
     getChatHistory,
@@ -68,7 +71,7 @@ function LandbankChatPage() {
       💬 Ms. Wang's concern: "The insurance premium is too expensive, will this leave us with no money to use?"
       
       `);
-      addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 Your task:
+    addTranscriptMessage(uuidv4().slice(0, 32), 'assistant', `🎯 Your task:
       Please try to use professional explanations to help Ms. Wang clarify her concerns, help her understand the value of this insurance policy, and work together to find the most suitable solution, thereby increasing her willingness to purchase.
       This exercise simulates real dialogue with instant feedback to help strengthen your customer communication and persuasion skills!
       
@@ -107,6 +110,10 @@ function LandbankChatPage() {
       showSystemToast('wait_for_response');
       return;
     }
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
 
     // Start a timer to increment progress over time

@@ -13,10 +13,13 @@ import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
 import AskForm from "@/app/components/AskForm";
 
+import { delay } from "@/app/lib/utils";
+
 function DynamicAnalysisContent() {
   const {
     router,
     initConv,
+    clearHistory,
 
     inputText,
     updateInputText,
@@ -39,7 +42,8 @@ function DynamicAnalysisContent() {
     endConversation,
     getChatHistoryText,
     getChatHistory,
-
+    handleTalkOff,
+    waitPostTask,
 
     isLoading,
 
@@ -91,6 +95,10 @@ function DynamicAnalysisContent() {
       showSystemToast('wait_for_response');
       return;
     }
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
 
     // Start a timer to increment progress over time
@@ -240,6 +248,7 @@ function DynamicAnalysisContent() {
   }
 
   async function onAfterLogin(email: string) {
+    clearHistory();
     await initConv({
       email,
       agentType: 'static',

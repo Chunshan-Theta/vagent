@@ -14,6 +14,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
+import { delay } from "@/app/lib/utils";
+
 function LandbankChatPage() {
   const {
     router,
@@ -26,7 +28,7 @@ function LandbankChatPage() {
     transcriptItems,
     setIsAnalyzing,
     setIsCallEnded,
-    
+
     isCallEnded,
     isPTTUserSpeaking,
     isAnalyzing,
@@ -37,6 +39,8 @@ function LandbankChatPage() {
     progressTimerRef,
 
     endConversation,
+    handleTalkOff,
+    waitPostTask,
 
     showSystemToast
   } = useAiChat();
@@ -56,6 +60,10 @@ function LandbankChatPage() {
       showSystemToast('wait_for_response');
       return;
     }
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
 
     // Start a timer to increment progress over time
@@ -236,7 +244,7 @@ function LandbankChatPage() {
       ></ChatView>
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App ref={appRef} agentSetKey="ragflowAgent" agentName="ragflowAgentInsurancePolicySale"/>
+        <App ref={appRef} agentSetKey="ragflowAgent" agentName="ragflowAgentInsurancePolicySale" />
       </div>
     </div>
   );

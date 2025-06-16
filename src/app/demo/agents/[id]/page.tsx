@@ -21,6 +21,8 @@ import { toast } from 'react-toastify';
 
 import { fetchAgentConfig } from '@/app/lib/ai-chat/agentApi';
 
+import { delay } from "@/app/lib/utils";
+
 const LABEL = 'demo_agent';
 
 const settingsMap = {
@@ -38,6 +40,7 @@ function LandbankChatV2Page() {
   const {
     router,
     initConv,
+    clearHistory,
 
     inputText,
     updateInputText,
@@ -58,7 +61,7 @@ function LandbankChatV2Page() {
     progressTimerRef,
 
     endConversation,
-
+    waitPostTask,
     getMessagePairs,
 
     isLoading,
@@ -68,6 +71,7 @@ function LandbankChatV2Page() {
     onSessionClose,
 
     setLanguage,
+    handleTalkOff,
 
     showSystemToast
   } = useAiChat();
@@ -112,7 +116,7 @@ function LandbankChatV2Page() {
     setClientLanguage(lang as any || 'zh');
   }, [])
   useEffect(() => {
-    fetchAgentConfig(agentId, clientLanguage).then((config)=>{
+    fetchAgentConfig(agentId, clientLanguage).then((config) => {
       setAgentConfig(config);
       console.log('[landbank_v2] agentConfig:', config);
     })
@@ -120,7 +124,7 @@ function LandbankChatV2Page() {
   useEffect(() => {
     console.log('[landbank_v2] loading', loading);
   }, [loading])
-  
+
   const [scene, setScene] = useState("init");
   const askItems = useRef([
     {
@@ -149,6 +153,7 @@ function LandbankChatV2Page() {
   }
 
   async function onAfterLogin(name: string) {
+    clearHistory();
     await initConv({
       uname: name,
       agentType: 'class',
@@ -242,6 +247,10 @@ function LandbankChatV2Page() {
     }
 
     // 基本檢查都跑完之後再確定提交 endConversation
+    await handleTalkOff();
+    await delay(700); // 等待幾秒，確保對話結束
+    await waitPostTask();
+    await delay(700); // 等待幾秒，確保對話結束
     endConversation();
     setAnalysisProgress(0);
 
