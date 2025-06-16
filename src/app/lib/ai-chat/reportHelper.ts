@@ -7,6 +7,8 @@ export type EditField = {
   title: string
   description?: string
   placeholder?: string
+
+  parser?: string
 }
 
 const fields:EditField[] = [
@@ -71,19 +73,34 @@ const fields:EditField[] = [
     description: ''
   },
   {
-    type: 'textarea',
+    type: 'text',
     key: 'reportAnalyze.keyPointTitle1',
-    title: '分析報告 - key_points 標題1',
+    title: '分析報告 - key_points 標題 1',
     placeholder: '關鍵句整理',
     description: ''
   },
   {
-    type: 'textarea',
+    type: 'text',
+    key: 'reportAnalyze.keyPointIcon1',
+    title: '分析報告 - key_points Icon 1',
+    placeholder: '❌',
+    description: '可直接填入 emoji 或 icon 名稱，如 "fa-star"\n，更多可至 https://react-icons.github.io/react-icons/icons/fa/ 查找',
+  },
+  {
+    type: 'text',
     key: 'reportAnalyze.keyPointTitle2',
-    title: '分析報告 - key_points 標題2',
+    title: '分析報告 - key_points 標題 2',
     placeholder: '問題',
     description: ''
   },
+  {
+    type: 'text',
+    key: 'reportAnalyze.keyPointIcon2',
+    title: '分析報告 - key_points Icon 2',
+    placeholder: '📉',
+    description: '可直接填入 emoji 或 icon 名稱，如 "fa-star"\n，更多可至 https://react-icons.github.io/react-icons/icons/fa/ 查找',
+  },
+
 ]
 
 const fieldsMap = _.keyBy(fields, 'key')
