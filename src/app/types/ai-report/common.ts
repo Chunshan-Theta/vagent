@@ -41,4 +41,46 @@ export interface TimelineItem {
 export interface TimelineContainerProps {
   items: TimelineItem[];
   className?: string;
+}
+
+// New types for audio-based timeline data
+export interface EmotionAnalysis {
+  sentence: string;
+  emotion: string;
+}
+
+export interface AudioInfo {
+  transcription: string;
+  emotions: EmotionAnalysis[];
+}
+
+export interface AudioData {
+  ref: string;
+  startTime: number;
+  url: string;
+  audioInfo?: string; // JSON string containing AudioInfo
+}
+
+export interface KeyPoint {
+  sentences: string[];
+  problems: string[];
+}
+
+export interface TimelineConversation {
+  title: string;
+  subtitleColor: string;
+  subtitle: string;
+  aiAudio?: AudioData;
+  userAudio?: AudioData;
+  aiRole: string;
+  userRole: string;
+  aiSay: string;
+  userSay: string;
+  analysis: string[];
+  keyPoint: KeyPoint;
+  time: number;
+}
+
+export interface AudioTimelineData {
+  timeline: TimelineConversation[];
 } 

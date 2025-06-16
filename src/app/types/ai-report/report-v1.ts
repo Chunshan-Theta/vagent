@@ -11,6 +11,7 @@ export type TimelineData = {
     ref?: string
     url?: string
     startTime?: number
+    audioInfo?: string
   }
   aiAudio?: {
     ref?: string
