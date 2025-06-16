@@ -7,6 +7,7 @@ export type KeyPointsParams = {
   analysis?: string
   context?: string
   criteria?: string
+  prompt?: string
   role?: string
   role2?: string
   history?: string
@@ -84,7 +85,7 @@ export async function getMessages(params: KeyPointsParams){
   const role = params.role || 'user';
   const role2 = params.role2 || 'assistant';
 
-  const basePrompt = basePromptTemplate
+  const basePrompt = (params.prompt || basePromptTemplate)
     .replace(/__role__/g, role)
     .replace(/__role2__/g, role2);
 
