@@ -30,6 +30,8 @@ export type ReportDatas = {
   meta?: {
     keyPointTitle1?: string
     keyPointTitle2?: string
+    keyPointIcon1?: string
+    keyPointIcon2?: string
   }
 }
 

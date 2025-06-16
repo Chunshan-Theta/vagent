@@ -14,6 +14,8 @@ type ReportSectionProps = {
   meta?: {
     keyPointTitle1?: string;
     keyPointTitle2?: string;
+    keyPointIcon1?: string;
+    keyPointIcon2?: string;
   }
 }
 
@@ -32,11 +34,14 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
     }
   }
   const keyPointTitle1 = props.meta?.keyPointTitle1 || '關鍵句整理';
+  const keyPointIcon1 = props.meta?.keyPointIcon1 || '❌';
   const keyPointTitle2 = props.meta?.keyPointTitle2 || '問題';
+  const keyPointIcon2 = props.meta?.keyPointIcon2 || '📉';
   const [update, setUpdate] = useState(0);
   const doUpdate = () => {
     setUpdate(prev => prev + 1);
   }
+  const playingAudioUrl = useRef<string | null>(null);
   const [playingAudiosCount, setPlayingAudiosCount] = useState(0);
   function updatePlayingAudiosCount() {
     setPlayingAudiosCount(() => {
@@ -63,12 +68,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
       const userAudio = handleAudioObj(item.userAudio)
       const needKeyPoint = (keyPoint.sentences.length > 0) ||
         (keyPoint.problems.length > 0)
-      // const audios = [handleAudioObj(item.aiAudio)!, handleAudioObj(item.userAudio)!].filter(audio => audio && audio.url)
-      // console.log({
-      //   item,
-      //   audios
 
-      // })
       return {
         meta: {
           title: item.title,
@@ -91,7 +91,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                         onClick={() => clickAudioBtn(index, 'ai')}
                         style={{ backgroundColor: item.mainColor || '#ffd166' }}
                       >
-                        {playingAudiosCount > 0 ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
+                        {playingAudiosCount > 0 && playingAudioUrl.current === aiAudio.url ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
                       </button>
                     )}</p>
                   <p>「{item.aiSay}」</p>
@@ -106,7 +106,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                         onClick={() => clickAudioBtn(index, 'user')}
                         style={{ backgroundColor: item.mainColor || '#ffd166' }}
                       >
-                        {playingAudiosCount > 0 ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
+                        {playingAudiosCount > 0 && playingAudioUrl.current === userAudio.url ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
                       </button>
                     )}</p>
                   <p>「{item.userSay}」</p>
@@ -129,7 +129,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                   (<>
                     {keyPoint.sentences.length > 0 &&
                       <div className="key-point">
-                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>❌ {keyPointTitle1}</p>
+                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>{keyPointIcon1} {keyPointTitle1}</p>
                         {keyPoint.sentences.map((text, index) => (
                           <li key={index}>{trimText(text)}</li>
                         ))}
@@ -137,7 +137,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                     }
                     {keyPoint.problems.length > 0 &&
                       <div className="key-point">
-                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>📉 {keyPointTitle2}</p>
+                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>{keyPointIcon2} {keyPointTitle2}</p>
                         {keyPoint.problems.map((text, index) => (
                           <li key={index}>{trimText(text)}</li>
                         ))}
@@ -166,8 +166,6 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
     }
   }
 
-
-
   function getAudios(index: number, role: 'user' | 'ai') {
     const item = timelineItems[index];
     const meta = item.meta || {};
@@ -183,25 +181,29 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
       item.audio.currentTime = 0
     }
     playingAudios.current = []
+    playingAudioUrl.current = null;
     updatePlayingAudiosCount();
   }
   function playAudios(index: number, role: 'user' | 'ai') {
     const audio = getAudios(index, role);
-    if (audio) {
+    if (audio?.url) {
       const audioElement = new Audio(audio.url)
       audioElement.currentTime = audio.startTime ?? 0
-      if(role === 'user'){
+      if (role === 'user') {
         audioElement.currentTime -= 2 // 用戶的語音要抓早一點
       }
+      playingAudioUrl.current = audio.url;
       audioElement.play()
       audioElement.loop = false;
       playingAudios.current.push({ index, audio: audioElement })
       audioElement.onerror = (e) => {
         playingAudios.current = playingAudios.current.filter(item => item.audio !== audioElement);
+        playingAudioUrl.current = null;
         doUpdate();
       }
       audioElement.onended = () => {
         playingAudios.current = playingAudios.current.filter(item => item.audio !== audioElement);
+        playingAudioUrl.current = null;
         doUpdate();
       }
       doUpdate();
@@ -210,9 +212,16 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
   }
 
   function clickAudioBtn(index: number, role: 'user' | 'ai') {
-    // console.log('playingAudiosCount', p)
     if (playingAudios.current.length > 0) {
-      stopAllAudios()
+      const currentAudio = getAudios(index, role)?.url;
+      if (playingAudioUrl.current && currentAudio && playingAudioUrl.current === currentAudio) {
+        // 如果點擊的音訊是正在播放的，則停止它
+        stopAllAudios()
+      } else {
+        // 如果點擊的音訊不是正在播放的，則停止所有音訊並播放新的
+        stopAllAudios()
+        playAudios(index, role)
+      }
     } else {
       playAudios(index, role)
     }

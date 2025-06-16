@@ -15,6 +15,7 @@ import { useAiChat } from "@/app/lib/ai-chat/aiChat";
 
 import { startAIMission, getAIMissionList } from '@/app/lib/ai-mission/missionAnalysis'
 import { handleAnalysisExamples } from '@/app/lib/ai-chat/utils'
+import { agentApi, convApi } from '@/app/lib/ai-chat'
 
 import { toast } from 'react-toastify';
 
@@ -65,7 +66,8 @@ function LandbankChatV2Page() {
     onSessionResume,
     onSessionClose,
 
-    showSystemToast
+    showSystemToast,
+    convInfo,
   } = useAiChat();
 
   const query = useSearchParams();
@@ -85,6 +87,10 @@ function LandbankChatV2Page() {
   const nowPageUrl = useMemo(() => {
     return '/demo/landbank/v2' + (lang ? `?lang=${lang}` : '');
   }, [lang])
+
+  const nowConvId = useMemo(() => {
+    return convInfo.current?.convId || '';
+  }, [convInfo.current?.convId]);
 
   // ------
   useEffect(() => {
@@ -130,7 +136,7 @@ function LandbankChatV2Page() {
     userInfo.current = { name }
     onAfterLogin(name).catch(console.error);
   }
-  
+
   async function onAfterLogin(name: string) {
     await initConv({
       uname: name,
@@ -204,6 +210,16 @@ function LandbankChatV2Page() {
         subtitle: '客戶情緒：......', // 後續會覆蓋掉
         aiRole: roleMap.assistant,
         userRole,
+        aiAudio: {
+          ref: aiMsg.data.audioRef || null,
+          // url: null, 後續非同步填入
+          startTime: aiMsg.data.audioStartTime || 0
+        },
+        userAudio: {
+          ref: userMsgs[0]?.data?.audioRef || null,
+          // url: null, 後續非同步填入
+          startTime: userMsgs[0]?.data?.audioStartTime || 0
+        },
         aiSay,
         userSay,
         analysis: [],
@@ -240,11 +256,19 @@ function LandbankChatV2Page() {
         // 順序不重要，後續會用 missionId 來對應
         'landbank/sentiment',
         'landbank/key_points',
-        // landbank/context 和 highlights 會有重疊，只能選一個
+        // context 和 highlights 功能會有重疊，只能選一個
+        // landbank/context 
         // 'landbank/highlights',
         'landbank/context'
       ]
 
+      const { userAudio, aiAudio } = item
+      if (userAudio && userAudio.ref) {
+        userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId, name: 'user_audio' })) || '';
+      }
+      if (aiAudio && aiAudio.ref) {
+        aiAudio.url = (await convApi.getAudioUrlByRefString(aiAudio.ref, { convId: nowConvId, name: 'assistant_audio' })) || '';
+      }
       const collect = {
         done: 0,
         error: 0,
@@ -408,7 +432,7 @@ function LandbankChatV2Page() {
     )
   }
 
-  function prepareStart(){
+  function prepareStart() {
     const bgStyles = {
       background: 'linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)',
       minHeight: '100dvh',

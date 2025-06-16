@@ -290,7 +290,9 @@ function ClassChatPage() {
         keyPointsPrompt: aiReport.getSetting('reportAnalyze.keyPointsPrompt'),
 
         keyPointTitle1: aiReport.getSetting('reportAnalyze.keyPointTitle1') || '關鍵句整理',
+        keyPointIcon1: aiReport.getSetting('reportAnalyze.keyPointIcon1') || '❌',
         keyPointTitle2: aiReport.getSetting('reportAnalyze.keyPointTitle2') || '問題',
+        keyPointIcon2: aiReport.getSetting('reportAnalyze.keyPointIcon2') || '📉',
       }
       const chatHistory = getChatHistoryText({
         roleMap: {
@@ -503,7 +505,9 @@ function ClassChatPage() {
         timeline: timelineItems,
         meta: {
           keyPointTitle1: config.keyPointTitle1,
+          keyPointIcon1: config.keyPointIcon1,
           keyPointTitle2: config.keyPointTitle2,
+          keyPointIcon2: config.keyPointIcon2,
         }
       }
 
