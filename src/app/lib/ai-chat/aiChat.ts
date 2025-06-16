@@ -37,6 +37,14 @@ export function useAiChat(){
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [language, setLanguage] = useState('en' as Language);
 
+  const clearHistory = ()=>{
+    chatContext.clearMessages();
+    transcript.clearTranscript();
+    convInfo.current.convId = null;
+    convInfo.current.audioCount = 0;
+    msgIdMap.current = {};
+  }
+
   const appContext = useAppContext();
   const { sendClientEvent } = appContext;
   
@@ -618,6 +626,6 @@ export function useAiChat(){
     showSystemToast,
 
     convInfo: convInfo,
-    
+    clearHistory,
   }
 }

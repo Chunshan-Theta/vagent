@@ -19,7 +19,7 @@ function NotFoundIcon(props: IconProp) {
   return <MIcon className={className} style={style} size={size}>Icon Not Found</MIcon>;
 }
 
-export function Icon(props: IconProp) {
+export function PIcon(props: IconProp) {
   const { name, className, style, size = 16 } = props;
   if (!name || !(name in iconMap)) {
     return <NotFoundIcon className={className} style={style} size={size} />;
@@ -28,3 +28,5 @@ export function Icon(props: IconProp) {
   const IconComponent = iconMap[iconName];
   return <IconComponent className={className} style={style} size={size} />;
 }
+
+export default PIcon;

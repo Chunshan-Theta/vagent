@@ -3,6 +3,8 @@ import TimelineContainer from "./TimelineContainer";
 import type { TimelineItem } from '@/app/types/ai-report/common'
 import { ReportV1 } from '@/app/types/ai-report'
 
+import PIcon from "@/app/vendor/icon/PIcon";
+import { iconExists } from "@/app/vendor/icon/tool";
 
 import _ from '@/app/vendor/lodash'
 import { FaPlay, FaStop } from "react-icons/fa";
@@ -129,7 +131,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                   (<>
                     {keyPoint.sentences.length > 0 &&
                       <div className="key-point">
-                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>{keyPointIcon1} {keyPointTitle1}</p>
+                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>{emojiOrIcon(keyPointIcon1)} {keyPointTitle1}</p>
                         {keyPoint.sentences.map((text, index) => (
                           <li key={index}>{trimText(text)}</li>
                         ))}
@@ -137,7 +139,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                     }
                     {keyPoint.problems.length > 0 &&
                       <div className="key-point">
-                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>{keyPointIcon2} {keyPointTitle2}</p>
+                        <p style={{ fontWeight: 600, marginBottom: "5px" }}>{emojiOrIcon(keyPointIcon2)} {keyPointTitle2}</p>
                         {keyPoint.problems.map((text, index) => (
                           <li key={index}>{trimText(text)}</li>
                         ))}
@@ -238,5 +240,14 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
     </div>
   );
 }
+
+
+function emojiOrIcon(icon: string) {
+  if(iconExists(icon)){
+    return <PIcon name={icon as any} size={14} />
+  }
+  return <span>{icon}</span>
+}
+
 
 export default ReportSection;

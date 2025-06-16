@@ -52,6 +52,7 @@ export type MessagesContextValue = {
   updateMessageData: (msgId: string, patch: Partial<MessageItem['data']>) => void;
   updateMessage: (msgId: string, patch: Partial<MessageItem>) => void;
   hideMessage: (msgId: string) => void;
+  clearMessages: () => void;
   /** 更新輸入框的文字 */
   updateInputText: (text: string) => void;
   submitInputText: (input?: string) => void;
@@ -62,7 +63,9 @@ const ChatContext = createContext<MessagesContextValue | undefined>(undefined);
 export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
   const [inputText, setInputText] = useState<string>("");
   const [messageItems, setMessages] = useState<MessageItem[]>([]);
-
+  const clearMessages = () => {
+    setMessages([]);
+  };
   const addMessageItem = (msgItem: MessageItem) => {
     setMessages((messages) => {
       const { id, role, type } = msgItem;
@@ -154,7 +157,8 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
         hideMessage,
         updateInputText,
         submitInputText,
-        setMessages
+        setMessages,
+        clearMessages
       }}
     >
       {children}

@@ -202,7 +202,8 @@ function ClassChatPage() {
 
     showSystemToast,
     convInfo,
-    waitPostTask
+    waitPostTask,
+    clearHistory
   } = useAiChat();
 
 
@@ -555,13 +556,13 @@ function ClassChatPage() {
     setIsUserInfoValid(true);
 
     try {
+      clearHistory();
       await initConv({
         email: userInfo.email,
         uname: userInfo.uname,
         agentType: 'class',
         agentId: agentId
       });
-      clearTranscript();
       handleTalkOn();
     } catch (err) {
       console.error('Error initializing conversation:', err);
