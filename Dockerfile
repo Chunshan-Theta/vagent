@@ -18,4 +18,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["/bin/sh", "-c", "./app/scripts/init-db.sh && npm run start"]
+CMD ["/bin/sh", "-c", "/app/scripts/init-db.sh && npm run start"]
