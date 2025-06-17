@@ -5,6 +5,7 @@ import { Readable } from 'stream';
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
+import { analyzeAudioEmotion } from '@/app/api/analysis/audio-emotion/route';
 
 import suuid from 'short-uuid'
 
@@ -47,24 +48,11 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
     // 進行語音分析
     let analysisInfo: string | undefined;
     try {
-      const analysisFormData = new FormData();
-      const audioBlob = new Blob([buffer], { type: type as string });
-      analysisFormData.append('audioFile', audioBlob, 'audio.wav');
-      
-      const analysisResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/analysis/audio-emotion`, {
-        method: 'POST',
-        body: analysisFormData,
-      });
-      
-      if (analysisResponse.ok) {
-        const analysisResult = await analysisResponse.json();
-        analysisInfo = JSON.stringify(analysisResult.analysis);
-        console.log('Audio analysis completed:', analysisResult.analysis);
-      } else {
-        console.warn('Audio analysis failed, continuing without analysis');
-      }
-    } catch (analysisError) {
-      console.warn('Audio analysis error, continuing without analysis:', analysisError);
+      const result = await analyzeAudioEmotion(buffer, type as string);
+      analysisInfo = JSON.stringify(result.analysis);
+      console.log('Audio analysis completed:', result.analysis);
+    } catch (error) {
+      console.warn('Audio analysis failed:', error);
     }
 
     try{

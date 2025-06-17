@@ -3,9 +3,10 @@
 import { Suspense, useState, useEffect } from 'react';
 import ClassReportComponent from '@/app/components/ai-report/ClassReportComponent';
 import ReportViewV2 from '@/app/components/ai-report/ReportViewV2';
+import AudioReportView from '@/app/components/ai-report/AudioReportView';
 import { AnalysisResponse, ReportDatas } from '@/app/types/ai-report/common';
 
-type ReportTab = 'v1' | 'v2';
+type ReportTab = 'v1' | 'v2' | 'audio';
 
 function ReportContent() {
   const [activeTab, setActiveTab] = useState<ReportTab>('v1');
@@ -80,6 +81,16 @@ function ReportContent() {
         >
           總體分析
         </button>
+        <button
+          onClick={() => setActiveTab('audio')}
+          className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'audio'
+              ? 'bg-[#00A3E0] text-white'
+              : 'bg-[#173944] text-gray-300 hover:bg-[#194A54]'
+          }`}
+        >
+          音頻分析
+        </button>
       </div>
     </div>
   );
@@ -107,6 +118,16 @@ function ReportContent() {
         <ClassReportComponent />
       );
     }
+    
+    if (activeTab === 'audio') {
+      return (
+        <AudioReportView
+          data={reportData}
+          message={JSON.parse(localStorage.getItem('chatMessages') || '[]')}
+        />
+      );
+    }
+    
     const messages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
     return (
       <ReportViewV2

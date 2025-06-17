@@ -167,3 +167,20 @@ export async function getAudioUrlByRefString(ref: string, opts: getAudioByRefStr
   }
   return null; // 如果不是有效的 ref，返回 null
 }
+
+export async function getAudioInfoByRefString(ref: string, opts: getAudioByRefStringOptions = {}): Promise<string | null> {
+  if(ref.startsWith('conv:')) {
+    const m = ref.match(/^conv:(\d+)$/);
+    if(m){
+      const indexStr = m[1];
+      const index = parseInt(indexStr, 10);
+      if(!opts.convId || !opts.name){
+        throw new Error('convId and name are required for conv audio reference');
+      }
+      const convId = opts.convId;
+      const audioData = await getConvAudioByIndex(convId, opts.name!, index); // 假設只取第一個音訊
+      return audioData.item.info || null;  // 返回音訊 Info
+    }
+  }
+  return null; // 如果不是有效的 ref，返回 null
+}

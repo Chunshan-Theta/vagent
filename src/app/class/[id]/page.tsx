@@ -424,6 +424,8 @@ function ClassChatPage() {
         const { userAudio, aiAudio } = item
         if (userAudio && userAudio.ref) {
           userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId, name: 'user_audio' })) || '';
+          userAudio.audioInfo = (await convApi.getAudioInfoByRefString(userAudio.ref, { convId: nowConvId, name: 'user_audio' })) || ''
+          console.log('audioInfo', userAudio.audioInfo)
         }
         if (aiAudio && aiAudio.ref) {
           aiAudio.url = (await convApi.getAudioUrlByRefString(aiAudio.ref, { convId: nowConvId, name: 'assistant_audio' })) || '';
