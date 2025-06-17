@@ -56,6 +56,8 @@ export type MessagesContextValue = {
   /** 更新輸入框的文字 */
   updateInputText: (text: string) => void;
   submitInputText: (input?: string) => void;
+  analysisProgress: number;
+  setAnalysisProgress: React.Dispatch<React.SetStateAction<number>>
 };
 
 const ChatContext = createContext<MessagesContextValue | undefined>(undefined);
@@ -63,6 +65,7 @@ const ChatContext = createContext<MessagesContextValue | undefined>(undefined);
 export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
   const [inputText, setInputText] = useState<string>("");
   const [messageItems, setMessages] = useState<MessageItem[]>([]);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const clearMessages = () => {
     setMessages([]);
   };
@@ -125,7 +128,7 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const updateMessageData = (msgId: string, patch: Partial<MessageItem['data']>) => {
     const prevData = messageItems.find((msg) => msg.id === msgId)?.data || {};
-    updateMessage(msgId, { data: { ...prevData ,...patch } });
+    updateMessage(msgId, { data: { ...prevData, ...patch } });
   }
 
   const hideMessage = (msgId: string) => {
@@ -158,7 +161,10 @@ export const ChatProvider: FC<PropsWithChildren> = ({ children }) => {
         updateInputText,
         submitInputText,
         setMessages,
-        clearMessages
+        clearMessages,
+
+        analysisProgress,
+        setAnalysisProgress
       }}
     >
       {children}

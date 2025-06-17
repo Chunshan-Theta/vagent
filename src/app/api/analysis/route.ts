@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { chatCompletion, AskRequest } from '@/app/s-lib/ai-analysis'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -140,6 +141,7 @@ ${rubric.criteria}。
   ### i. 引用內文
   - 在分析中引用對話中的具體詞彙或片段，以支持您的觀察和建議。
   - 確保引用的句子和原文相同。
+7. 請確保回應中的 scores.explanation, feedback, summary 裡面能引用到 user 的文字，並且能夠清楚地解釋為什麼給予這個分數。
 
 # ${languageInstruction}
 
@@ -185,6 +187,35 @@ ${rubric.criteria}。
       
       analysis.overallScore = totalWeight > 0 ? weightedScore / totalWeight : analysis.overallScore;
     }
+
+    // 嘗試用 report-v1/reference 任務來生成更完整的內容
+    const generate = async (key: keyof typeof analysis)=>{
+      const content = analysis[key] || '';
+      if (!content) return '';
+
+      const res = await chatCompletion({
+        missionId: 'report-v1/reference',
+        params: {
+          content: analysis[key] || '',
+          reference: `對話紀錄:\n"""${message}"""\n`,
+          instruction: '請根據 reference 內的對話紀錄，補充 content 生成一個更完整的內容。\n如果合適請使用對話紀錄中的內容來補充，並且要包含具體的對話範例句子。'
+        }
+      })
+      return res.json?.output || ''
+    }
+
+    const old = {
+      feedback: analysis.feedback || '',
+      summary: analysis.summary || ''
+    };
+    console.log('original datas', old);
+
+    await Promise.all([
+      generate('feedback').then((feedback) => analysis.feedback = feedback),
+      generate('summary').then((summary) => analysis.summary = summary),
+    ]).catch((err)=>{
+      console.error('Error generating additional content:', err);
+    })
 
     return NextResponse.json(analysis);
   } catch (error) {

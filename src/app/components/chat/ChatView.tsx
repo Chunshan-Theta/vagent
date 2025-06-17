@@ -1,4 +1,4 @@
-import React, { use, useMemo, useState } from 'react'
+import React, { use, useMemo, useRef, useState } from 'react'
 
 import { useChat } from '@/app/contexts/ChatContext'
 import { useAppContext } from '@/app/contexts/AppContext'
@@ -11,6 +11,9 @@ import { useEffect } from 'react'
 import './chat.scss'
 import { getTranslation, Language } from '@/app/i18n/translations'
 
+import { useAiChat } from '@/app/lib/ai-chat/aiChat'
+
+
 interface ChatViewProps {
   boxShadow?: string
   background?: string
@@ -21,15 +24,64 @@ interface ChatViewProps {
   isLoading?: boolean
   isRecording?: boolean
 
+  /** 預設會直接同步 chat context 的 analyze progress，可透過設置為 true 來取消 */
+  noSyncProgress?: boolean
+  /** 0 ~ 100，只在 noSyncProgress = true 時生效 */
+  progress?: number
+
+
   onSubmit?: (text: string) => void
   onClickEnd?: () => void
   onMicrophoneClick?: () => void
 }
 
 const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
+
+  const chatCtx = useChat()
+
   const classNames = props.classNames || []
   const { background, onSubmit, onClickEnd, onMicrophoneClick } = props
   const { messageItems, inputText, updateInputText } = useChat()
+  const loadingUpdateInterval = useRef<any>(null)
+  const [loadingText, setLoadingText] = useState('')
+
+  useEffect(() => {
+    // 清除 loadingUpdateInterval
+    if (loadingUpdateInterval.current) {
+      clearInterval(loadingUpdateInterval.current)
+      loadingUpdateInterval.current = null
+    }
+
+    // 如果有 isLoading，則開始更新 loadingText
+    if (props.isLoading) {
+      let count = 0
+      loadingUpdateInterval.current = setInterval(() => {
+        count = (count + 1) % 3
+        setLoadingText('處理中' + '.'.repeat(count + 1))
+      }, 500)
+    } else {
+      setLoadingText('')
+    }
+
+    return () => {
+      if (loadingUpdateInterval.current) {
+        clearInterval(loadingUpdateInterval.current)
+        loadingUpdateInterval.current = null
+      }
+    }
+  }, [props.isLoading])
+
+  const doSyncProgress = useMemo(() => {
+    return !props.noSyncProgress
+  }, [props.noSyncProgress])
+
+  const currentProgress = useMemo(() => {
+    if (props.noSyncProgress) {
+      return props.progress ?? 0
+    }
+    return chatCtx.analysisProgress
+  }, [chatCtx.analysisProgress, props.progress, props.noSyncProgress])
+
   const isLoading = useMemo(() => {
     return props.isLoading || false
   }, [props.isLoading])
@@ -110,9 +162,23 @@ const ChatView: React.FC<ChatViewProps> = (props: ChatViewProps) => {
         <div className="chat-footer">
           {/* if loading => add loading icon */}
           {isLoading && (
+            <div className="progress-bar-container" style={{ width: '100%', marginBottom: 8 }}>
+              <div
+                className="progress-bar"
+                style={{
+                  width: `${currentProgress}%`,
+                  height: 4,
+                  background: '#00a3e0',
+                  borderRadius: 3,
+                  transition: 'width 0.3s',
+                }}
+              />
+            </div>
+          )}
+          {isLoading && (
             <div style={{ width: '100%', textAlign: 'center' }}>
-              <div className="loading-icon">
-              </div>
+              {/* <div className="loading-icon"></div> */}
+              <span style={{ color: '#fff5' }}>{loadingText}</span>
             </div>
           )}
           {/* if end => add end icon */}

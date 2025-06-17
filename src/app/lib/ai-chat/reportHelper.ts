@@ -64,7 +64,7 @@ const fields:EditField[] = [
   {
     type: 'textarea',
     key: 'reportAnalyze.keyPointsPrompt',
-    title: '分析報告 - key_points prompt',
+    title: '分析報告 - key_points prompt (暫時停用)',
     placeholder: [
       '請參考分析規則，然後依據底下的對話，分別找出：',
       '- __role2__ 說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）',
@@ -76,28 +76,42 @@ const fields:EditField[] = [
     type: 'text',
     key: 'reportAnalyze.keyPointTitle1',
     title: '分析報告 - key_points 標題 1',
-    placeholder: '關鍵句整理',
+    placeholder: '優點',
+    description: ''
+  },
+  {
+    type: 'text',
+    key: 'reportAnalyze.keyPointAnalysis1',
+    title: '分析報告 - key_points 分析描述 1',
+    placeholder: '分析 __role__ 表現良好的部分，並列出具體的例子或關鍵句（請列出實際原句）',
     description: ''
   },
   {
     type: 'text',
     key: 'reportAnalyze.keyPointIcon1',
     title: '分析報告 - key_points Icon 1',
-    placeholder: '❌',
+    placeholder: '⭕',
     description: '可直接填入 emoji 或 icon 名稱，如 "fa-star"\n，更多可至 https://react-icons.github.io/react-icons/icons/fa/ 查找',
   },
   {
     type: 'text',
     key: 'reportAnalyze.keyPointTitle2',
     title: '分析報告 - key_points 標題 2',
-    placeholder: '問題',
+    placeholder: '缺點',
+    description: ''
+  },
+  {
+    type: 'text',
+    key: 'reportAnalyze.keyPointAnalysis2',
+    title: '分析報告 - key_points 分析描述 2',
+    placeholder: '分析 __role__ 表現不佳的部分，並列出可能存在的溝通問題或不足之處（請列出實際原句）',
     description: ''
   },
   {
     type: 'text',
     key: 'reportAnalyze.keyPointIcon2',
     title: '分析報告 - key_points Icon 2',
-    placeholder: '📉',
+    placeholder: '❌',
     description: '可直接填入 emoji 或 icon 名稱，如 "fa-star"\n，更多可至 https://react-icons.github.io/react-icons/icons/fa/ 查找',
   },
 

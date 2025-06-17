@@ -34,8 +34,14 @@ export function useAiChat(){
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isCallEnded, setIsCallEnded] = useState(false);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
+  // const [analysisProgress, setAnalysisProgress] = useState(0);
   const [language, setLanguage] = useState('en' as Language);
+
+  const analysisProgress = chatContext.analysisProgress;
+  const setAnalysisProgress = chatContext.setAnalysisProgress;
+
+  const lastSimProgress = useRef<ReturnType<typeof simProgressUp>|null>(null);
+
 
   const clearHistory = ()=>{
     chatContext.clearMessages();
@@ -257,7 +263,66 @@ export function useAiChat(){
     if(id === 'wait_for_response'){
       showCanNotInterruptToast();
     }
-  } 
+  }
+
+  /**
+   * 針對某些不能捕捉實際的進度的情況，模擬進度上升
+   * 
+   * 最後距離完成差距 0.2 以內的進度，會以 1/10 的速度上升
+   * @param startProgress 
+   * @param endProgress 
+   * @param duration 預估執行完成的時間 (ms)
+   */
+  const simProgressUp = (startProgress: number, endProgress: number, duration: number = 10000) => {
+    const interval = 200; // 每 200ms 更新一次進度
+    const valRange = endProgress - startProgress;
+    const topVal = valRange * 0.8 + startProgress; // 最後 20% 的進度以 1/10 的速度上升
+    const step = (valRange) / (duration / interval);
+    const state = {
+      start,
+      stop,
+      complete,
+
+      timerId: null as any,
+    }
+    function _next(){
+      if (state.timerId) {
+        clearTimeout(state.timerId);
+        state.timerId = null;
+      }
+      if (startProgress >= endProgress) {
+        return;
+      }
+      let addVal = step
+      if (startProgress >= topVal) {
+        // 最後的進度以 1/10 的速度上升
+        addVal += step / 10; // 每次增加 0.02
+      }
+      setAnalysisProgress((prev)=>prev+ addVal);
+      state.timerId = setTimeout(_next, interval);
+    }
+    function start(){
+      if(lastSimProgress.current){
+        lastSimProgress.current.stop();
+      }
+      lastSimProgress.current = state;
+      _next();
+    }
+    function stop(){
+      if (state.timerId) {
+        clearTimeout(state.timerId);
+        state.timerId = null;
+      }
+      if (lastSimProgress.current) {
+        lastSimProgress.current = null;
+      }
+    }
+    function complete(){
+      stop();
+      setAnalysisProgress(endProgress);
+    }
+    return state
+  }
 
 
   const handleTalkOff = async () => {
@@ -627,5 +692,6 @@ export function useAiChat(){
 
     convInfo: convInfo,
     clearHistory,
+    simProgressUp,
   }
 }

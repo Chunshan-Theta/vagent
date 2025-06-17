@@ -19,6 +19,8 @@ import * as deltawwRubric from './missions/deltaww/rubric'
 import * as reportV1Sentiment from './missions/report-v1/sentiment'
 import * as reportV1Context from './missions/report-v1/context'
 import * as reportV1KeyPoints from './missions/report-v1/key_points'
+import * as reportV1KeyPointsV2 from './missions/report-v1/key_points_v2'
+import * as reportV1Reference from './missions/report-v1/reference'
 
 export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/context': landbankContext,
@@ -36,6 +38,8 @@ export const missionModules: {[missionId:string]: MissionModule} = {
   'report-v1/sentiment': reportV1Sentiment,
   'report-v1/context': reportV1Context,
   'report-v1/key_points': reportV1KeyPoints,
+  'report-v1/key_points_v2': reportV1KeyPointsV2,
+  'report-v1/reference': reportV1Reference,
 
   'srt/chat_role_detect': srtChatRoleDetect,
 

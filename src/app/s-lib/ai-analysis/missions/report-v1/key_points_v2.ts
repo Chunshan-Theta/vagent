@@ -4,22 +4,29 @@ import { getLangConfig } from "../../_lang"
 import * as utils from '../../utils'
 
 export type KeyPointsParams = {
-  analysis?: string
+  analysis1?: string
+  analysis2?: string
+  title1?: string
+  title2?: string
+
   context?: string
   criteria?: string
-  prompt?: string
   role?: string
   role2?: string
   history?: string
   lang?: string
 }
 
+const defaultAnalysis1 = '分析 __role__ 表現良好的部分，並列出具體的例子或關鍵句（請列出實際原句）';
+const defaultAnalysis2 = '分析 __role__ 表現不佳的部分，並列出可能存在的溝通問題或不足之處（請列出實際原句）';
 
-const basePromptTemplate = `
-請參考分析規則，然後依據底下的對話，分別找出：
-- sentences: __role2__ 說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）
-- problems: __role__ 回應中可能存在的溝通問題或不足之處
-`.trim();
+
+const injectParams = (text:string, datas: { role:string, role2: string })=>{
+  return text
+    .replace(/__role__/g, datas.role || 'user')
+    .replace(/__role2__/g, datas.role2 || 'assistant')
+}
+
 
 export function defineParams() : MissionParamsDefineMap {
   const criteria = defaultCriteria
@@ -29,11 +36,6 @@ export function defineParams() : MissionParamsDefineMap {
       title: '內容語系',
       description: '請輸入內容的語系，例如：zh、en 等等',
       default: 'zh',
-    },
-    analysis: {
-      type: 'textarea',
-      title: '分析方向',
-      default: `請詳細分析對話紀錄，並根據分析方向和規則給我建議。`.trim()
     },
     context: {
       type: 'textarea',
@@ -47,22 +49,40 @@ export function defineParams() : MissionParamsDefineMap {
       description: '請在此貼上完整的評分規則或分析的方向描述。',
       default: criteria.join('\n'),
     },
-    prompt: {
-      type: 'textarea',
-      title: '提示語',
-      description: '這是用於生成分析的提示語，請根據需要進行修改。\n(如果有把關鍵句整理和問題的名稱意義改掉，最好告知 agent 你想把哪個資料放入 sentences 哪個資料放入 problems)',
-      default: basePromptTemplate
+    title1: {
+      type: 'text',
+      title: '生成項目1',
+      description: '指定生成項目1裡面要放甚麼東西 (簡單寫就好，不用寫成句子)',
+      default: '優點'
+    },
+    analysis1: {
+      type: 'text',
+      title: '生成指示1',
+      description: '指定生成結果1的說明。(例："說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）")',
+      default: defaultAnalysis1
+    },
+    title2: {
+      type: 'text',
+      title: '生成項目1',
+      description: '指定生成項目2裡面要放甚麼東西 (簡單寫就好，不用寫成句子)',
+      default: '缺點'
+    },
+    analysis2: {
+      type: 'text',
+      title: '生成指示2',
+      description: '指定生成結果2的說明。(例："回應中可能存在的溝通問題或不足之處")',
+      default: defaultAnalysis2
     },
     role: {
       type: 'text',
       title: '要分析的角色(role)',
-      description: '請輸入角色名稱(要和對話紀錄中的對象相同',
+      description: '請輸入角色名稱(要和對話紀錄中的對象相同)',
       default: 'user',
     },
     role2: {
       type: 'text',
       title: '對方角色(role2)',
-      description: '請輸入角色名稱(要和對話紀錄中的對象相同',
+      description: '請輸入角色名稱(要和對話紀錄中的對象相同)',
       default: 'assistant',
     },
     history: {
@@ -78,16 +98,23 @@ export function moduleOptions() : ModelOptions{
   return getOpts()
 }
 
+
+
 export async function getMessages(params: KeyPointsParams){
   const lang = params.lang || 'zh';
   const langConfig = getLangConfig(lang, 'zh');
 
+
   const role = params.role || 'user';
   const role2 = params.role2 || 'assistant';
 
-  const basePrompt = (params.prompt || basePromptTemplate)
-    .replace(/__role__/g, role)
-    .replace(/__role2__/g, role2);
+  const basePromptTemplate = `
+請參考分析規則，然後依據對話紀錄，分別進行分析：
+- list1: ${params.analysis1 || defaultAnalysis1}
+- list2: ${params.analysis2 || defaultAnalysis2}
+`.trim();
+  
+  const basePrompt = injectParams(basePromptTemplate, { role, role2 });
 
   const prompt1 = await utils.translatePrompt(`
 
@@ -99,11 +126,6 @@ ${textIndent(params.context || '')}
 分析規則：
 """
 ${textIndent(params.criteria || '')}
-"""
-
-分析方向或目標：
-"""
-${textIndent(params.analysis || '')}
 """
   `.trim(), 'zh', lang);
 
@@ -134,6 +156,12 @@ ${langConfig.instructions || ''}
 }
 
 export function expectSchema(params: KeyPointsParams){
+  const inject = (text: string) => {
+    return injectParams(text, {
+      role: params.role || 'user',
+      role2: params.role2 || 'assistant'
+    });
+  }
   return {
     schema: {
       type: 'object',
@@ -141,20 +169,24 @@ export function expectSchema(params: KeyPointsParams){
         keyPoints: {
           type: 'object',
           properties: {
-            sentences: {
+            list1: {
               type: 'array',
+              description: inject(params.analysis1 || defaultAnalysis1),
               items: {
                 type: 'string',
+                description: params.title1 || '優點',
               },
             },
-            problems: {
+            list2: {
               type: 'array',
+              description: inject(params.analysis2 || defaultAnalysis2),
               items: {
                 type: 'string',
+                description: params.title2 || '缺點',
               },
             },
           },
-          required: ['sentences', 'problems'],
+          required: ['list1', 'list2'],
         },
       },
       required: ['keyPoints'],

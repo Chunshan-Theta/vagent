@@ -291,9 +291,11 @@ function ClassChatPage() {
         contextPrompt: aiReport.getSetting('reportAnalyze.contextPrompt'),
         keyPointsPrompt: aiReport.getSetting('reportAnalyze.keyPointsPrompt'),
 
+        keyPointAnalysis1: aiReport.getSetting('reportAnalyze.keyPointAnalysis1') || '請分析對話紀錄，並找出 user 的關鍵句',
         keyPointTitle1: aiReport.getSetting('reportAnalyze.keyPointTitle1') || '關鍵句整理',
         keyPointIcon1: aiReport.getSetting('reportAnalyze.keyPointIcon1') || '❌',
         keyPointTitle2: aiReport.getSetting('reportAnalyze.keyPointTitle2') || '問題',
+        keyPointAnalysis2: aiReport.getSetting('reportAnalyze.keyPointAnalysis2') || '請分析對話紀錄，並找出 user 的問題或不足之處',
         keyPointIcon2: aiReport.getSetting('reportAnalyze.keyPointIcon2') || '📉',
       }
       const chatHistory = getChatHistoryText({
@@ -386,6 +388,19 @@ function ClassChatPage() {
         },
         'report-v1/key_points': {
           analysis: config.analysis,
+          context: config.context,
+          criteria: config.criteria,
+          role: config.roleSelf,
+          role2: config.roleTarget,
+          prompt: config.keyPointsPrompt,
+
+          history
+        },
+        'report-v1/key_points_v2': {
+          analysis1: config.keyPointAnalysis1,
+          analysis2: config.keyPointAnalysis2,
+          title1: config.keyPointTitle1,
+          title2: config.keyPointTitle2,
           context: config.context,
           criteria: config.criteria,
           role: config.roleSelf,
@@ -488,6 +503,19 @@ function ClassChatPage() {
             }
             if (Array.isArray(sentences)) {
               item.keyPoint!.sentences = sentences as string[]
+            }
+          }
+        }
+        if (resMap['report-v1/key_points_v2']) {
+          const keyPointsRes = resMap['report-v1/key_points_v2']
+          const keyPoints = keyPointsRes.json.keyPoints
+          if (typeof keyPoints === 'object') {
+            const { list1, list2 } = keyPoints
+            if (Array.isArray(list1)) {
+              item.keyPoint!.sentences = list1 as string[]
+            }
+            if (Array.isArray(list2)) {
+              item.keyPoint!.problems = list2 as string[]
             }
           }
         }
