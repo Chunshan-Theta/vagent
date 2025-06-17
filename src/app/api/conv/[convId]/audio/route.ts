@@ -5,7 +5,7 @@ import { Readable } from 'stream';
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
-import { analyzeAudioEmotion } from '@/app/api/analysis/audio-emotion/route';
+import { analyzeAudioEmotion } from '@/lib/audio-emotion-analyzer';
 
 import suuid from 'short-uuid'
 

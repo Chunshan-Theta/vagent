@@ -95,9 +95,9 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
   // Helper function to analyze audio timeline data
   const analyzeAudioTimeline = (timelineData: AudioTimelineData): AnalysisResponse => {
     const timeline = timelineData.timeline;
-    let totalEmotions: Record<string, number> = {};
-    let allProblems: string[] = [];
-    let allAnalysis: string[] = [];
+    const totalEmotions: Record<string, number> = {};
+    const allProblems: string[] = [];
+    const allAnalysis: string[] = [];
     let conversationLength = 0;
 
     // Define emotion polarity
@@ -627,7 +627,7 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
                       <BarChart
                         data={(() => {
                           // Calculate emotions for chart - avoid duplicate audioInfo, separate key emotions from others
-                          let chartEmotions: Record<string, number> = {};
+                          const chartEmotions: Record<string, number> = {};
                           const processedAudioInfo = new Set<string>();
                           
                           // Use same emotion definitions

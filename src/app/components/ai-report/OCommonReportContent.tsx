@@ -424,6 +424,7 @@ export default function OCommonReportContent(opts: OReportProps) {
           <div className="header">
             <div className="profile-container">
               <div className="profile-image">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={avatarImg} alt="教練頭像" />
               </div>
               <div className="profile-info">
