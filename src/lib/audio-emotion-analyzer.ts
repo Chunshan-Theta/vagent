@@ -40,7 +40,7 @@ export async function analyzeAudioEmotion(buffer: Buffer, mimeType: string) {
 
   // Initialize the model with generation config
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.0-flash",
     generationConfig: {
       temperature: 0.3,  // 降低溫度使輸出更穩定
       maxOutputTokens: 2048,
