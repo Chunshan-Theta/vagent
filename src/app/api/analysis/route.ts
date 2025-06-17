@@ -170,7 +170,7 @@ ${rubric.criteria}。
       response_format: { type: "json_object" },
     });
 
-    const analysis = JSON.parse(completion.choices[0].message.content || '{}');
+    const analysis = JSON.parse(completion.choices[0].message.content || '{}') as AnalysisResponse;
     
     // Add the detected language to the response
     analysis.language = detectedLanguage;
@@ -192,28 +192,34 @@ ${rubric.criteria}。
     const generate = async (key: keyof typeof analysis)=>{
       const content = analysis[key] || '';
       if (!content) return '';
-
+      console.log('run report-v1/reference for', key);
       const res = await chatCompletion({
         missionId: 'report-v1/reference',
         params: {
           content: analysis[key] || '',
           reference: `對話紀錄:\n"""${message}"""\n`,
           instruction: '請根據 reference 內的對話紀錄，補充 content 生成一個更完整的內容。\n如果合適請使用對話紀錄中的內容來補充，並且要包含具體的對話範例句子。'
-        }
+        },
+        responseType: 'json_schema'
       })
       return res.json?.output || ''
     }
 
-    const old = {
-      feedback: analysis.feedback || '',
-      summary: analysis.summary || ''
-    };
-    console.log('original datas', old);
+    // const old = {
+    //   feedback: analysis.feedback || '',
+    //   summary: analysis.summary || ''
+    // };
+    // console.log('original analysis', old);
 
     await Promise.all([
-      generate('feedback').then((feedback) => analysis.feedback = feedback),
-      generate('summary').then((summary) => analysis.summary = summary),
-    ]).catch((err)=>{
+      generate('feedback').then((feedback) => (analysis.feedback = feedback)),
+      generate('summary').then((summary) => (analysis.summary = summary)),
+    ]).then(([feedback, summary])=>{
+      // console.log('new analysis', {
+      //   feedback: feedback || '',
+      //   summary: summary || ''
+      // })
+    }).catch((err)=>{
       console.error('Error generating additional content:', err);
     })
 

@@ -309,7 +309,8 @@ function ClassChatPage() {
         localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
       })
 
-      setAnalysisProgress(30);
+      const baseProgress = 30;
+      setAnalysisProgress(baseProgress);
 
       const { startAt, pairs } = getMessagePairs({
         spRole: 'assistant',
@@ -453,7 +454,8 @@ function ClassChatPage() {
           total: missions.length
         }
         const updateProgress = () => {
-          setAnalysisProgress((collect.end / collect.total) * 100 * 0.6) // 0 ~ 60%
+          const range = (100 - baseProgress - 10) / 100 // 假設 baseProgress 是 30 => 範圍是 0.6
+          setAnalysisProgress(baseProgress + (collect.end / collect.total) * 100 * range / (timelineItems.length || 1)) // 0 ~ 60%
         }
 
         const promises = missions.map((missionId) => {
@@ -526,12 +528,10 @@ function ClassChatPage() {
             item.analysis = context as string[]
           }
         }
-
-        // index / timelineItems.length
-        setAnalysisProgress(timelineItems.length > 0 ? 60 : 100);
       }
 
       setAnalysisProgress(90);
+      await delay(600); // 等待一秒，確保進度條更新
 
       const report = {
         timeline: timelineItems,
@@ -551,7 +551,7 @@ function ClassChatPage() {
       setAnalysisProgress(100);
 
       // Navigate to report page
-      Promise.all([
+      await Promise.all([
         rubtic_analysis
       ])
       router.push('/class/report');
