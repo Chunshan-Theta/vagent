@@ -1,5 +1,5 @@
 
-import * as landbankSentiment from './landbank/sentiment'
+import * as landbankSentiment from './missions/landbank/sentiment'
 import { MissionModule, ModelOptions, AskRequest } from './types'
 import OpenAI from 'openai';
 

@@ -1,10 +1,10 @@
 import type { MissionModule } from "./types"
-import * as landbankContext from './landbank/context'
-import * as landbankRubric from './landbank/rubric'
-import * as landbankSentiment from './landbank/sentiment'
-import * as landbankProblems from './landbank/problems'
-import * as landbankKeyPoints from './landbank/key_points'
-import * as landbankHighlight from './landbank/highlights'
+import * as landbankContext from './missions/landbank/context'
+import * as landbankRubric from './missions/landbank/rubric'
+import * as landbankSentiment from './missions/landbank/sentiment'
+import * as landbankProblems from './missions/landbank/problems'
+import * as landbankKeyPoints from './missions/landbank/key_points'
+import * as landbankHighlight from './missions/landbank/highlights'
 
 import * as srtChatRoleDetect from './srt/chat_role_detect'
 
@@ -21,6 +21,9 @@ import * as reportV1Context from './missions/report-v1/context'
 import * as reportV1KeyPoints from './missions/report-v1/key_points'
 import * as reportV1KeyPointsV2 from './missions/report-v1/key_points_v2'
 import * as reportV1Reference from './missions/report-v1/reference'
+
+import * as landbankDA1Grading from './missions/landbank-d/a1-grading'
+import * as landbankDA4Advice from './missions/landbank-d/a4-advice'
 
 export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/context': landbankContext,
@@ -40,6 +43,9 @@ export const missionModules: {[missionId:string]: MissionModule} = {
   'report-v1/key_points': reportV1KeyPoints,
   'report-v1/key_points_v2': reportV1KeyPointsV2,
   'report-v1/reference': reportV1Reference,
+
+  'landbank-d/a1-grading': landbankDA1Grading,
+  'landbank-d/a4-advice': landbankDA4Advice,
 
   'srt/chat_role_detect': srtChatRoleDetect,
 

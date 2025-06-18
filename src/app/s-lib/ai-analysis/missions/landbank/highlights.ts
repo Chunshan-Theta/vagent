@@ -1,6 +1,6 @@
-import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../types"
+import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../../types"
 import getOpts from "./_config"
-import { getLangConfig } from "../_lang"
+import { getLangConfig } from "../../_lang"
 
 export type HighlightsParams = {
   history?: string

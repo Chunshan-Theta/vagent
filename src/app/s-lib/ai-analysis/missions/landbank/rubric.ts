@@ -1,7 +1,7 @@
-import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../types"
+import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../../types"
 import getOpts from "./_config"
-import { getLangConfig } from "../_lang"
-import * as utils from '../utils'
+import { getLangConfig } from "../../_lang"
+import * as utils from '../../utils'
 
 export type RubricParams = {
   criteriaTitles?: string[]

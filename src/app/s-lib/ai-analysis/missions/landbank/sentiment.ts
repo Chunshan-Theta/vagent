@@ -1,4 +1,4 @@
-import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../types"
+import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../../types"
 import getOpts from "./_config"
 
 export type SentimentParams = {

@@ -1,4 +1,4 @@
-import type { ModelOptions } from "../types"
+import type { ModelOptions } from "../../types"
 
 export function moduleOptions() : ModelOptions{
   return {
