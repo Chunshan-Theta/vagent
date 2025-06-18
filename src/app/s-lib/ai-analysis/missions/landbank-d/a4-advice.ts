@@ -14,6 +14,8 @@ export type ContextParams = {
   gradingExamples?: string
   history?: string
   input?: string
+
+  instruction?: string
 }
 
 
@@ -70,16 +72,22 @@ export function defineParams() : MissionParamsDefineMap {
     },
     history: {
       type: 'textarea',
-      title: '對話紀錄(在 input 之前的所有對話內容',
+      title: '對話紀錄(在 user_say 之前的所有對話內容)',
       placeholder: 'user: ..........\nassistant: ..........\nuser: ..........\nassistant: ..........',
       default: '',
     },
     input: {
       type: 'text',
-      title: '角色',
+      title: '用戶最後一次說的話(user_say)',
       description: '填入用戶最後一次說了什麼(會針對這句話做分析)',
       default: '',
     },
+    instruction: {
+      type: 'textarea',
+      title: '生成指示',
+      description: '請輸入生成指示，這些指示將用於生成基於對話紀錄和參考資料的建議。',
+      default: getInstruction()
+    }
   }
 }
 
@@ -114,29 +122,7 @@ ${params.grading || d.grading}
 ${params.gradingExamples || d.examples}
 """
 
-# 生成任務
-你需要基於互動紀錄和參考資料，給予用戶對應的建議。
-目標是訓練用戶，讓用戶能夠回答的更好。
-
-- 依照評分標準產出3種回答方向建議
-- 回答方向建議必須要回應對話紀錄中 assistant 最後說的話，並且要具體延伸舉例可以怎麼說
-- 回答方向建議一定要是符合"步驟任務目標"範圍內
-- 回答方向建議是用來引導舉例我可以怎麼回答"最後一段AI 提問內容"
-- 切記回答方向建議的詞彙絕對必須跟"對話紀錄"的詞彙、句子、概念有超過70%以上的不同，因為這些都是練習過的內容，重複出現會讓使用者很挫折、重複犯錯，必須要持續用不同的方式來引導才會進步
-- 回答方向建議內容盡可能原封不動保留、引用"對話紀錄"、"步驟任務目標"內的詞彙句子來回應補充
-- 建議共3條，每一種150字以內
-
-# 生成格式
-使用繁體中文zh-tw
-(有提到"學員"，都要直接說"你"
-不能提到"評分標準"，要改成"學習目標"等詞彙
-不能提到"評分"，都要改成"練習"、"學習"等詞彙)
-建議共3條，每一種150字以內
-
-## 生成範例
-- 建議1：
-- 建議2：
-- 建議3：
+${getInstruction()}
 
 # 互動紀錄
 
@@ -181,4 +167,31 @@ export function expectSchema(params: ContextParams){
 
 function splitTexts(text: string){
   return text.split(/[\t\n,，]/).map(t => t.trim()).filter(t => t.length > 0);
+}
+
+
+function getInstruction() {
+  return `# 生成任務
+你需要基於互動紀錄和參考資料，給予用戶對應的建議。
+目標是訓練用戶，讓用戶能夠回答的更好。
+
+- 依照評分標準產出3種回答方向建議
+- 回答方向建議必須要回應對話紀錄中 assistant 最後說的話，並且要具體延伸舉例可以怎麼說
+- 回答方向建議一定要是符合"步驟任務目標"範圍內
+- 回答方向建議是用來引導舉例我可以怎麼回答"最後一段AI 提問內容"
+- 切記回答方向建議的詞彙絕對必須跟"對話紀錄"的詞彙、句子、概念有超過70%以上的不同，因為這些都是練習過的內容，重複出現會讓使用者很挫折、重複犯錯，必須要持續用不同的方式來引導才會進步
+- 回答方向建議內容盡可能原封不動保留、引用"對話紀錄"、"步驟任務目標"內的詞彙句子來回應補充
+- 建議共3條，每一種150字以內
+
+# 生成格式
+使用繁體中文zh-tw
+(有提到"學員"，都要直接說"你"
+不能提到"評分標準"，要改成"學習目標"等詞彙
+不能提到"評分"，都要改成"練習"、"學習"等詞彙)
+建議共3條，每一種150字以內
+
+## 生成範例
+- 建議1：
+- 建議2：
+- 建議3：`.trim()
 }
