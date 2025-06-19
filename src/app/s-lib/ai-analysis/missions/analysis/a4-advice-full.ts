@@ -141,40 +141,12 @@ export function expectSchema(params: ContextParams){
       type: 'object',
       properties: {
         advises: {
-          type: 'array',
-          items: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: {
-                  type: 'string',
-                  description: '評分標準的名稱(標題)',
-                },
-                score: {
-                  type: 'number',
-                  description: '針對該標準的得分',
-                },
-                reason: {
-                  type: 'string',
-                  description: '針對該標準得分的原因',
-                },
-                tips: {
-                  type: 'array',
-                  items: {
-                    type: 'string',
-                    description: '基於當前標準，給予用戶的改進建議',
-                  },
-                },
-              },
-              additionalProperties: false,
-              required: ['title', 'score', 'reason', 'tips'],
-            },
-          },
+          type: 'string',
         }
       },
+      additionalProperties: false,
       required: ['advises'],
-    }
+    },
   };
 }
 

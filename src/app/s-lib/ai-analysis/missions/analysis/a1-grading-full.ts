@@ -12,6 +12,8 @@ export type ContextParams = {
   grading?: string
   gradingExamples?: string
   history?: string
+  reference?: string
+
 
   instruction?: string
 }
@@ -86,7 +88,7 @@ export function defineParams() : MissionParamsDefineMap {
 - 對於任何標準，無論有無符合都要列出標題和類型和原因，如果是很不符合的標準就分類為"無法判斷"
 - 評分時要盡量提到因為用戶說了哪些導致符合或不符合的原因
 
-每一個標準的分析結果產出格式：
+產出格式：(注意：每個標準都要有一個分析結果)
 - 評分標準標題：___
 - 屬於評分標準的哪一種：[___]
 - 屬於該評分標準的詳細原因：___`
@@ -102,22 +104,28 @@ export async function getMessages(params: ContextParams){
   const d = getDefaultParams();
   const titles = splitTexts(params.titles || d.titles);
   const types = splitTexts(params.types || d.types);
+  const role = params.role || d.role;
+  
+  const referenceSection = params.reference ? `<參考資料>:\n"""\n${params.reference}\n"""` : '';
 
 const defaultInstruction = `
-你的任務是根據"評分標準"和"評分示範"來分析<user_say>裡面回答的評分
+你的任務是根據"評分標準"和"評分示範"來分析對話紀錄中我的評分
+- 我的角色是 ${role}
 - 請依序判斷每個評分標準的說明和範例，並給出每一個評分標準的分析結果
 - 對於任何標準，無論有無符合都要列出標題和類型和原因，如果是很不符合的標準就分類為"${types[types.length - 1] || '無法判斷'}"
 - 評分時要盡量提到因為用戶說了哪些導致符合或不符合的原因
 
-每一個標準的分析結果產出格式：
+產出格式：(注意：每個標準都要有一個分析結果)
 - 評分標準標題：___ (${titles.join('、')})
 - 屬於評分標準的哪一種：[___] (${types.join('、')})
 - 屬於該評分標準的詳細原因：___
 `.trim();
 
+const inst = (params.instruction || defaultInstruction).trim().replace(/__role__/g, role)
+
   const template = `
-你(AI)的角色是: "${params.role2 || d.role2}"
-我扮演的角色是: "${params.role || d.role}"
+AI的角色是: "${params.role2 || d.role2}"
+我的角色是: "${params.role || d.role}"
 
 <情境描述>:
 """
@@ -134,7 +142,9 @@ ${params.grading || d.grading}
 ${params.gradingExamples || d.examples}
 """
 
-${params.instruction || defaultInstruction}
+${referenceSection}
+
+${inst}
 
 <對話紀錄>:
 """
@@ -158,11 +168,33 @@ export function expectSchema(params: ContextParams){
       type: 'object',
       properties: {
         scores: {
-          type: 'string',
+          type: 'array',
+          items: {
+            type: 'object',
+            description: '每個標準的評分結果',
+            properties: {
+              title: {
+                type: 'string',
+                description: '評分標準標題',
+              },
+              score: {
+                type: 'number',
+                description: '針對該標準的得分',
+              },
+              reason: {
+                type: 'string',
+                description: '針對該標準得分的原因',
+              }
+            },
+            additionalProperties: false,
+            required: ['title', 'score', 'reason', 'tips'],
+          },
         }
       },
+      additionalProperties: false,
       required: ['scores'],
-    }
+    },
+    struct: true
   };
 }
 

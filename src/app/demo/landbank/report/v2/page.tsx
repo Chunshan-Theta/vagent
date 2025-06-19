@@ -20,6 +20,11 @@ type OReportDatas = {
   user: { name: string }
   scores: any[]
   history: string
+} | {
+  user: { name: string }
+  rubric: any[]
+  adviceItems: { content: string }[]
+  history: string
 }
 
 function LandbankReportV2() {
@@ -44,17 +49,45 @@ function LandbankReportV2() {
 
   const loading = useMemo(() => localLoading, [localLoading])
 
-  const advanceItems = useMemo(() => {
+  // 舊版要多做一層轉換
+  const adviceItems = useMemo(() => {
+    const oData = oreportData.current
+    if (!oData) return []
     const tips: string[] = []
-    const scores = oreportData.current?.scores || []
-    for (const score of scores) {
-      const { criterion, score: scoreValue, improvementTips } = score
-      if (improvementTips && improvementTips.length > 0) {
-        tips.push(improvementTips[0])
+    if ('scores' in oData) {
+      const scores = oData?.scores || []
+      for (const score of scores) {
+        const { criterion, score: scoreValue, improvementTips } = score
+        if (improvementTips && improvementTips.length > 0) {
+          tips.push(improvementTips[0])
+        }
+      }
+      return tips.map((tip) => ({ content: tip }))
+    }
+  }, [oreportData.current])
+
+  const oReportDatas = useMemo(() => {
+    const data = oreportData.current
+    if (data) {
+      if ('scores' in data) {
+        // 相容舊版資料
+        return {
+          user: data.user,
+          rubric: data.scores || [],
+          adviceItems: adviceItems,
+          playLogText: data.history
+        }
+      } else {
+        return {
+          user: data.user,
+          rubric: data.rubric || [],
+          adviceItems: data.adviceItems || [],
+          playLogText: data.history
+        }
       }
     }
-    return tips.map((tip) => ({ content: tip }))
-  }, [oreportData.current])
+    return null
+  }, [oreportData.current, adviceItems])
 
   useEffect(() => {
     changeRootCssVar('--background', '#173944')
@@ -128,16 +161,15 @@ function LandbankReportV2() {
         )
       }
       if (activeTab === 'oreport') {
-        const data = oreportData.current
+        const data = oReportDatas
         return (
           <>
             {data &&
               <OReportView
                 user={data.user}
-                rubric={data.scores}
-                adviceItems={advanceItems}
-                playLogText={data.history}
-
+                rubric={data.rubric || []}
+                adviceItems={data.adviceItems}
+                playLogText={data.playLogText || ''}
               />
             }
           </>

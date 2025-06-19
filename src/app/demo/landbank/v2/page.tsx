@@ -276,7 +276,9 @@ function LandbankChatV2Page() {
     await waitPostTask();
     await delay(700); // 等待幾秒，確保對話結束
     endConversation();
-    setAnalysisProgress(0);
+
+    const baseProgress = 15
+    setAnalysisProgress(baseProgress);
 
     for (const item of timelineItems) {
       const { aiSay, userSay } = item
@@ -352,7 +354,10 @@ function LandbankChatV2Page() {
         total: missions.length
       }
       const updateProgress = () => {
-        setAnalysisProgress((collect.end / collect.total) * 100 * 0.6) // 0 ~ 60%
+        // baseProgress ~ max%
+        const max = 70
+        const range = (max - baseProgress) / 100
+        setAnalysisProgress(baseProgress + ((collect.end / collect.total) * 100 * range) / timelineItems.length)
       }
       const promises = missions.map((missionId) => {
         return _runAnalyze({
@@ -416,17 +421,45 @@ function LandbankChatV2Page() {
 
     }
 
-    setAnalysisProgress(90);
-    const res = await _runAnalyze({
-      missionId: 'landbank/rubric',
+    setAnalysisProgress(70);
+
+    const analysisConf = {
+      role: config.roleSelf,
+      role2: config.roleTarget,
+      grading: config.criteria,
+      gradingExamples: '無範例，請自行參考評分標準。',
+      context: config.context,
+      // types: default
+      // titles: default
+      // instruction: default
+
+    }
+
+    const analysisA1P = _runAnalyze({
+      missionId: 'analysis/a1-grading-full',
       params: {
-        criteria: getCriteria(),
+        ...analysisConf,
         history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
       },
       responseType: 'json_schema'
+    }).then((res) => {
+      setAnalysisProgress((prev) => prev + 15);
+      return res
+    })
+    const analysisA4P = _runAnalyze({
+      missionId: 'analysis/a4-advice-full',
+      params: {
+        ...analysisConf,
+        history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
+      },
+      responseType: 'json_schema'
+    }).then((res) => {
+      setAnalysisProgress((prev) => prev + 15);
+      return res
     })
 
-    console.log('landbank/rubric:', res)
+    const analysisA1 = await analysisA1P
+    const analysisA4 = await analysisA4P
 
 
     const report = {
@@ -438,10 +471,26 @@ function LandbankChatV2Page() {
         keyPointIcon2: config.keyPointIcon2,
       }
     }
+    type A1Score = {
+      title: string
+      score: string
+      reason: string
+    }
+    const rubric = (analysisA1?.json?.scores || []).map((item: A1Score) => {
+      return {
+        criterion: item.title,
+        score: item.score,
+        reason: item.reason,
+      }
+    })
+    const adviceItems = (analysisA4?.json?.advises || []).map((advice: string) => {
+      return { content: advice }
+    })
 
     const oreport = {
       user: userInfo.current,
-      scores: res.json.scores || [],
+      rubric,
+      adviceItems,
       history: getFullChatHistory().map((msg) => `${roleMap[msg.role as 'user' | 'assistant']}: ${msg.content}`).join('\n\n'),
     }
 
