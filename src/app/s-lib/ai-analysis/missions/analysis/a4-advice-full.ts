@@ -141,7 +141,11 @@ export function expectSchema(params: ContextParams){
       type: 'object',
       properties: {
         advises: {
-          type: 'string',
+          type: 'array',
+          items: {
+            type: 'string',
+            description: '建議內容',
+          },
         }
       },
       additionalProperties: false,
