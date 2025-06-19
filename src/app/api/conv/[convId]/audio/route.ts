@@ -48,9 +48,30 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
     // 進行語音分析
     let analysisInfo: string | undefined;
     try {
-      const result = await analyzeAudioEmotion(buffer, type as string);
-      analysisInfo = JSON.stringify(result.analysis);
-      console.log('Audio analysis completed:', result.analysis);
+      const [emotionResult, analysisResult] = await Promise.allSettled([
+        analyzeAudioEmotion(buffer, type as string),
+        analyzeAudioEmotion(buffer, type as string, "請逐句轉錄音訊，並針對每句話評估以下15項語音指標，每項給出0–100分，並簡要說明評分的具體原因，具體原因使用括弧包裹。以下是評估的指標：語速控制、音量穩定性、語音清晰度、停頓運用、言語流暢性、簡潔性、關鍵訊息傳遞、語調表達、聲音能量、友善的語調、沉著穩定、正向情緒傳達、聲音個性、聲音穩定性、聲音表現力。回覆格式如下：「句子內容」- 語速控制：80（語速自然，節奏穩定） - 音量穩定性：85（音量穩定，無明顯波動） - 停頓運用：75（使用停頓，但略緊） - 言語流暢度：88（表達流暢，無口吃) ……（依序評估15項指標）")
+      ]);
+
+      const mergedAnalysis: any = {};
+
+      if (emotionResult.status === 'fulfilled') {
+        mergedAnalysis.emotion = emotionResult.value.analysis;
+        console.log('Audio emotion analysis completed:', emotionResult.value.analysis);
+      } else {
+        console.warn('Audio emotion analysis failed:', emotionResult.reason);
+      }
+
+      if (analysisResult.status === 'fulfilled') {
+        mergedAnalysis.transcription = analysisResult.value.analysis;
+        console.log('Audio analysis completed:', analysisResult.value.analysis);
+      } else {
+        console.warn('Audio analysis failed:', analysisResult.reason);
+      }
+
+      if (Object.keys(mergedAnalysis).length > 0) {
+        analysisInfo = JSON.stringify(mergedAnalysis);
+      }
     } catch (error) {
       console.warn('Audio analysis failed:', error);
     }
