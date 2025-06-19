@@ -74,11 +74,12 @@ function LandbankReportV2() {
       throw new Error('No report data found in local storage')
     }
     const reportData = JSON.parse(reportDataStr) as ReportV1.ReportDatas
-    const { timeline } = reportData
+    const { timeline, meta } = reportData
 
     const timelineDatas: ReportV1.TimelineData[] = timeline
     return {
-      timeline: timelineDatas
+      timeline: timelineDatas,
+      meta
     }
   }
 
