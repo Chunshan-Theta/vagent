@@ -377,8 +377,8 @@ function LandbankChatV2Page() {
       const resMap = _.keyBy(results, 'missionId')
       console.log('resMap:', resMap)
 
-      if (resMap['landbank/sentiment']) {
-        const sentimentRes = resMap['landbank/sentiment']
+      if (resMap['report-v1/sentiment']) {
+        const sentimentRes = resMap['report-v1/sentiment']
         const sentimentType = (sentimentRes.json.sentiment || '').toLowerCase()
         if (sentimentType) {
           item.subtitle = `客戶情緒：${sentimentType}`
@@ -386,8 +386,8 @@ function LandbankChatV2Page() {
           item.mainColor = settings.sentimentColors[sentimentType as SentimentColor]
         }
       }
-      if (resMap['landbank/key_points']) {
-        const keyPointsRes = resMap['landbank/key_points']
+      if (resMap['report-v1/key_points']) {
+        const keyPointsRes = resMap['report-v1/key_points']
         const keyPoints = keyPointsRes.json.keyPoints
         if (typeof keyPoints === 'object') {
           const { problems, sentences } = keyPoints
@@ -399,15 +399,15 @@ function LandbankChatV2Page() {
           }
         }
       }
-      if (resMap['landbank/highlights']) {
-        const highlightsRes = resMap['landbank/highlights']
+      if (resMap['report-v1/highlights']) {
+        const highlightsRes = resMap['report-v1/highlights']
         const highlights = highlightsRes.json.sentences
         if (Array.isArray(highlights)) {
           item.analysis = highlights
         }
       }
-      if (resMap['landbank/context']) {
-        const contextRes = resMap['landbank/context']
+      if (resMap['report-v1/context']) {
+        const contextRes = resMap['report-v1/context']
         const context = contextRes.json.sentences
         if (Array.isArray(context)) {
           item.analysis = context
