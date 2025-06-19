@@ -142,15 +142,17 @@ export function expectSchema(params: ContextParams){
       properties: {
         advises: {
           type: 'array',
+            description: '建議列表',
           items: {
             type: 'string',
-            description: '建議內容',
+            description: '150 字以內的建議內容',
           },
         }
       },
       additionalProperties: false,
       required: ['advises'],
     },
+    strict: true,
   };
 }
 
@@ -165,8 +167,8 @@ function splitTexts(text: string){
 
 function getInstruction() {
   return `# 生成任務
-你需要基於互動紀錄和參考資料，給予用戶對應的建議。
-- 依照評分標準產出3種回答方向建議。
+你需要基於互動紀錄和參考資料，給予 user 對應的建議。
+- 依照評分標準產出3種回答方向的改進建議。
 - 回答方向建議必須要回應對話紀錄中 assistant 最後說的話，並且要具體延伸舉例可以怎麼說。
 - 回答方向建議一定要符合<對話目標>。
 - 回答方向建議內容盡可能引用<對話紀錄>和<對話目標>的詞彙句子來回應補充，且要原封不動保留。

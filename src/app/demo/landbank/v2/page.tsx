@@ -165,6 +165,31 @@ function LandbankChatV2Page() {
     sendSimulatedUserMessage(inputText, { hide: false, triggerResponse: true, interruptAI: true });
     updateInputText('');
   }
+  const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: string) => {
+    if (!criteria) {
+      criteria = '使用者本身是否是進行良性的溝通';
+    }
+
+    const weights = [0.5, 0.5, 0.5, 0.5];
+
+    const response = await fetch('/api/analysis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: chatHistory,
+        rubric: {
+          criteria,
+          weights,
+        },
+        detectedLanguage: clientLanguage,
+      }),
+    });
+
+    return response.json();
+  }
+
   function _runAnalyze(opts: Parameters<typeof startAIMission>[0]) {
     const { missionId, params, responseType, modelOptions } = opts
 
@@ -429,37 +454,40 @@ function LandbankChatV2Page() {
       grading: config.criteria,
       gradingExamples: '無範例，請自行參考評分標準。',
       context: config.context,
+      history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n')
       // types: default
       // titles: default
       // instruction: default
-
     }
 
     const analysisA1P = _runAnalyze({
       missionId: 'analysis/a1-grading-full',
       params: {
         ...analysisConf,
-        history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
       },
       responseType: 'json_schema'
     }).then((res) => {
-      setAnalysisProgress((prev) => prev + 15);
+      setAnalysisProgress((prev) => prev + 10);
       return res
     })
     const analysisA4P = _runAnalyze({
       missionId: 'analysis/a4-advice-full',
       params: {
         ...analysisConf,
-        history: getFullChatHistory().map((msg) => `${msg.role}: ${msg.content}`).join('\n'),
       },
       responseType: 'json_schema'
     }).then((res) => {
-      setAnalysisProgress((prev) => prev + 15);
+      setAnalysisProgress((prev) => prev + 10);
+      return res
+    })
+    const analysisRubricP = analyzeChatHistoryByRubric(config.criteria, chatHistory, lang).then((res) => {
+      setAnalysisProgress((prev) => prev + 10);
       return res
     })
 
     const analysisA1 = await analysisA1P
     const analysisA4 = await analysisA4P
+    const analysisRubric = await analysisRubricP
 
 
     const report = {
@@ -476,7 +504,7 @@ function LandbankChatV2Page() {
       score: string
       reason: string
     }
-    const rubric = (analysisA1?.json?.scores || []).map((item: A1Score) => {
+    const a1Rubric = (analysisA1?.json?.scores || []).map((item: A1Score) => {
       return {
         criterion: item.title,
         score: item.score,
@@ -489,7 +517,7 @@ function LandbankChatV2Page() {
 
     const oreport = {
       user: userInfo.current,
-      rubric,
+      rubric: a1Rubric,
       adviceItems,
       history: getFullChatHistory().map((msg) => `${roleMap[msg.role as 'user' | 'assistant']}: ${msg.content}`).join('\n\n'),
     }
@@ -497,6 +525,7 @@ function LandbankChatV2Page() {
     // Store the analysis result and chat history in localStorage
     localStorage.setItem('landbank/v2/report', JSON.stringify(report));
     localStorage.setItem('landbank/v2/oreport', JSON.stringify(oreport));
+    localStorage.setItem('landbank/v2/analysis', JSON.stringify(analysisRubric));
     localStorage.setItem('landbank/v2/messages', JSON.stringify(getFullChatHistory()));
 
     setAnalysisProgress(100);

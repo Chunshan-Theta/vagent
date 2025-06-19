@@ -5,6 +5,8 @@ import OReportView from '@/app/components/ai-report/OReportView'
 import { ReportV1 } from '@/app/types/ai-report'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import LoadingIcon from '@/app/components/LoadingIcon'
+import ReportViewV2 from '@/app/components/ai-report/ReportViewV2';
+import { AnalysisResponse, ReportDatas } from '@/app/types/ai-report/common';
 
 
 const settingsMap = {
@@ -30,6 +32,9 @@ type OReportDatas = {
 function LandbankReportV2() {
   const reportData = useRef<ReportV1.ReportDatas | null>(null)
   const oreportData = useRef<OReportDatas | null>(null)
+  const analysisData = useRef<any>(null)
+  const messagesData = useRef<any[]>([])
+
 
   useEffect(() => {
     // function handleResize() {
@@ -45,7 +50,7 @@ function LandbankReportV2() {
   }, [])
 
   const [localLoading, setLocalLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'report' | 'oreport'>('report')
+  const [activeTab, setActiveTab] = useState<'report' | 'oreport' | 'analysis'>('report')
 
   const loading = useMemo(() => localLoading, [localLoading])
 
@@ -127,14 +132,39 @@ function LandbankReportV2() {
     return reportData
   }
 
+
+  async function fetchAnalysisData() {
+    const analysisStr = localStorage.getItem('landbank/v2/analysis');
+    if (!analysisStr) {
+      return null
+    }
+    const analysisData = JSON.parse(analysisStr) as AnalysisResponse;
+    return analysisData;
+  }
+
+  async function fetchMessagesData(): Promise<any[]> {
+    const messagesStr = localStorage.getItem('landbank/v2/messages')
+    if (!messagesStr) {
+      return []
+    }
+    const messagesData = JSON.parse(messagesStr) as any[]
+    return messagesData
+  }
+
   async function init() {
     const data = await fetchReportData()
     reportData.current = data
     const oreport = await fetchOReportData()
     oreportData.current = oreport
+    const analysis = await fetchAnalysisData()
+    analysisData.current = analysis
+    const messages = await fetchMessagesData()
+    messagesData.current = messages
     console.log('[report_page]', {
       report: reportData.current,
-      oreport: oreportData.current
+      oreport: oreportData.current,
+      analysis: analysisData.current,
+      messages: messagesData.current
     })
   }
 
@@ -175,11 +205,21 @@ function LandbankReportV2() {
           </>
         )
       }
+      if (activeTab === 'analysis') {
+        return (
+          <>
+            <ReportViewV2
+              data={analysisData.current}
+              message={messagesData.current || []}
+            />
+          </>
+        )
+      }
     }
     return null
   }
 
-  const getTabStatus = (tab: 'report' | 'oreport') => {
+  const getTabStatus = (tab: 'report' | 'oreport' | 'analysis') => {
     const style = {
       background: 'linear-gradient(135deg, rgba(23, 99, 84, 0.2), rgba(13, 62, 52, 0.15))',
       padding: '8px 18px',
@@ -215,6 +255,12 @@ function LandbankReportV2() {
         </button> */}
         <button style={getTabStatus('report').style} onClick={() => setActiveTab('report')}>對話分析</button>
         <button style={getTabStatus('oreport').style} onClick={() => setActiveTab('oreport')}>分析統計</button>
+        { analysisData.current &&
+          <button style={getTabStatus('analysis').style} onClick={() => setActiveTab('analysis')}>總體分析</button>
+        }
+        {/* <button
+          className={`px-4 py-2 rounded ${activeTab === 'analysis' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          onClick={() => setActiveTab('analysis')}
         {/* <button
           className={`px-4 py-2 rounded ${activeTab === 'oreport' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
           onClick={() => setActiveTab('oreport')}
