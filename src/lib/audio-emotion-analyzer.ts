@@ -26,7 +26,11 @@ function cleanupCache() {
   }
 }
 
-export async function analyzeAudioEmotion(buffer: Buffer, mimeType: string) {
+export async function analyzeAudioEmotion(
+  buffer: Buffer, 
+  mimeType: string, 
+  prompt: string = "Please transcribe the audio and label the emotion of each sentence. label the emotion example: [Emotion: Aggressive, Friendly]"
+) {
   // Check cache first
   const cacheKey = createCacheKey(buffer, mimeType);
   const cached = emotionCache.get(cacheKey);
@@ -35,8 +39,6 @@ export async function analyzeAudioEmotion(buffer: Buffer, mimeType: string) {
     console.log('Cache hit for audio emotion analysis');
     return cached.data;
   }
-
-  const prompt = `Please transcribe the audio and label the emotion of each sentence. label the emotion example: [Emotion: Aggressive, Friendly]`;
 
   // Initialize the model with generation config
   const model = genAI.getGenerativeModel({
