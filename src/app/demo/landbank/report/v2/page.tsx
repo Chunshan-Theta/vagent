@@ -247,26 +247,11 @@ function LandbankReportV2() {
     <div className="ai-report-page flex flex-col items-center min-h-screen">
       {/* Tab 選單 */}
       <div className="flex mt-8 mb-4 space-x-4">
-        {/* <button
-          className={`px-4 py-2 rounded ${activeTab === 'report' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          onClick={() => setActiveTab('report')}
-        >
-          對話分析
-        </button> */}
         <button style={getTabStatus('report').style} onClick={() => setActiveTab('report')}>對話分析</button>
-        <button style={getTabStatus('oreport').style} onClick={() => setActiveTab('oreport')}>分析統計</button>
+        {/* <button style={getTabStatus('oreport').style} onClick={() => setActiveTab('oreport')}>分析統計</button> */}
         { analysisData.current &&
           <button style={getTabStatus('analysis').style} onClick={() => setActiveTab('analysis')}>總體分析</button>
         }
-        {/* <button
-          className={`px-4 py-2 rounded ${activeTab === 'analysis' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          onClick={() => setActiveTab('analysis')}
-        {/* <button
-          className={`px-4 py-2 rounded ${activeTab === 'oreport' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-          onClick={() => setActiveTab('oreport')}
-        >
-          分析統計
-        </button> */}
       </div>
       {/* 內容區 */}
       <div className="flex justify-center items-center flex-1 w-full">
