@@ -38,11 +38,12 @@ export function moduleOptions() : ModelOptions{
 
 export function getMessages(params: KeyPointsParams){
   const lang = params.lang || 'zh';
+  const role = params.role || 'user';
   const prompt1 = utils.translatePrompt(`
-請依據底下的對話，分別找出：
-- 客戶說話中具有情緒或資訊意涵的關鍵句（請列出實際原句）
-- 業務回應中可能存在的溝通問題或不足之處
-  `.trim(), 'zh', lang);
+請參考分析規則，然後依據底下的對話，分別找出：
+- sentences: 列出 "__role__" 說話的優點說得特別好的地方，例如：具有代表性情緒或資訊意涵的地方（必須融入具體引用對照評分標準的說明）
+- problems: 列出 "__role__" 說話的缺點可能存在的溝通問題或不足之處（必須融入具體引用對照評分標準的說明）
+  `.trim().replace(/__role__/g, role), 'zh', lang);
   const template = `
 ${prompt1}
 
@@ -72,12 +73,14 @@ export function expectSchema(params: KeyPointsParams){
           properties: {
             sentences: {
               type: 'array',
+              description: '優點',
               items: {
                 type: 'string',
               },
             },
             problems: {
               type: 'array',
+              description: '缺點',
               items: {
                 type: 'string',
               },

@@ -59,8 +59,8 @@ export function defineParams() : MissionParamsDefineMap {
     },
     gradingExamples: {
       type: 'textarea',
-      title: '*評分範例',
-      description: '請輸入評分範例，這些範例將用於輔助評分標準的理解。',
+      title: '*評分示範',
+      description: '請輸入評分示範，這些範例將用於輔助評分標準的理解。',
       default: d.examples,
     },
     history: {

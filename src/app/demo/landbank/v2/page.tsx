@@ -186,8 +186,13 @@ function LandbankChatV2Page() {
       showSystemToast('wait_for_response');
       return;
     }
-    // const storedChatMessages = localStorage.setItem('analysis_report')
-    // const chatHistory = JSON.parse(storedChatMessages || '[]').filter((msg: any) => msg.role !== 'system')
+
+    const config = {
+      keyPointTitle1: '優點',
+      keyPointIcon1: '⭕',
+      keyPointTitle2: '缺點',
+      keyPointIcon2: '❌',
+    }
 
     const { startAt, pairs } = getMessagePairs({
       spRole: 'assistant',
@@ -271,6 +276,22 @@ function LandbankChatV2Page() {
         'landbank/context'
       ]
 
+      const missionParams: { [missionId: string]: { [x: string]: any } } = {
+        'landbank/sentiment': {
+          role: roleMap.assistant,
+          history: chatHistory,
+        },
+        'landbank/key_points': {
+          role: analysisRole,
+          history: chatHistory,
+        },
+        'landbank/context': {
+          role: analysisRole,
+          history: chatHistory,
+        },
+      }
+
+
       const { userAudio, aiAudio } = item
       if (userAudio && userAudio.ref) {
         userAudio.url = (await convApi.getAudioUrlByRefString(userAudio.ref, { convId: nowConvId, name: 'user_audio' })) || '';
@@ -291,8 +312,7 @@ function LandbankChatV2Page() {
         return _runAnalyze({
           missionId,
           params: {
-            role: analysisRole,
-            history: chatHistory,
+            ...(missionParams[missionId] || {}),
           },
           responseType: 'json_schema'
         }).then((res) => {
@@ -364,7 +384,13 @@ function LandbankChatV2Page() {
 
 
     const report = {
-      timeline: timelineItems
+      timeline: timelineItems,
+      meta: {
+        keyPointTitle1: config.keyPointTitle1,
+        keyPointIcon1: config.keyPointIcon1,
+        keyPointTitle2: config.keyPointTitle2,
+        keyPointIcon2: config.keyPointIcon2,
+      }
     }
 
     const oreport = {
