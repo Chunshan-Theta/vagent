@@ -20,6 +20,7 @@ import { agentApi, convApi } from '@/app/lib/ai-chat'
 import { toast } from 'react-toastify';
 import { delay } from "@/app/lib/utils";
 
+import useAgentSettings from "@/app/hooks/useAgentSettings";
 
 const LABEL = 'landbank_v2';
 
@@ -67,6 +68,8 @@ function LandbankChatV2Page() {
     onSessionResume,
     onSessionClose,
 
+    getChatHistoryText,
+
     showSystemToast,
     convInfo,
     handleTalkOff,
@@ -97,6 +100,7 @@ function LandbankChatV2Page() {
   }, [convInfo.current?.convId]);
 
   // ------
+  const aiReport = useAgentSettings('2ab59d3f-e096-4d82-8a99-9db513c04ca1', { ignoreError: true })
   useEffect(() => {
     document.title = pageInfo.title;
   }, []);
@@ -188,11 +192,28 @@ function LandbankChatV2Page() {
     }
 
     const config = {
-      keyPointTitle1: '優點',
-      keyPointIcon1: '⭕',
-      keyPointTitle2: '缺點',
-      keyPointIcon2: '❌',
+      criteria: aiReport.getSetting('reportAnalyze.criteria') || 'user 本身是否是進行良性的溝通',
+      context: aiReport.getSetting('reportAnalyze.context') || '以下是一份 user 和 assistant 的對話紀錄。',
+      analysis: aiReport.getSetting('reportAnalyze.analysis') || '請判斷 user 的表現，然後給予合適的分析結果',
+      roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || 'user',
+      roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'assistant',
+
+      contextPrompt: aiReport.getSetting('reportAnalyze.contextPrompt'),
+      keyPointsPrompt: aiReport.getSetting('reportAnalyze.keyPointsPrompt'),
+
+      keyPointAnalysis1: aiReport.getSetting('reportAnalyze.keyPointAnalysis1') || '分析 __role__ 表現良好的部分，並列出具體的例子或關鍵句（請列出實際原句）',
+      keyPointTitle1: aiReport.getSetting('reportAnalyze.keyPointTitle1') || '優點',
+      keyPointIcon1: aiReport.getSetting('reportAnalyze.keyPointIcon1') || '❌',
+      keyPointTitle2: aiReport.getSetting('reportAnalyze.keyPointTitle2') || '缺點',
+      keyPointAnalysis2: aiReport.getSetting('reportAnalyze.keyPointAnalysis2') || '分析 __role__ 表現不佳的部分，並列出可能存在的溝通問題或不足之處（請列出實際原句）',
+      keyPointIcon2: aiReport.getSetting('reportAnalyze.keyPointIcon2') || '📉',
     }
+    const chatHistory = getChatHistoryText({
+      roleMap: {
+        user: config.roleSelf,
+        assistant: config.roleTarget,
+      }
+    })
 
     const { startAt, pairs } = getMessagePairs({
       spRole: 'assistant',
@@ -265,29 +286,54 @@ function LandbankChatV2Page() {
         `${roleMap.assistant}: ${parseHistoryContent(aiSay)}`,
         `${roleMap.user}: ${userSay}`
       ].join('\n')
+      const history = chatHistory;
 
       const missions = [
         // 順序不重要，後續會用 missionId 來對應
-        'landbank/sentiment',
-        'landbank/key_points',
+        'report-v1/sentiment',
+        'report-v1/key_points',
         // context 和 highlights 功能會有重疊，只能選一個
         // landbank/context 
         // 'landbank/highlights',
-        'landbank/context'
+        'report-v1/context'
       ]
 
       const missionParams: { [missionId: string]: { [x: string]: any } } = {
-        'landbank/sentiment': {
-          role: roleMap.assistant,
-          history: chatHistory,
+        'report-v1/sentiment': {
+          role2: config.roleTarget,
+          history
         },
-        'landbank/key_points': {
-          role: analysisRole,
-          history: chatHistory,
+        'report-v1/key_points': {
+          analysis: config.analysis,
+          context: config.context,
+          criteria: config.criteria,
+          role: config.roleSelf,
+          role2: config.roleTarget,
+          prompt: config.keyPointsPrompt,
+
+          history
         },
-        'landbank/context': {
-          role: analysisRole,
-          history: chatHistory,
+        'report-v1/key_points_v2': {
+          analysis1: config.keyPointAnalysis1,
+          analysis2: config.keyPointAnalysis2,
+          title1: config.keyPointTitle1,
+          title2: config.keyPointTitle2,
+          context: config.context,
+          criteria: config.criteria,
+          role: config.roleSelf,
+          role2: config.roleTarget,
+          prompt: config.keyPointsPrompt,
+
+          history
+        },
+        'report-v1/context': {
+          analysis: config.analysis,
+          context: config.context,
+          criteria: config.criteria,
+          role: config.roleSelf,
+          prompt: config.contextPrompt,
+
+          history
         },
       }
 

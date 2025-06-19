@@ -25,6 +25,9 @@ import * as reportV1Reference from './missions/report-v1/reference'
 import * as landbankDA1Grading from './missions/landbank-d/a1-grading'
 import * as landbankDA4Advice from './missions/landbank-d/a4-advice'
 
+import * as analysisA1GradingFull from './missions/analysis/a1-grading-full'
+import * as analysisA4AdviceFull from './missions/analysis/a4-advice-full'
+
 export const missionModules: {[missionId:string]: MissionModule} = {
   'landbank/context': landbankContext,
   'landbank/sentiment': landbankSentiment,
@@ -46,6 +49,9 @@ export const missionModules: {[missionId:string]: MissionModule} = {
 
   'landbank-d/a1-grading': landbankDA1Grading,
   'landbank-d/a4-advice': landbankDA4Advice,
+
+  'analysis/a1-grading-full': analysisA1GradingFull,
+  'analysis/a4-advice-full': analysisA4AdviceFull,
 
   'srt/chat_role_detect': srtChatRoleDetect,
 
