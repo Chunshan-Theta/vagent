@@ -35,6 +35,8 @@ function NewDeanReportV1() {
   const analysisData = useRef<any>(null)
   const messagesData = useRef<any[]>([])
 
+  const [ready, setReady] = useState(false)
+
 
   useEffect(() => {
     // function handleResize() {
@@ -50,7 +52,7 @@ function NewDeanReportV1() {
   }, [])
 
   const [localLoading, setLocalLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'report' | 'oreport' | 'analysis'>('report')
+  const [activeTab, setActiveTab] = useState<'report' | 'oreport' | 'analysis'>('analysis')
 
   const loading = useMemo(() => localLoading, [localLoading])
 
@@ -140,6 +142,7 @@ function NewDeanReportV1() {
       analysis: analysisData.current,
       messages: messagesData.current
     })
+    setReady(true)
   }
 
 
@@ -224,7 +227,7 @@ function NewDeanReportV1() {
       {/* 內容區 */}
       <div className="flex justify-center items-center flex-1 w-full">
         {loading && <LoadingIcon />}
-        {createReportView()}
+        {ready && createReportView()}
       </div>
     </div>
   )

@@ -21,6 +21,7 @@ Model.knex(knex);
 
 export const fn = {
   now: knex.fn.now.bind(knex.fn),
+  raw: knex.raw.bind(knex),
 }
 
 

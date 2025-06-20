@@ -5,6 +5,8 @@ import ConvAudio from "./ConvAudio";
 
 import AgentSettings from "./AgentSettings";
 
+import KeyQuota from "./KeyQuota";
+
 export {
   Conv,
   ConvMessage,
@@ -12,4 +14,6 @@ export {
   ConvAudio,
 
   AgentSettings,
+
+  KeyQuota
 };

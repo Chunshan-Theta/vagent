@@ -22,8 +22,11 @@ import { delay } from "@/app/lib/utils";
 import useAgentSettings from "@/app/hooks/useAgentSettings";
 import { getTranslation, Language } from "@/app/i18n/translations";
 
+import * as keyApi from '@/app/lib/ai-chat/keyQuota'
 
+import { requireQuota } from "../utils";
 import * as utils from '@/app/class/utils'
+import { set } from "lodash";
 
 const vv = 'v1'
 
@@ -84,6 +87,7 @@ function DynamicAnalysisContent() {
     waitPostTask,
 
     showSystemToast,
+    simProgressUp,
     convInfo
   } = useAiChat();
 
@@ -139,6 +143,8 @@ function DynamicAnalysisContent() {
       defaultValue: '',
     },
   ])
+
+  const keyInfo = useRef<{ group: string, key: string }>(null)
 
 
 
@@ -215,7 +221,7 @@ function DynamicAnalysisContent() {
           return;
         } else {
           // 登入成功
-          return onAfterLogin(data.account);
+          return onAfterLogin(account);
         }
       }).catch(() => {
         alert('登入失敗，請稍後再試');
@@ -226,8 +232,21 @@ function DynamicAnalysisContent() {
 
   async function onAfterLogin(email: string) {
     clearHistory();
-    
+
     await fetchAgentConfig();
+
+    const dd = {
+      group: `newdean-${vv}`,
+      key: `EM:${email}`,
+    }
+    keyInfo.current = dd;
+    if (requireQuota(dd.group, dd.key)) {
+      await keyApi.ensureKeyQuota({
+        ...dd,
+        quota: 1,
+      });
+    }
+
     await initConv({
       email,
       agentType: 'static',
@@ -296,7 +315,24 @@ function DynamicAnalysisContent() {
       return;
     }
 
+    setIsAnalyzing(true);
     setAnalysisProgress(0);
+
+    const kq = keyInfo.current!;
+    if (requireQuota(kq.group, kq.key)) {
+      const quota = await keyApi.getKeyQuota(kq)
+      if (!quota || quota.usage >= quota.quota) {
+        alert('已達到使用上限，詳情可詢問網站管理員。');
+        setIsAnalyzing(false);
+        return;
+      }
+      await keyApi.increaseKeyQuota({
+        ...kq,
+        usage: 1,
+      });
+    }
+
+    setAnalysisProgress(15);
     // 基本檢查都跑完之後再確定提交 endConversation
     await handleTalkOff();
     await delay(700); // 等待幾秒，確保對話結束
@@ -321,18 +357,15 @@ function DynamicAnalysisContent() {
     setAnalysisProgress(40);
     await delay(500);
     const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, chatHistory, 'zh')
-
-    setAnalysisProgress(80);
-    await delay(500);
+    const progress = simProgressUp(40, 100, 15000);
 
     const rubricAnalysis = await rubricAnalysisP;
+
 
     localStorage.setItem(`newdean/${vv}/analysis`, JSON.stringify(rubricAnalysis));
     localStorage.setItem(`newdean/${vv}/messages`, JSON.stringify(getFullChatHistory()));
 
-    setAnalysisProgress(100);
-    setIsAnalyzing(false);
-
+    progress.complete();
 
     router.push(`${reportUrl}?back=${encodeURIComponent(nowPageUrl)}`);
   }
