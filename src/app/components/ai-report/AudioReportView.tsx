@@ -25,6 +25,8 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAudioTimeline, setIsAudioTimeline] = useState(false);
+  const [isCardsExpanded, setIsCardsExpanded] = useState(false);
+  const [analysisCards, setAnalysisCards] = useState<any[]>([]);
 
   function getStoredChatMessages() : string {
     if (typeof message === 'string' && message.trim() !== '') {
@@ -115,6 +117,7 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
     // Format 1: 「餵，您好」- 語速控制：90（語速適中，平穩） - 音量穩定性：92（音量一致，穩定性高）
     // Format 2: **第一句：「喂喂喂」** *   語速控制：70（語速略快）
     // Format 3: **句子1："準備好了。"** *   **語速控制：** 70
+    // Format 4: 「我想知道我應該要怎麼樣面對我的合作夥伴。」- 語速控制：[85]（語速平穩，略微偏慢）
     
     // Try format 1 first (simple quotes with dashes)
     const format1Regex = /「([^」]*)」([^「]*)/g;
@@ -127,8 +130,8 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
       
       Object.entries(criteriaMapping).forEach(([key, patterns]) => {
         patterns.forEach(pattern => {
-          // Look for patterns like "- 語速控制：90（語速適中，平穩）"
-          const regex = new RegExp(`-\\s*${pattern}：(\\d+)（([^）]*)）`, 'gi');
+          // Look for patterns like "- 語速控制：90（語速適中，平穩）" or "- 語速控制：[90]（語速適中，平穩）"
+          const regex = new RegExp(`-\\s*${pattern}：\\[?(\\d+)\\]?（([^）]*)）`, 'gi');
           let match;
           while ((match = regex.exec(scoresSection)) !== null) {
             const score = parseInt(match[1]);
@@ -163,9 +166,10 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
               // Multiple score patterns:
               // *   語速控制：70（描述）
               // *   **語速控制：** 70
+              // *   語速控制：[70]（描述）
               const scorePatterns = [
-                new RegExp(`\\*\\s*${pattern}：(\\d+)（([^）]*)）`, 'gi'),
-                new RegExp(`\\*\\s*\\*?\\*?${pattern}：?\\*?\\*?\\s*(\\d+)`, 'gi')
+                new RegExp(`\\*\\s*${pattern}：\\[?(\\d+)\\]?（([^）]*)）`, 'gi'),
+                new RegExp(`\\*\\s*\\*?\\*?${pattern}：?\\*?\\*?\\s*\\[?(\\d+)\\]?`, 'gi')
               ];
               
               for (const scoreRegex of scorePatterns) {
@@ -192,8 +196,8 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
       // 尝试简单的数字提取作为最后手段
       Object.entries(criteriaMapping).forEach(([key, patterns]) => {
         patterns.forEach(pattern => {
-          // 更宽泛的匹配：只要找到标准名称和数字
-          const fallbackRegex = new RegExp(`${pattern}[：:\\s]*([0-9]+)`, 'gi');
+          // 更宽泛的匹配：只要找到标准名称和数字（支持方括号格式）
+          const fallbackRegex = new RegExp(`${pattern}[：:\\s]*\\[?([0-9]+)\\]?`, 'gi');
           let match;
           while ((match = fallbackRegex.exec(transcription)) !== null) {
             const score = parseInt(match[1]);
@@ -208,33 +212,35 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
       });
     }
     
-    // 最终包底：如果完全无法解析，给出默认值
-    if (!foundMatches) {
-      const defaultCriteria = ['語速控制', '音量穩定性', '語音清晰度', '言語流暢性', '關鍵訊息傳遞'];
-      const randomDescriptions = [
-        '語調穩定，節奏適中',
-        '聲音清楚，表達自然',
-        '語速適當，表達流暢',
-        '音量平穩，語氣親切',
-        '表達清晰，語調和諧'
-      ];
-      const randomTexts = [
-        '好的，我明白了',
-        '請問這個部分是怎麼運作的',
-        '謝謝您的說明',
-        '我想了解更多細節',
-        '這樣聽起來很有道理'
-      ];
-      
-      defaultCriteria.forEach((criterion, index) => {
-        if (data[criterion]) {
-          const randomScore = 70 + Math.floor(Math.random() * 20); // 70-89分随机
-          data[criterion].scores.push(randomScore);
-          data[criterion].descriptions.push(randomDescriptions[index % randomDescriptions.length]);
-          data[criterion].originalTexts.push(randomTexts[index % randomTexts.length]);
+            // 最终包底：如果完全无法解析，给出默认值
+        if (!foundMatches) {
+          const defaultCriteria = ['語速控制', '音量穩定性', '語音清晰度', '言語流暢性', '關鍵訊息傳遞'];
+          const randomDescriptions = [
+            '語調穩定，節奏適中',
+            '聲音清楚，表達自然',
+            '語速適當，表達流暢',
+            '音量平穩，語氣親切',
+            '表達清晰，語調和諧'
+          ];
+          const randomTexts = [
+            '好的，我明白了',
+            '請問這個部分是怎麼運作的',
+            '謝謝您的說明',
+            '我想了解更多細節',
+            '這樣聽起來很有道理'
+          ];
+          
+          // Generate random scores once and store them
+          const fixedRandomScores = [75, 82, 78, 85, 79]; // Pre-generated random scores
+          
+          defaultCriteria.forEach((criterion, index) => {
+            if (data[criterion]) {
+              data[criterion].scores.push(fixedRandomScores[index]);
+              data[criterion].descriptions.push(randomDescriptions[index % randomDescriptions.length]);
+              data[criterion].originalTexts.push(randomTexts[index % randomTexts.length]);
+            }
+          });
         }
-      });
-    }
 
     return data;
   };
@@ -282,6 +288,151 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
       'Hopeful': 'text-green-300'
     };
     return emotionColors[emotion] || 'text-gray-400';
+  };
+
+  // Helper function to calculate analysis cards once
+  const calculateAnalysisCards = (timelineData: AudioTimelineData) => {
+    // Calculate transcription scores for cards
+    const chartScores: Record<string, number[]> = {
+      '語速控制': [],
+      '音量穩定性': [],
+      '語音清晰度': [],
+      '停頓運用': [],
+      '言語流暢性': [],
+      '簡潔性': [],
+      '關鍵訊息傳遞': [],
+      '語調表達': [],
+      '聲音能量': [],
+      '友善的語調': [],
+      '沉著穩定': [],
+      '正向情緒傳達': [],
+      '聲音個性': [],
+      '聲音穩定性': [],
+      '聲音表現力': []
+    };
+    
+    const criteriaMapping = {
+      '語速控制': { en: 'SPEED CONTROL' },
+      '音量穩定性': { en: 'VOLUME STABILITY' },
+      '語音清晰度': { en: 'CLARITY SCORE' },
+      '停頓運用': { en: 'PAUSE USAGE' },
+      '言語流暢性': { en: 'FLUENCY SCORE' },
+      '簡潔性': { en: 'CONCISENESS' },
+      '關鍵訊息傳遞': { en: 'KEY MESSAGE' },
+      '語調表達': { en: 'TONE EXPRESSION' },
+      '聲音能量': { en: 'VOICE ENERGY' },
+      '友善的語調': { en: 'FRIENDLY TONE' },
+      '沉著穩定': { en: 'STABILITY' },
+      '正向情緒傳達': { en: 'POSITIVE EMOTION' },
+      '聲音個性': { en: 'VOICE PERSONALITY' },
+      '聲音穩定性': { en: 'VOICE STABILITY' },
+      '聲音表現力': { en: 'VOICE PERFORMANCE' }
+    };
+    
+    const processedAudioInfo = new Set<string>();
+    
+    timelineData.timeline.forEach(conversation => {
+      if (conversation.userAudio?.audioInfo && !processedAudioInfo.has(conversation.userAudio.audioInfo)) {
+        processedAudioInfo.add(conversation.userAudio.audioInfo);
+        const transcriptionData = parseTranscriptionData(conversation.userAudio.audioInfo);
+
+        if (transcriptionData && typeof transcriptionData === 'string') {
+          const data = extractScoresFromTranscription(transcriptionData);
+          
+          Object.entries(data).forEach(([criterion, criterionData]) => {
+            if (criterionData.scores.length > 0 && chartScores[criterion]) {
+              chartScores[criterion].push(...criterionData.scores);
+            }
+          });
+        }
+      }
+    });
+    
+    // Get descriptions for each criterion
+    const criteriaDescriptions: Record<string, string[]> = {};
+    const processedAudioInfoForDesc = new Set<string>();
+    
+    timelineData.timeline.forEach(conversation => {
+      if (conversation.userAudio?.audioInfo && !processedAudioInfoForDesc.has(conversation.userAudio.audioInfo)) {
+        processedAudioInfoForDesc.add(conversation.userAudio.audioInfo);
+        const transcriptionData = parseTranscriptionData(conversation.userAudio.audioInfo);
+        if (transcriptionData && typeof transcriptionData === 'string') {
+          const data = extractScoresFromTranscription(transcriptionData);
+          
+          Object.entries(data).forEach(([criterion, criterionData]) => {
+            if (criterionData.descriptions.length > 0 && !criteriaDescriptions[criterion]) {
+              // Group descriptions by their content before parentheses and randomly select
+              const descGroups: Record<string, string[]> = {};
+              const fullDescriptions = criterionData.descriptions.map((desc, idx) => 
+                `${desc} (${criterionData.originalTexts[idx] || ''})`
+              );
+              
+              fullDescriptions.forEach(desc => {
+                const beforeParentheses = desc.split(' (')[0].trim();
+                if (!descGroups[beforeParentheses]) {
+                  descGroups[beforeParentheses] = [];
+                }
+                descGroups[beforeParentheses].push(desc);
+              });
+              
+              // Randomly select one from each group - fix the randomness at calculation time
+              criteriaDescriptions[criterion] = Object.values(descGroups).map(group => {
+                const randomIndex = Math.floor(Math.random() * group.length);
+                return group[randomIndex];
+              });
+            }
+          });
+        }
+      }
+    });
+
+    // Convert to average scores and create cards
+    let cards = Object.entries(chartScores)
+      .filter(([_, scores]) => scores.length > 0)
+      .map(([criterion, scores]) => {
+        const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+        const mapping = criteriaMapping[criterion as keyof typeof criteriaMapping];
+        return {
+          criterion,
+          score: Math.round(avgScore),
+          enName: mapping?.en || criterion.toUpperCase(),
+          scores: scores,
+          descriptions: criteriaDescriptions[criterion] || []
+        };
+      })
+      .sort((a, b) => b.score - a.score); // Sort by score descending
+    
+    // UI包底方案：如果没有任何卡片，显示默认卡片
+    if (cards.length === 0) {
+      const defaultCriteria = [
+        { key: '語速控制', en: 'SPEED CONTROL' },
+        { key: '音量穩定性', en: 'VOLUME STABILITY' },
+        { key: '語音清晰度', en: 'CLARITY SCORE' },
+        { key: '言語流暢性', en: 'FLUENCY SCORE' },
+        { key: '關鍵訊息傳遞', en: 'KEY MESSAGE' }
+      ];
+      
+      const defaultDescriptions = [
+        '語調穩定，節奏適中 (好的，我明白了)',
+        '聲音清楚，表達自然 (請問這個部分是怎麼運作的)',
+        '語速適當，表達流暢 (謝謝您的說明)',
+        '音量平穩，語氣親切 (我想了解更多細節)', 
+        '表達清晰，語調和諧 (這樣聽起來很有道理)'
+      ];
+      
+      // Fixed scores to avoid randomization on each render
+      const fixedScores = [75, 82, 78, 85, 79];
+      
+      cards = defaultCriteria.map((item, index) => ({
+        criterion: item.key,
+        score: fixedScores[index],
+        enName: item.en,
+        scores: [fixedScores[index]],
+        descriptions: [defaultDescriptions[index]]
+      }));
+    }
+    
+    return cards;
   };
 
   // Helper function to analyze audio timeline data
@@ -402,6 +553,13 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
         }
 
         setLocalMessage(storedChatHistory);
+        
+        // Calculate analysis cards once and store them
+        if (parsedData.timeline && Array.isArray(parsedData.timeline)) {
+          const calculatedCards = calculateAnalysisCards(parsedData);
+          setAnalysisCards(calculatedCards);
+        }
+        
         setLoading(false);
 
         // Trigger confetti if score is high
@@ -672,198 +830,71 @@ export default function AudioReportView({ data, onBack, message = '' }: Props) {
                   語音分析能力評估
               </h3>
                 
-                {(() => {
-                  // Calculate transcription scores for cards
-                  const chartScores: Record<string, number[]> = {
-                    '語速控制': [],
-                    '音量穩定性': [],
-                    '語音清晰度': [],
-                    '停頓運用': [],
-                    '言語流暢性': [],
-                    '簡潔性': [],
-                    '關鍵訊息傳遞': [],
-                    '語調表達': [],
-                    '聲音能量': [],
-                    '友善的語調': [],
-                    '沉著穩定': [],
-                    '正向情緒傳達': [],
-                    '聲音個性': [],
-                    '聲音穩定性': [],
-                    '聲音表現力': []
-                  };
-                  
-                  const criteriaMapping = {
-                    '語速控制': { en: 'SPEED CONTROL' },
-                    '音量穩定性': { en: 'VOLUME STABILITY' },
-                    '語音清晰度': { en: 'CLARITY SCORE' },
-                    '停頓運用': { en: 'PAUSE USAGE' },
-                    '言語流暢性': { en: 'FLUENCY SCORE' },
-                    '簡潔性': { en: 'CONCISENESS' },
-                    '關鍵訊息傳遞': { en: 'KEY MESSAGE' },
-                    '語調表達': { en: 'TONE EXPRESSION' },
-                    '聲音能量': { en: 'VOICE ENERGY' },
-                    '友善的語調': { en: 'FRIENDLY TONE' },
-                    '沉著穩定': { en: 'STABILITY' },
-                    '正向情緒傳達': { en: 'POSITIVE EMOTION' },
-                    '聲音個性': { en: 'VOICE PERSONALITY' },
-                    '聲音穩定性': { en: 'VOICE STABILITY' },
-                    '聲音表現力': { en: 'VOICE PERFORMANCE' }
-                  };
-                  
-                  const processedAudioInfo = new Set<string>();
-                  
-                                        audioTimelineData.timeline.forEach(conversation => {
-                        if (conversation.userAudio?.audioInfo && !processedAudioInfo.has(conversation.userAudio.audioInfo)) {
-                          processedAudioInfo.add(conversation.userAudio.audioInfo);
-                          const transcriptionData = parseTranscriptionData(conversation.userAudio.audioInfo);
-
-                          if (transcriptionData && typeof transcriptionData === 'string') {
-                            const data = extractScoresFromTranscription(transcriptionData);
-
-                            
-                            Object.entries(data).forEach(([criterion, criterionData]) => {
-                              if (criterionData.scores.length > 0 && chartScores[criterion]) {
-                                chartScores[criterion].push(...criterionData.scores);
-                              }
-                            });
-                          }
-                        }
-                      });
-                  
-                  // Get descriptions for each criterion
-                  const criteriaDescriptions: Record<string, string[]> = {};
-                  const processedAudioInfoForDesc = new Set<string>();
-                  
-                  audioTimelineData.timeline.forEach(conversation => {
-                    if (conversation.userAudio?.audioInfo && !processedAudioInfoForDesc.has(conversation.userAudio.audioInfo)) {
-                      processedAudioInfoForDesc.add(conversation.userAudio.audioInfo);
-                      const transcriptionData = parseTranscriptionData(conversation.userAudio.audioInfo);
-                      if (transcriptionData && typeof transcriptionData === 'string') {
-                        const data = extractScoresFromTranscription(transcriptionData);
-                        
-                                                 Object.entries(data).forEach(([criterion, criterionData]) => {
-                           if (criterionData.descriptions.length > 0 && !criteriaDescriptions[criterion]) {
-                             criteriaDescriptions[criterion] = criterionData.descriptions.map((desc, idx) => 
-                               `${desc} (${criterionData.originalTexts[idx] || ''})`
-                             );
-                           }
-                         });
-                      }
-                    }
-                  });
-
-                  // Convert to average scores and create cards
-                  let analysisCards = Object.entries(chartScores)
-                    .filter(([_, scores]) => scores.length > 0)
-                    .map(([criterion, scores]) => {
-                      const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-                      const mapping = criteriaMapping[criterion as keyof typeof criteriaMapping];
-                      return {
-                        criterion,
-                        score: Math.round(avgScore),
-                        enName: mapping?.en || criterion.toUpperCase(),
-                        scores: scores,
-                        descriptions: criteriaDescriptions[criterion] || []
-                      };
-                    })
-                    .sort((a, b) => b.score - a.score); // Sort by score descending
-                  
-                  // UI包底方案：如果没有任何卡片，显示默认卡片
-                  if (analysisCards.length === 0) {
-                    const defaultCriteria = [
-                      { key: '語速控制', en: 'SPEED CONTROL' },
-                      { key: '音量穩定性', en: 'VOLUME STABILITY' },
-                      { key: '語音清晰度', en: 'CLARITY SCORE' },
-                      { key: '言語流暢性', en: 'FLUENCY SCORE' },
-                      { key: '關鍵訊息傳遞', en: 'KEY MESSAGE' }
-                    ];
-                    
-                    const defaultDescriptions = [
-                      '語調穩定，節奏適中 (好的，我明白了)',
-                      '聲音清楚，表達自然 (請問這個部分是怎麼運作的)',
-                      '語速適當，表達流暢 (謝謝您的說明)',
-                      '音量平穩，語氣親切 (我想了解更多細節)', 
-                      '表達清晰，語調和諧 (這樣聽起來很有道理)'
-                    ];
-                    
-                    analysisCards = defaultCriteria.map((item, index) => ({
-                      criterion: item.key,
-                      score: 70 + Math.floor(Math.random() * 20), // 70-89分随机
-                      enName: item.en,
-                      scores: [70 + Math.floor(Math.random() * 20)],
-                      descriptions: [defaultDescriptions[index]]
-                    }));
-                  }
-                  
-                  return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {analysisCards.map((card, index) => (
-                        <div key={index} className="bg-[#2D5A67] rounded-[16px] p-4 shadow-[0_2px_8px_rgba(0,160,255,0.1)]">
-                          {/* Header */}
-                          <div className="relative mb-3">
-                            <div className="bg-orange-400 text-black text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
-                              {card.criterion}
-                            </div>
-                          </div>
-                          
-                          {/* Score Display */}
-                          <div className="bg-[#173944] rounded-[12px] p-4 mb-3 text-center">
-                            <div className="text-3xl font-bold text-white mb-1">{card.score}</div>
-                            <div className="text-gray-300 text-xs font-medium">{card.enName}</div>
-                          </div>
-                          
-                          {/* Analysis Details */}
-                          <div className="space-y-2">
-                            <div>
-                              <div className="text-orange-400 text-sm font-semibold mb-1">關鍵對話分析</div>
-                              <div className="bg-[#173944] rounded-[8px] p-2">
-                                <div className="text-white text-xs">
-                                  • 平均分數：{card.score}分
-                                </div>
-                                <div className="text-white text-xs">
-                                  • 分數範圍：{Math.min(...card.scores)}~{Math.max(...card.scores)}分
-                                </div>
-              </div>
-            </div>
-                            
-                            {card.descriptions && card.descriptions.length > 0 && (
-                              <div>
-                                <div className="text-orange-400 text-sm font-semibold mb-1">分析說明</div>
-                                <div className="bg-[#173944] rounded-[8px] p-2 space-y-1">
-                                  {(() => {
-                                    // Group descriptions by their content before parentheses
-                                    const descGroups: Record<string, string[]> = {};
-                                    card.descriptions.forEach(desc => {
-                                      const beforeParentheses = desc.split(' (')[0].trim();
-                                      if (!descGroups[beforeParentheses]) {
-                                        descGroups[beforeParentheses] = [];
-                                      }
-                                      descGroups[beforeParentheses].push(desc);
-                                    });
-                                    
-                                    // Randomly select one from each group
-                                    const uniqueDescriptions = Object.values(descGroups).map(group => {
-                                      const randomIndex = Math.floor(Math.random() * group.length);
-                                      return group[randomIndex];
-                                    });
-                                    
-                                    return uniqueDescriptions.map((desc, idx) => (
-                                      <div key={idx} className="text-white text-xs flex items-start">
-                                        <span className="text-orange-300 mr-1">•</span>
-                                        <span>{desc}</span>
-                                      </div>
-                                    ));
-                                  })()}
-                                </div>
-                              </div>
-                            )}
-
+                                                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {analysisCards
+                      .slice(0, isCardsExpanded ? analysisCards.length : 3)
+                      .map((card, index) => (
+                      <div key={index} className="bg-[#2D5A67] rounded-[16px] p-4 shadow-[0_2px_8px_rgba(0,160,255,0.1)]">
+                        {/* Header */}
+                        <div className="relative mb-3">
+                          <div className="bg-orange-400 text-black text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
+                            {card.criterion}
                           </div>
                         </div>
-                      ))}
+                        
+                        {/* Score Display */}
+                        <div className="bg-[#173944] rounded-[12px] p-4 mb-3 text-center">
+                          <div className="text-3xl font-bold text-white mb-1">{card.score}</div>
+                          <div className="text-gray-300 text-xs font-medium">{card.enName}</div>
+                        </div>
+                        
+                        {/* Analysis Details */}
+                        <div className="space-y-2">
+                          {card.descriptions && card.descriptions.length > 0 && (
+                            <div>
+                              <div className="text-orange-400 text-sm font-semibold mb-1">分析說明</div>
+                              <div className="bg-[#173944] rounded-[8px] p-2 space-y-1">
+                                {card.descriptions.map((desc: string, idx: number) => (
+                                  <div key={idx} className="text-white text-xs flex items-start">
+                                    <span className="text-orange-300 mr-1">•</span>
+                                    <span>{desc}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Expand/Collapse Button */}
+                  {analysisCards.length > 3 && (
+                    <div className="flex justify-center mt-6">
+                      <button
+                        onClick={() => setIsCardsExpanded(!isCardsExpanded)}
+                        className="bg-[#00A3E0] text-white px-6 py-2 rounded-full hover:bg-[#00A3E0]/90 transition-colors duration-200 shadow-[0_2px_4px_rgba(0,160,255,0.3)] flex items-center"
+                      >
+                        {isCardsExpanded ? (
+                          <>
+                            <span>收起</span>
+                            <svg className="ml-2 w-4 h-4 transform rotate-180" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </>
+                        ) : (
+                          <>
+                            <span>顯示更多 ({analysisCards.length - 3} 項)</span>
+                            <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  );
-                })()}
+                  )}
+                </div>
               </div>
             )}
 
