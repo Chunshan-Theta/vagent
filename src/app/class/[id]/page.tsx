@@ -224,10 +224,15 @@ function ClassChatPage() {
   }, [convInfo.current?.convId]);
 
 
-  const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: Language) => {
+  const analyzeChatHistoryByRubric = async (criteria: string | undefined, role: string, chatHistory: string, clientLanguage: Language) => {
     if (!criteria) {
       criteria = '使用者本身是否是進行良性的溝通';
     }
+
+    criteria += [
+      '',
+      `另外，要分析的對象是對話紀錄中的"${role}"，需要針對這個角色的表現進行分析，而不是其他人。`
+    ].join('\n');
 
     const weights = [0.5, 0.5, 0.5, 0.5];
 
@@ -306,7 +311,7 @@ function ClassChatPage() {
         }
       })
       // 註：分析 Rubric 的時候優先使用 agentConfig 中的 criteria，其他的分析反之
-      const rubtic_analysis = analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, chatHistory, clientLanguage || 'zh').then((analysis) => {
+      const rubtic_analysis = analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, config.roleSelf, chatHistory, clientLanguage || 'zh').then((analysis) => {
         localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
       })
 

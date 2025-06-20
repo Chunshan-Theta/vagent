@@ -40,10 +40,6 @@ const settingsMap = {
     }
   }
 }
-const roleMap = {
-  user: '我',
-  assistant: '小陳'
-}
 function DynamicAnalysisContent() {
   const {
     router,
@@ -261,10 +257,14 @@ function DynamicAnalysisContent() {
     }
   }, [scene])
 
-  const analyzeChatHistoryByRubric = async (criteria: string | undefined, chatHistory: string, clientLanguage: string) => {
+  const analyzeChatHistoryByRubric = async (criteria: string | undefined, role: string, chatHistory: string, clientLanguage: string) => {
     if (!criteria) {
       criteria = '使用者本身是否是進行良性的溝通';
     }
+    criteria += [
+      '',
+      `另外，要分析的對象是對話紀錄中的"${role}"，需要針對這個角色的表現進行分析，而不是其他人。`
+    ].join('\n');
 
     const weights = [0.5, 0.5, 0.5, 0.5];
 
@@ -356,7 +356,7 @@ function DynamicAnalysisContent() {
     })
     setAnalysisProgress(40);
     await delay(500);
-    const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, chatHistory, 'zh')
+    const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, config.roleSelf, chatHistory, 'zh')
     const progress = simProgressUp(40, 100, 15000).start();
 
     const rubricAnalysis = await rubricAnalysisP;
