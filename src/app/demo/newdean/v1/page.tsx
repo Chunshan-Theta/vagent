@@ -4,7 +4,7 @@ import React, { Suspense, useState, useEffect, useRef, useMemo } from "react";
 import { TranscriptProvider, useTranscript } from "@/app/contexts/TranscriptContext";
 import { ChatProvider, useChat } from "@/app/contexts/ChatContext";
 import { EventProvider } from "@/app/contexts/EventContext";
-import App, { AppRef } from "@/app/App";
+import App, { AppRef } from "@/app/class/[id]/App";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReportV1 } from '@/app/types/ai-report'
 import ChatView from "@/app/components/chat/ChatView";
@@ -154,26 +154,25 @@ function DynamicAnalysisContent() {
     }
   }, [])
 
-  useEffect(() => {
-
-    const fetchAgentConfig = async () => {
-      try {
-        const response = await fetch(`/api/agents/${agentId}`);
-        if (!response.ok) {
-          throw new Error(getTranslation(clientLanguage, 'errors.failed_to_load'));
-        }
-        const data = await response.json();
-        console.log('fetchAgentConfig data', data);
-        const agentConfig = await createAgentConfig(data.agent, clientLanguage);
-        console.log('agentConfig', agentConfig);
-        setAgentConfig(agentConfig);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load'));
+  const fetchAgentConfig = async () => {
+    try {
+      const response = await fetch(`/api/agents/${agentId}`);
+      if (!response.ok) {
+        throw new Error(getTranslation(clientLanguage, 'errors.failed_to_load'));
       }
-    };
+      const data = await response.json();
+      console.log('fetchAgentConfig data', data);
+      const agentConfig = await createAgentConfig(data.agent, clientLanguage);
+      console.log('agentConfig', agentConfig);
+      setAgentConfig(agentConfig);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load'));
+    }
+  };
+  // useEffect(() => {
 
-    fetchAgentConfig();
-  }, [agentId, clientLanguage]);
+
+  // }, [agentId, clientLanguage]);
 
 
   const onSubmitAskForm = (form: any) => {
@@ -227,6 +226,8 @@ function DynamicAnalysisContent() {
 
   async function onAfterLogin(email: string) {
     clearHistory();
+    
+    await fetchAgentConfig();
     await initConv({
       email,
       agentType: 'static',
@@ -419,13 +420,15 @@ function DynamicAnalysisContent() {
 
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
-        <App
-          ref={appRef}
-          agentSetKey="chineseAgent"
-          onSessionOpen={onSessionOpen}
-          onSessionResume={onSessionResume}
-          onSessionClose={onSessionClose}
-        />
+        {agentConfig && (
+          <App
+            ref={appRef}
+            agentConfig={agentConfig}
+            onSessionOpen={onSessionOpen}
+            onSessionResume={onSessionResume}
+            onSessionClose={onSessionClose}
+          />
+        )}
       </div>
     </div>
   );
