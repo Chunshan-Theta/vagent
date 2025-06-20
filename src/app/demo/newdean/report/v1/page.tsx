@@ -158,36 +158,38 @@ function NewDeanReportV1() {
   }, [])
 
   function createReportView() {
-    if (activeTab === 'report') {
-      // 限制寬度
-      return (
-        <div className="max-w-4xl w-full">
-          {reportData.current && <ReportView data={reportData.current} />}
-        </div>
-      )
-    }
-    if (activeTab === 'oreport') {
-      const data = oReportDatas
-      return (
-        <>
-          {data &&
-            <OReportView
-              user={data.user}
-              rubric={data.rubric || []}
-              adviceItems={data.adviceItems}
-              playLogText={data.playLogText || ''}
-            />
-          }
-        </>
-      )
-    }
+    // if (activeTab === 'report') {
+    //   // 限制寬度
+    //   return (
+    //     <div className="max-w-4xl w-full">
+    //       {reportData.current && <ReportView data={reportData.current} />}
+    //     </div>
+    //   )
+    // }
+    // if (activeTab === 'oreport') {
+    //   const data = oReportDatas
+    //   return (
+    //     <>
+    //       {data &&
+    //         <OReportView
+    //           user={data.user}
+    //           rubric={data.rubric || []}
+    //           adviceItems={data.adviceItems}
+    //           playLogText={data.playLogText || ''}
+    //         />
+    //       }
+    //     </>
+    //   )
+    // }
     if (activeTab === 'analysis') {
       return (
         <>
-          <ReportViewV2
-            data={analysisData.current}
-            message={messagesData.current || []}
-          />
+          {analysisData.current &&
+            <ReportViewV2
+              data={analysisData.current}
+              message={messagesData.current || []}
+            />
+          }
         </>
       )
     }

@@ -357,7 +357,7 @@ function DynamicAnalysisContent() {
     setAnalysisProgress(40);
     await delay(500);
     const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, chatHistory, 'zh')
-    const progress = simProgressUp(40, 100, 15000);
+    const progress = simProgressUp(40, 100, 15000).start();
 
     const rubricAnalysis = await rubricAnalysisP;
 

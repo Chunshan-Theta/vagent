@@ -307,6 +307,7 @@ export function useAiChat(){
       }
       lastSimProgress.current = state;
       _next();
+      return state;
     }
     function stop(){
       if (state.timerId) {
@@ -316,10 +317,12 @@ export function useAiChat(){
       if (lastSimProgress.current) {
         lastSimProgress.current = null;
       }
+      return state;
     }
     function complete(){
       stop();
       setAnalysisProgress(endProgress);
+      return state;
     }
     return state
   }

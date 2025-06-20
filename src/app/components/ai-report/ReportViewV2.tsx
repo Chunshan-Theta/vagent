@@ -38,7 +38,7 @@ export default function ReportViewV2({ data: analysis, onBack, message = '' }: P
     if (typeof analysis === 'string' && analysis.trim() !== '') {
       return analysis
     }
-    if (Array.isArray(analysis)) {
+    if (typeof analysis === 'object' && analysis != null) {
       return JSON.stringify(analysis);
     }
     if (typeof window === 'undefined') return '{}';
