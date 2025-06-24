@@ -7,6 +7,7 @@ const openai = new OpenAI({
 });
 
 export interface AnalysisRequest {
+  role?: string;
   message: string;
   rubric: {
     criteria: string[] | string;
@@ -33,7 +34,7 @@ export interface AnalysisResponse {
 export async function POST(request: Request) {
   try {
     const body: AnalysisRequest = await request.json();
-    const { message, rubric, detectedLanguage="zh" } = body;
+    const { message, rubric, detectedLanguage="zh", role } = body;
 
     if (!message || !rubric || !rubric.criteria) {
       return NextResponse.json(
@@ -46,6 +47,10 @@ export async function POST(request: Request) {
     } else {
       rubric.criteria = rubric.criteria;
     }
+
+    const roleName = role || 'user'
+    const roleDesc1 =  roleName === 'user' ? '分析對象為 user。' : `分析對象為 user 且其扮演角色為 ${roleName}。`;
+    const roleDesc2 =  roleName === 'user' ? '分析對象為 user，而不是其他角色' : `分析對象為 user ，user 在對話中扮演的角色為 ${roleName}，其他角色僅為對話情境參考。`;
 
     // Detect the language of the conversation
     // const languageDetectionPrompt = `Detect the primary language of the following text. Respond with only the language code (e.g., "en", "zh", "ja", "ko", "es", "fr", "de"). If you're unsure, respond with "en".
@@ -84,15 +89,12 @@ export async function POST(request: Request) {
 根據這些標準(criteria)分析以下訊息：
 對於每個標準(criteria)，請提供：
 1. 1-100 分（100 分代表滿分，1 分代表最低分）
-2. 關於給分的簡要原因說明，必須針對user的文字（而不是來自nassistant和criteria）。
+2. 關於給分的簡要原因說明，必須針對user的文字（而不是來自assistant和criteria）。
 3. examples要引用來自user的文字（而不是來自nassistant和criteria）來作為具體例子，支援您的評分和推理。
 4. 針對此標準提出2-3個具體的改進建議，改進建議要包含引導例句。
 5. 簡單概括整個對話（2-3 句）
 6. 3-5條針對整個對話的整體改進建議，改進建議要包含引導例句。
-
-# criteria
-${rubric.criteria}。
-
+7. ${roleDesc1}
 
 # 重要提示：
 1. 一切分析都應該以「user的文本」為基礎（忽略assistant的文字），主要著重分析使用者在當前對話中的表現。
@@ -138,14 +140,23 @@ ${rubric.criteria}。
   - 根據分析，提出加強對話的具體方法。
   - 專注於促進同理心、相互理解和協作解決問題（例如，使用反思性傾聽、提出澄清問題、避免使用評判性語言）。
 
-  ### i. 引用內文
-  - 在分析中引用對話中的具體詞彙或片段，以支持您的觀察和建議。
-  - 確保引用的句子和原文相同。
-7. 請確保回應中的 scores.explanation, feedback, summary 裡面能引用到 user 的文字，並且能夠清楚地解釋為什麼給予這個分數。
+  ### i. 提供具體的對話範例句子 examples
+  - 在建議與分析時，必須參照並引用 user 實際說過的內容。
+  - 如果沒有值得參考的內容請留空。
+
+# criteria:
+\`\`\`
+${rubric.criteria}。
+\`\`\`
+
+# 需要分析的訊息紀錄：
+\`\`\`
+${message}
+\`\`\`
 
 # ${languageInstruction}
 
-# 需要分析的訊息：“${message}”
+請針對上述訊息紀錄進行分析，且${roleDesc2}
 
 # 以 JSON 格式回應，結構如下：
 {

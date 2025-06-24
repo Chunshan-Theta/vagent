@@ -261,10 +261,6 @@ function DynamicAnalysisContent() {
     if (!criteria) {
       criteria = '使用者本身是否是進行良性的溝通';
     }
-    criteria += [
-      '',
-      `另外，要分析的對象是對話紀錄中的"${role}"，需要針對這個角色的表現進行分析，而不是其他人。`
-    ].join('\n');
 
     const weights = [0.5, 0.5, 0.5, 0.5];
 
@@ -278,6 +274,7 @@ function DynamicAnalysisContent() {
         rubric: {
           criteria,
           weights,
+          role
         },
         detectedLanguage: clientLanguage,
       }),
@@ -344,7 +341,7 @@ function DynamicAnalysisContent() {
 
     const config = {
       criteria: getAgentConfig().criteria,
-      roleSelf: aiReport.getSetting('reportAnalyze.roleSelf') || 'user',
+      roleSelf: '主管',
       roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'assistant',
     };
 

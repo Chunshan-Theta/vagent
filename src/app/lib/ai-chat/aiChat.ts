@@ -298,7 +298,7 @@ export function useAiChat(){
         // 最後的進度以 1/10 的速度上升
         addVal += step / 10; // 每次增加 0.02
       }
-      setAnalysisProgress((prev)=>prev+ addVal);
+      setAnalysisProgress((prev)=>prev + addVal);
       state.timerId = setTimeout(_next, interval);
     }
     function start(){
