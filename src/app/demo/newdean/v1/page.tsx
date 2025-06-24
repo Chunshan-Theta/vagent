@@ -271,10 +271,11 @@ function DynamicAnalysisContent() {
       },
       body: JSON.stringify({
         message: chatHistory,
+        role,
+        context: `對話紀錄中 user 的角色是主管，assistant 扮演部門溝通的角色。`,
         rubric: {
           criteria,
           weights,
-          role
         },
         detectedLanguage: clientLanguage,
       }),
@@ -341,8 +342,8 @@ function DynamicAnalysisContent() {
 
     const config = {
       criteria: getAgentConfig().criteria,
-      roleSelf: '主管',
-      roleTarget: aiReport.getSetting('reportAnalyze.roleTarget') || 'assistant',
+      roleSelf: 'user',
+      roleTarget: 'assistant',
     };
 
     const chatHistory = getChatHistoryText({

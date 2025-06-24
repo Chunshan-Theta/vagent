@@ -9,6 +9,7 @@ const openai = new OpenAI({
 export interface AnalysisRequest {
   role?: string;
   message: string;
+  context?: string;
   rubric: {
     criteria: string[] | string;
     weights?: number[];
@@ -34,7 +35,7 @@ export interface AnalysisResponse {
 export async function POST(request: Request) {
   try {
     const body: AnalysisRequest = await request.json();
-    const { message, rubric, detectedLanguage="zh", role } = body;
+    const { message, rubric, detectedLanguage="zh", role, context } = body;
 
     if (!message || !rubric || !rubric.criteria) {
       return NextResponse.json(
@@ -207,9 +208,10 @@ ${message}
       const res = await chatCompletion({
         missionId: 'report-v1/reference',
         params: {
+          context: context || '',
           content: analysis[key] || '',
           reference: `對話紀錄:\n"""${message}"""\n`,
-          instruction: '請根據 reference 內的對話紀錄，補充 content 生成一個更完整的內容。\n如果合適請使用對話紀錄中的內容來補充，並且要包含具體的對話範例句子。'
+          instruction: '請根據 context 和 reference 內的對話紀錄，補充 content 生成一個更完整的內容。\n針對合適的段落使用對話紀錄中的內容來補充，如果沒有合適的段落，則不需要補充。',
         },
         responseType: 'json_schema'
       })
