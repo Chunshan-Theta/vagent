@@ -277,7 +277,7 @@ function DynamicAnalysisContent() {
         message: chatHistory,
         role,
         // context: `對話紀錄中 user 的角色是主管，assistant 扮演部門溝通的角色。請根據對話紀錄來分析主管和部門溝通的情況。`,
-        context: `對話紀錄中 user 對方則扮演部門溝通的角色。請根據 user 說的話來分析部門溝通的情況。`,
+        context: `對話紀錄中 user 的角色是主管，而對方是部門內的成員的角色。請根據 user 說的話來分析部門溝通的情況。`,
         rubric: {
           criteria,
           weights,
