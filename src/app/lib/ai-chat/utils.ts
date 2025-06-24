@@ -9,6 +9,8 @@ const { sttPrompt, startAsk } = sharedConfig;
 const invalidSttText = _initInvalidSttText()
 
 
+
+
 /**
  * 確保文字並不是直接重複 stt prompt 的內容
  * @param text 
@@ -26,8 +28,7 @@ export function sttTextValid(text:string){
 
 export function sttTextValidEx(text:string){
   text = (text || '').trim();
-  const valid = sttTextValid(text) && text !== '通話暫停中' && text !== '通話已恢復';
-  // TODO 檢查更多語系的內容
+  const valid = sttTextValid(text) && text !== '通話暫停中' && text !== '通話已恢復' && !invalidSttText.has(text);
   return valid;
 }
   
@@ -84,10 +85,12 @@ export function handleAnalysisExamples(examples:string[], opts: handleAnalysisEx
 function _initInvalidSttText(){
   const stopCall = translations.ai_chatbot_action.stop_call;
   const sessionResume = translations.ai_chatbot_action.sessionResume;
+  const startAsk = translations.ai_chatbot_action.startAsk;
 
   const list = [
     ...Object.keys(stopCall).map(lang => stopCall[lang as keyof typeof stopCall]),
     ...Object.keys(sessionResume).map(lang => sessionResume[lang as keyof typeof sessionResume]),
+    ...Object.keys(startAsk).map(lang => startAsk[lang as keyof typeof startAsk]),
   ]
 
   return new Set(list.map(text => text.trim()).filter(text => text.length > 0))
