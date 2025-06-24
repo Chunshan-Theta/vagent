@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 
 const API_URL = '/api/agents'; // API 路徑改為 /agents
