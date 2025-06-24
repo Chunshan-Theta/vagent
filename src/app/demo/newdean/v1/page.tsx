@@ -354,6 +354,7 @@ function DynamicAnalysisContent() {
     const userInputHistory = getChatHistoryText({
       items: transcriptItems
         .filter(item => item.type === 'MESSAGE')
+        .filter(item => item.role === 'user')
         .filter(item => {
           // Skip messages that should be hidden
           const content = item.title || '';
