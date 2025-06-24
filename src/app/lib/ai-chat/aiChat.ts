@@ -547,19 +547,21 @@ export function useAiChat(){
 
   type getChatHistoryTextOptions = {
     roleMap?: {[role:string]: string};
+    items?: typeof transcriptItems;
   }
   const getChatHistoryText = (opts: getChatHistoryTextOptions = {})=>{
-    return utils.getChatHistoryText(transcriptItems, opts);
+    const items = opts.items || transcriptItems;
+    return utils.getChatHistoryText(items, opts);
   }
 
   const getChatHistory = ()=>{
     const chatHistory = transcriptItems
-    .filter(item => item.type === 'MESSAGE')
-    .filter(item => {
-      // Skip messages that should be hidden
-      const content = item.title || '';
-      return sttTextValid(content);
-    })
+      .filter(item => item.type === 'MESSAGE')
+      .filter(item => {
+        // Skip messages that should be hidden
+        const content = item.title || '';
+        return sttTextValid(content);
+      })
     return chatHistory;
   }
 

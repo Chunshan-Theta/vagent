@@ -14,6 +14,7 @@ import { AgentConfig, Tool, TranscriptItem } from "@/app/types";
 
 import { agentApi, convApi } from '@/app/lib/ai-chat'
 import { useAiChat } from "@/app/lib/ai-chat/aiChat";
+import { sttTextValidEx } from "@/app/lib/ai-chat/utils";
 
 import AskForm from "@/app/components/AskForm";
 import _ from '@/app/vendor/lodash';
@@ -27,6 +28,7 @@ import * as keyApi from '@/app/lib/ai-chat/keyQuota'
 import { requireQuota } from "../utils";
 import * as utils from '@/app/class/utils'
 import { set } from "lodash";
+
 
 const vv = 'v1'
 
@@ -69,8 +71,10 @@ function DynamicAnalysisContent() {
     getMessagePairs,
 
     progressTimerRef,
+    
 
     endConversation,
+
     getChatHistoryText,
     getChatHistory,
 
@@ -272,7 +276,8 @@ function DynamicAnalysisContent() {
       body: JSON.stringify({
         message: chatHistory,
         role,
-        context: `對話紀錄中 user 的角色是主管，assistant 扮演部門溝通的角色。`,
+        // context: `對話紀錄中 user 的角色是主管，assistant 扮演部門溝通的角色。請根據對話紀錄來分析主管和部門溝通的情況。`,
+        context: `對話紀錄中 user 對方則扮演部門溝通的角色。請根據 user 說的話來分析部門溝通的情況。`,
         rubric: {
           criteria,
           weights,
@@ -346,6 +351,19 @@ function DynamicAnalysisContent() {
       roleTarget: 'assistant',
     };
 
+    const userInputHistory = getChatHistoryText({
+      items: transcriptItems
+        .filter(item => item.type === 'MESSAGE')
+        .filter(item => {
+          // Skip messages that should be hidden
+          const content = item.title || '';
+          return sttTextValidEx(content);
+        }),
+      roleMap: {
+        user: config.roleSelf,
+        assistant: config.roleTarget,
+      }
+    })
     const chatHistory = getChatHistoryText({
       roleMap: {
         user: config.roleSelf,
@@ -354,7 +372,8 @@ function DynamicAnalysisContent() {
     })
     setAnalysisProgress(40);
     await delay(500);
-    const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, config.roleSelf, chatHistory, 'zh')
+
+    const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, config.roleSelf, userInputHistory, 'zh')
     const progress = simProgressUp(40, 100, 30000).start();
 
     const rubricAnalysis = await rubricAnalysisP;

@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 對於每個標準(criteria)，請提供：
 1. 1-100 分（100 分代表滿分，1 分代表最低分）
 2. 關於給分的簡要原因說明，必須針對user的文字（而不是來自assistant和criteria）。
-3. examples要引用來自user的文字（而不是來自nassistant和criteria）來作為具體例子，支援您的評分和推理。
+3. examples要引用來自user的文字（而不是來自 assistant 和 criteria ）來作為具體例子，支援您的評分和推理。
 4. 針對此標準提出2-3個具體的改進建議，改進建議要包含引導例句。
 5. 簡單概括整個對話（2-3 句）
 6. 3-5條針對整個對話的整體改進建議，改進建議要包含引導例句。
@@ -141,14 +141,13 @@ export async function POST(request: Request) {
   - 根據分析，提出加強對話的具體方法。
   - 專注於促進同理心、相互理解和協作解決問題（例如，使用反思性傾聽、提出澄清問題、避免使用評判性語言）。
 
-  ### i. 提供具體的對話範例句子 examples
-  - 在建議與分析時，必須參照並引用 user 實際說過的內容。
-  - 如果沒有值得參考的內容請留空。
-
 # criteria:
 \`\`\`
-${rubric.criteria}。
+${rubric.criteria}
 \`\`\`
+
+# context:
+${context || 'reference 內包含了 user 和 assistant 的對話紀錄，請根據這些對話紀錄來補充內容。'}
 
 # 需要分析的訊息紀錄：
 \`\`\`
@@ -181,6 +180,8 @@ ${message}
       model: "gpt-4o",
       response_format: { type: "json_object" },
     });
+
+    console.log('usage', completion.usage)
 
     const analysis = JSON.parse(completion.choices[0].message.content || '{}') as AnalysisResponse;
     

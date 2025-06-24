@@ -27,6 +27,7 @@ export function sttTextValid(text:string){
 export function sttTextValidEx(text:string){
   text = (text || '').trim();
   const valid = sttTextValid(text) && text !== '通話暫停中' && text !== '通話已恢復';
+  // TODO 檢查更多語系的內容
   return valid;
 }
   
