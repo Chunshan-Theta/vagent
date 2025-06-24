@@ -60,3 +60,8 @@ export async function translatePrompt(text: string, sourceLang: string, targetLa
   });
   return res
 }
+
+export function textIndent(text: string, indent: number = 2): string {
+  const spaces = ' '.repeat(indent);
+  return text.split('\n').map(line => spaces + line).join('\n');
+}

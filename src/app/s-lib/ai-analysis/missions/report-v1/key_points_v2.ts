@@ -3,6 +3,8 @@ import getOpts, { defaultCriteria } from "./_config"
 import { getLangConfig } from "../../_lang"
 import * as utils from '../../utils'
 
+const textIndent = utils.textIndent
+
 export type KeyPointsParams = {
   analysis1?: string
   analysis2?: string
@@ -194,8 +196,3 @@ export function expectSchema(params: KeyPointsParams){
   };
 }
 
-function textIndent(text: string, indent: number = 2): string {
-  const spaces = ' '.repeat(indent);
-  return text.split('\n').map(line => spaces + line).join('\n');
-
-}

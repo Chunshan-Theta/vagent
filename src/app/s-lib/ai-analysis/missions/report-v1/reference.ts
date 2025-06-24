@@ -1,16 +1,25 @@
 import type { ModelOptions, MissionResponseSchame, MissionParamsDefineMap } from "../../types"
 import getOpts from "./_config"
+import { textIndent } from "../../utils"
 
 export type MissionParams = {
+  context?: string
   content?: string
   reference?: string
   instruction?: string
 }
 
-const defaultInstruction = '請幫我生成更完整的內容，基於 content 和 reference'
+const defaultInstruction = '請幫我生成更完整的內容，基於 context、content和reference'
 
 export function defineParams() : MissionParamsDefineMap {
   return {
+    context: {
+      type: 'textarea',
+      title: '情境',
+      description: '請盡可能完整的描述參考資料或內文中的情境，這些情境將用於生成更完整的內容。',
+      default: '',
+      placeholder: '例：reference 內包含了 user 和 assistant 的對話紀錄，請根據這些對話紀錄來補充內容。',
+    },
     content: {
       type: 'textarea',
       title: '原始內文',
@@ -40,21 +49,27 @@ export function moduleOptions() : ModelOptions{
 export function getMessages(params: MissionParams){
   const sysPrompt = `
 你是一個文章檢閱者
-你需要閱讀 content 和 reference，然後生成一個更完整的內容。
+你需要閱讀用戶提供的 context、content和reference，然後生成一個更完整的 content。
 比如說 content 是一篇文章，而 reference 是一些相關的資料或參考文獻，這時候你要根據 content 的內容加入一些 reference 的資料，讓 content 更完整。
 比如說 content 是一篇影片評論，而 reference 裡面提供了逐字稿，這時候你可以根據逐字稿的內容補充評論的細節。
 
+註：context 是用來幫助你理解 content 和 reference 的背景資料。
 註：可以想像 content 是基於 reference 和其他資料生成的文章。
 `.trim();
   const prompt = `
+## context:
+"""
+${textIndent(params.context || 'reference 內包含了 user 和 assistant 的對話紀錄，請根據這些對話紀錄來補充內容。', 2)}
+"""
+
 ## content:
 """
-${params.content || ''}
+${textIndent(params.content || '', 2)}
 """
 
 ## reference:
 """
-${params.reference || ''}
+${textIndent(params.reference || '', 2)}
 """
 
 ${params.instruction || defaultInstruction}
