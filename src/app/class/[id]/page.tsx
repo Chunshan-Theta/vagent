@@ -299,10 +299,10 @@ function ClassChatPage() {
 
         keyPointAnalysis1: aiReport.getSetting('reportAnalyze.keyPointAnalysis1') || '分析 __role__ 表現良好的部分，並列出具體的例子或關鍵句（請列出實際原句）',
         keyPointTitle1: aiReport.getSetting('reportAnalyze.keyPointTitle1') || '優點',
-        keyPointIcon1: aiReport.getSetting('reportAnalyze.keyPointIcon1') || '❌',
+        keyPointIcon1: aiReport.getSetting('reportAnalyze.keyPointIcon1') || '⭕',
         keyPointTitle2: aiReport.getSetting('reportAnalyze.keyPointTitle2') || '缺點',
         keyPointAnalysis2: aiReport.getSetting('reportAnalyze.keyPointAnalysis2') || '分析 __role__ 表現不佳的部分，並列出可能存在的溝通問題或不足之處（請列出實際原句）',
-        keyPointIcon2: aiReport.getSetting('reportAnalyze.keyPointIcon2') || '📉',
+        keyPointIcon2: aiReport.getSetting('reportAnalyze.keyPointIcon2') || '❌',
       }
       const chatHistory = getChatHistoryText({
         roleMap: {
