@@ -26,13 +26,15 @@ type AskFormProps = {
   submitText?: string
   loading?: boolean
   onSubmit?: (data: SubmitForm) => void
+  noSubmit?: boolean // 是否不顯示送出按鈕
+  children?: React.ReactNode // 新增 children 支援
 }
 
 const inputTypes = new Set(['text', 'number', 'password'] as const)
 
 const AskForm: React.FC<AskFormProps> = (props) => {
-  const { items, theme = 'default', onSubmit = () => { }, submitText = '送出' } = props
-
+  const { items, theme = 'default', onSubmit = () => { }, submitText = '送出', children } = props
+  const noSubmit = props.noSubmit || false
   const [errors, setErrors] = React.useState<FormError[]>([])
   const clearErrors = () => {
     setErrors([])
@@ -108,9 +110,10 @@ const AskForm: React.FC<AskFormProps> = (props) => {
           return <div key={index}></div>
         }
       })}
+      {children}
       <div className="ask-form__submit">
-        { props.loading && <div className="ask-form__loading"></div> }
-        { !props.loading &&
+        {props.loading && <div className="ask-form__loading"></div>}
+        {!props.loading && !noSubmit &&
           <button type="button" className="ask-form__submit-button" onClick={btnSubmit}>
             {submitText}
           </button>
