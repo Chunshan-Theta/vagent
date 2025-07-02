@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -18,6 +19,7 @@ interface AgentConfig {
 }
 
 export default function AutoGenAgent() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [purpose, setPurpose] = useState('assistants');
   const [loading, setLoading] = useState(false);
@@ -47,6 +49,31 @@ export default function AutoGenAgent() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCreate = () => {
+    if (!result) return;
+
+    // Map the fields to the new agent form structure
+    const formData = {
+      name: result.AgentName,
+      public_description: result.AgentDescription,
+      prompt_name: result.AgentName, // Using AgentName as prompt_name too
+      prompt_personas: result.AgentDescription, // Using AgentDescription as prompt_personas
+      prompt_customers: result.AgentCustomersDescribe,
+      prompt_tool_logics: result.AgentToolPluginDescribe,
+      prompt_voice_styles: result.AgentVoiceStyles,
+      voice: (result.Echo || 'echo').toLowerCase(), // Default to 'echo' if not provided
+      prompt_conversation_modes: result.AgentConversationModes,
+      prompt_prohibited_phrases: result.AgentProhibitedRules,
+      criteria: result.AgentCriteria,
+    };
+
+    // Store in localStorage
+    localStorage.setItem('new_agent_form_data', JSON.stringify(formData));
+
+    // Redirect to new agent page
+    router.push('/admin/agents/new');
   };
 
   const renderField = (label: string, content: string) => (
@@ -88,7 +115,12 @@ export default function AutoGenAgent() {
 
       {result && (
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-6">{result.AgentName}</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">{result.AgentName}</h2>
+            <Button onClick={handleCreate} className="bg-green-600 hover:bg-green-700">
+              Create Agent
+            </Button>
+          </div>
           
           {renderField('描述', result.AgentDescription)}
           {renderField('目標客群', result.AgentCustomersDescribe)}

@@ -13,6 +13,19 @@ export default function NewAgentPage() {
 
   useEffect(() => {
     fetchTools();
+    
+    // Load form data from localStorage if exists
+    const savedFormData = localStorage.getItem('new_agent_form_data');
+    if (savedFormData) {
+      try {
+        const parsedData = JSON.parse(savedFormData);
+        setFormData(parsedData);
+        // Clear the data from localStorage after loading
+        localStorage.removeItem('new_agent_form_data');
+      } catch (err) {
+        console.error('Error parsing saved form data:', err);
+      }
+    }
   }, []);
 
   const fetchTools = async () => {
