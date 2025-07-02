@@ -24,7 +24,7 @@ export const useElasticService = ({ baseUrl, indexName }: UseElasticServiceProps
       event_id: `evt_${uuidv4()}`,
       user,
       client_device: clientDevice,
-      event_situation,
+      event_situation: eventSituation,
       action: {
         ...action,
         body: action.body || {}

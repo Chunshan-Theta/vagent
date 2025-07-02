@@ -62,15 +62,22 @@ export interface UserBehaviorEvent {
 export class ElasticService {
   private baseUrl: string;
   private indexName: string;
+  private apiBaseUrl: string;
 
   constructor(baseUrl: string, indexName: string) {
     this.baseUrl = baseUrl;
     this.indexName = indexName;
+    // Use window.location.origin in browser environment, use baseUrl in Node
+    this.apiBaseUrl = typeof window !== 'undefined' ? window.location.origin : baseUrl;
   }
 
   async insertEvent(event: UserBehaviorEvent): Promise<any> {
     try {
-      const response = await axios.post(`${this.baseUrl}/${this.indexName}/_doc`, event);
+      const response = await axios.post(`${this.baseUrl}/${this.indexName}/_doc`, event, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Failed to insert event to Elasticsearch:', error);
@@ -90,15 +97,10 @@ export class ElasticService {
     };
   }> {
     try {
-      const response = await axios.post(
-        `${this.baseUrl}/${this.indexName}/_search`,
-        {
-          from: query.from || 0,
-          size: query.size || 10,
-          sort: query.sort || { '@timestamp': 'desc' },
-          query: query.query || { match_all: {} }
-        }
-      );
+      const response = await axios.post(`${this.apiBaseUrl}/api/log/search`, {
+        ...query,
+        indexName: this.indexName
+      });
       return response.data;
     } catch (error) {
       console.error('Failed to search events from Elasticsearch:', error);
