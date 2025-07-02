@@ -2,6 +2,10 @@ import { ElasticService } from '@/lib/elastic-service';
 import { NextRequest } from 'next/server';
 import { POST as logPost } from '../log/route';
 import { POST as searchPost } from '../log/search/route';
+import axios from 'axios';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('Log API Tests', () => {
   let elasticService: ElasticService;
@@ -106,8 +110,37 @@ describe('Log API Tests', () => {
     }
   };
 
-  beforeAll(() => {
+  beforeEach(() => {
     elasticService = new ElasticService(testHost, 'voiss-user-logs-test');
+    
+    // Mock successful Elasticsearch responses
+    mockedAxios.post.mockImplementation((url) => {
+      if (url.includes('/_doc')) {
+        return Promise.resolve({
+          data: {
+            _index: 'test-index',
+            _id: 'test-id',
+            result: 'created'
+          }
+        });
+      } else if (url.includes('voiss-user-logs-test/_search')) {
+        return Promise.resolve({
+          data: {
+            hits: {
+              total: { value: 1 },
+              hits: [{
+                _source: sampleEvent
+              }]
+            }
+          }
+        });
+      }
+      return Promise.reject(new Error(`Unknown endpoint: ${url}`));
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('ElasticService Tests', () => {
@@ -164,14 +197,41 @@ describe('Log API Tests', () => {
     });
 
     it('should successfully insert and retrieve LLM event', async () => {
+      // Mock specific response for LLM event
+      mockedAxios.post.mockImplementationOnce((url) => {
+        if (url.includes('/_doc')) {
+          return Promise.resolve({
+            data: {
+              _index: 'test-index',
+              _id: 'test-id',
+              result: 'created'
+            }
+          });
+        }
+        return Promise.reject(new Error(`Unknown endpoint: ${url}`));
+      });
+
+      mockedAxios.post.mockImplementationOnce((url) => {
+        if (url.includes('voiss-user-logs-test/_search')) {
+          return Promise.resolve({
+            data: {
+              hits: {
+                total: { value: 1 },
+                hits: [{
+                  _source: sampleLLMEvent
+                }]
+              }
+            }
+          });
+        }
+        return Promise.reject(new Error(`Unknown endpoint: ${url}`));
+      });
+
       // Insert the event
       const insertResult = await elasticService.insertEvent(sampleLLMEvent);
       expect(insertResult._index).toBeDefined();
       expect(insertResult._id).toBeDefined();
       expect(insertResult.result).toBe('created');
-
-      // Wait for indexing
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Search for the inserted event
       const searchQuery = {
@@ -196,6 +256,36 @@ describe('Log API Tests', () => {
     });
 
     it('should search LLM events by time range and parameters', async () => {
+      // Mock specific response for time range search
+      mockedAxios.post.mockImplementationOnce((url) => {
+        if (url.includes('voiss-user-logs-test/_search')) {
+          return Promise.resolve({
+            data: {
+              hits: {
+                total: { value: 1 },
+                hits: [{
+                  _source: {
+                    ...sampleLLMEvent,
+                    action: {
+                      ...sampleLLMEvent.action,
+                      action_properties: {
+                        ...sampleLLMEvent.action.action_properties,
+                        parameters: {
+                          temperature: 0.5,
+                          top_p: 0.9,
+                          max_tokens: 1200
+                        }
+                      }
+                    }
+                  }
+                }]
+              }
+            }
+          });
+        }
+        return Promise.reject(new Error(`Unknown endpoint: ${url}`));
+      });
+
       const searchQuery = {
         query: {
           bool: {
@@ -270,6 +360,33 @@ describe('Log API Tests', () => {
   });
 
   describe('Search API Endpoint Tests', () => {
+    beforeEach(() => {
+      // Mock Elasticsearch response for all search tests
+      mockedAxios.post.mockImplementation((url) => {
+        if (url.includes('/_doc')) {
+          return Promise.resolve({
+            data: {
+              _index: 'test-index',
+              _id: 'test-id',
+              result: 'created'
+            }
+          });
+        } else if (url.includes('/_search')) {
+          return Promise.resolve({
+            data: {
+              hits: {
+                total: { value: 1 },
+                hits: [{
+                  _source: sampleEvent
+                }]
+              }
+            }
+          });
+        }
+        return Promise.reject(new Error('Unknown endpoint'));
+      });
+    });
+
     it('should successfully search logs', async () => {
       const req = new Request('http://localhost/api/log/search', {
         method: 'POST',
@@ -328,6 +445,23 @@ describe('Log API Tests', () => {
     });
 
     it('should search LLM report generation events', async () => {
+      // Mock specific response for LLM search
+      mockedAxios.post.mockImplementationOnce((url) => {
+        if (url.includes('/_search')) {
+          return Promise.resolve({
+            data: {
+              hits: {
+                total: { value: 1 },
+                hits: [{
+                  _source: sampleLLMEvent
+                }]
+              }
+            }
+          });
+        }
+        return Promise.reject(new Error('Unknown endpoint'));
+      });
+
       const req = new Request('http://localhost/api/log/search', {
         method: 'POST',
         body: JSON.stringify({

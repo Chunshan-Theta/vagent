@@ -63,8 +63,15 @@ export async function POST(req: NextRequest) {
       query: must.length > 0 ? { bool: { must } } : { match_all: {} }
     };
 
-    const result = await elasticService.searchEvents(searchQuery);
-    return NextResponse.json(result);
+    try {
+      const result = await elasticService.searchEvents(searchQuery);
+      return NextResponse.json(result);
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return NextResponse.json({ hits: { total: { value: 0 }, hits: [] } });
+      }
+      throw error;
+    }
   } catch (error: any) {
     console.error('Error searching logs:', error);
     return NextResponse.json(

@@ -97,10 +97,7 @@ export class ElasticService {
     };
   }> {
     try {
-      const response = await axios.post(`${this.apiBaseUrl}/api/log/search`, {
-        ...query,
-        indexName: this.indexName
-      });
+      const response = await axios.post(`${this.baseUrl}/${this.indexName}/_search`, query);
       return response.data;
     } catch (error) {
       console.error('Failed to search events from Elasticsearch:', error);
