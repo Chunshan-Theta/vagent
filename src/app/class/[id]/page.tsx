@@ -158,7 +158,8 @@ function ClassChatPage() {
     const metadataWithUser = {
       ...metadata,
       email: userInfo.email,
-      uname: userInfo.uname
+      uname: userInfo.uname,
+      agentId: agentId,
     };
     return logService.logStep(
       step,
@@ -183,7 +184,7 @@ function ClassChatPage() {
         await logWithUser(
           'fetch_agent_config_start',
           'agent',
-          { agentId: params.id },
+          {},
           {},
           false,
           '',
@@ -200,7 +201,7 @@ function ClassChatPage() {
         await logWithUser(
           'fetch_agent_config_success',
           'agent',
-          { agentId: params.id },
+          {},
           { agent: data.agent },
           false,
           '',
@@ -213,7 +214,7 @@ function ClassChatPage() {
         await logWithUser(
           'fetch_agent_config_error',
           'agent',
-          { agentId: params.id },
+          {},
           {},
           true,
           error,
@@ -375,7 +376,7 @@ function ClassChatPage() {
       await logWithUser(
         'analysis_config_ready',
         'analysis',
-        { convId: convInfo.current?.convId },
+        { convId: convInfo.current?.convId, agentId: agentId ,userInfo},
         { config },
         false,
         '',
@@ -525,7 +526,6 @@ function ClassChatPage() {
         const item = timelineItems[index]
         const { aiSay, userSay } = item
 
-        const analysisRole = 'user'
         const chatHistory = [
           `${config.roleTarget}: ${parseHistoryContent(aiSay)}`,
           `${config.roleSelf}: ${userSay}`
@@ -652,7 +652,7 @@ function ClassChatPage() {
       await logWithUser(
         'analysis_complete',
         'analysis',
-        { convId: convInfo.current?.convId },
+        { convId: convInfo.current?.convId, agentId: agentId },
         { timelineItemsCount: timelineItems.length },
         false,
         '',
@@ -674,7 +674,7 @@ function ClassChatPage() {
       await logWithUser(
         'analysis_error',
         'analysis',
-        { convId: convInfo.current?.convId },
+        { convId: convInfo.current?.convId, agentId: agentId },
         {},
         true,
         error instanceof Error ? error.message : 'Unknown error',
@@ -706,7 +706,7 @@ function ClassChatPage() {
       await logWithUser(
         'conversation_start',
         'conversation',
-        { agentId },
+        { },
         { email: userInfo.email, uname: userInfo.uname },
         false,
         '',
@@ -728,7 +728,7 @@ function ClassChatPage() {
       await logWithUser(
         'conversation_start_error',
         'conversation',
-        { agentId },
+        {  },
         { email: userInfo.email, uname: userInfo.uname },
         true,
         error,
