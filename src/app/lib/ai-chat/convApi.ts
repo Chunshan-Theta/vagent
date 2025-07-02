@@ -8,6 +8,18 @@ export interface CreateConvParams {
   agentId: string;
 }
 
+export interface ConvMessage {
+  id: string;
+  convId: string;
+  type: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  audioRef?: string | null;
+  audioStartTime?: number | null;
+  createdAt: string;
+  // 可根據需求擴充其他欄位
+}
+
 export interface Conv {
   id: string;
   uid?: number | null;
@@ -16,7 +28,8 @@ export interface Conv {
   agentType: string;
   agentId: string;
   createdAt: string;
-  // 其他欄位可依需求擴充
+
+  messages?: ConvMessage[]; // 對話訊息列表
 }
 
 export interface ConvAudio {
@@ -183,4 +196,24 @@ export async function getAudioInfoByRefString(ref: string, opts: getAudioByRefSt
     }
   }
   return null; // 如果不是有效的 ref，返回 null
+}
+
+/**
+ * 查詢對話紀錄 logs
+ * @param params 可傳 agentType, agentId, convId (皆可選)
+ */
+export async function searchConvLogs(params: {
+  agentType?: string;
+  agentId?: string;
+  convIds?: string[];
+} = {}): Promise<{ success: boolean; data: Conv[] }> {
+  const url = new URL('/api/conv/search_logs', window.location.origin);
+  if (params.agentType) url.searchParams.append('agentType', params.agentType);
+  if (params.agentId) url.searchParams.append('agentId', params.agentId);
+  if (params.convIds && params.convIds.length > 0) {
+    params.convIds.forEach(id => url.searchParams.append('convId', id));
+  }
+  const res = await fetch(url.toString(), { method: 'GET' });
+  if (!res.ok) throw new Error(await res.text());
+  return (await res.json()) as { success: boolean; data: Conv[] };
 }
