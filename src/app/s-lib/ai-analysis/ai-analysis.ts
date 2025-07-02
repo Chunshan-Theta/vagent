@@ -1,7 +1,7 @@
-
 import * as landbankSentiment from './missions/landbank/sentiment'
 import { MissionModule, ModelOptions, AskRequest } from './types'
 import OpenAI from 'openai';
+import { logAICompletion, logAIError } from '@/app/api/db/elastic';
 
 import { missionModules } from './missions'
 
@@ -13,7 +13,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-
 const defaultModelOptions: ModelOptions = {
   platform: 'openai',
   model: 'gpt-4o',
@@ -23,59 +22,79 @@ const defaultModelOptions: ModelOptions = {
 }
 
 
+
 export async function chatCompletion(req: AskRequest){
+  const startTime = Date.now();
 
-  const mModule = missionModules[req.missionId] as MissionModule
-  if(!mModule){
-    throw new Error(`Module ${req.missionId} not found`)
-  }
-  const responseFormat = req.responseType || 'text'
-  if(responseFormat === 'json_schema' && !mModule.expectSchema){
-    throw new Error(`Module ${req.missionId} does not support response format ${responseFormat}`)
-  }
-  const params = req.params || {}
-  if(typeof params !== 'object'){
-    throw new Error(`Module ${req.missionId} params must be an object`)
-  }
-  const options = completeOptions([req.modelOptions], defaultModelOptions)
-  
-  const jsonSchema = mModule.expectSchema ? await mModule.expectSchema(params) : null
+  try {
+    const mModule = missionModules[req.missionId] as MissionModule
+    if(!mModule){
+      throw new Error(`Module ${req.missionId} not found`)
+    }
+    const responseFormat = req.responseType || 'text'
+    if(responseFormat === 'json_schema' && !mModule.expectSchema){
+      throw new Error(`Module ${req.missionId} does not support response format ${responseFormat}`)
+    }
+    const params = req.params || {}
+    if(typeof params !== 'object'){
+      throw new Error(`Module ${req.missionId} params must be an object`)
+    }
+    const options = completeOptions([req.modelOptions], defaultModelOptions)
+    
+    const jsonSchema = mModule.expectSchema ? await mModule.expectSchema(params) : null
 
-  if(responseFormat === 'json_schema' && !jsonSchema){
-    throw new Error(`Module ${req.missionId} does not support response format ${responseFormat}`)
-  }
-  if(jsonSchema && !jsonSchema.name){
-    jsonSchema.name = 'ai_response'
-  }
+    if(responseFormat === 'json_schema' && !jsonSchema){
+      throw new Error(`Module ${req.missionId} does not support response format ${responseFormat}`)
+    }
+    if(jsonSchema && !jsonSchema.name){
+      jsonSchema.name = 'ai_response'
+    }
 
-  const responseFormatObj = responseFormat === 'json_schema' ? 
-    { type: "json_schema", json_schema: { name: jsonSchema!.name, schema: jsonSchema!.schema, strict: !!jsonSchema!.strict } } :
-    { type: responseFormat }
+    const responseFormatObj = responseFormat === 'json_schema' ? 
+      { type: "json_schema", json_schema: { name: jsonSchema!.name, schema: jsonSchema!.schema, strict: !!jsonSchema!.strict } } :
+      { type: responseFormat }
 
+    const messages = await mModule.getMessages(params)
+    const completion = await openai.chat.completions.create({
+      messages: messages,
+      model: options.model!,
+      temperature: options.temperature,
+      top_p: options.top_p,
+      max_tokens: options.max_tokens,
+      stream: false,
+      response_format: responseFormatObj as any
+    });
 
-  const messages = await mModule.getMessages(params)
-  const completion = await openai.chat.completions.create({
-    messages: messages,
-    model: options.model!,
-    temperature: options.temperature,
-    top_p: options.top_p,
-    max_tokens: options.max_tokens,
-    stream: false,
-    response_format: responseFormatObj as any
-  });
+    const output = completion.choices[0].message.content || '';
+    const json = responseFormat !== 'text' ? tryJSONParse(output) : null
 
+    const result = {
+      missionId: req.missionId,
+      output,
+      json
+    };
 
-  const output = completion.choices[0].message.content || '';
-  const json = responseFormat !== 'text' ? tryJSONParse(output) : null
+    // Log successful completion
+    await logAICompletion(completion, {
+      missionId: req.missionId,
+      model: options.model!,
+      responseFormat,
+      messages,
+      startTime
+    });
 
-  return {
-    missionId: req.missionId,
-    output,
-    json
+    return result;
+
+  } catch (error: any) {
+    // Log error
+    await logAIError(error, {
+      missionId: req.missionId,
+      startTime,
+      requestParams: req.params
+    });
+    throw error;
   }
 }
-
-
 
 /**
  * 
