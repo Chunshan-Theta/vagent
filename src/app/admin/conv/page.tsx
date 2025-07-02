@@ -33,6 +33,8 @@ function ExportConvSection() {
   const [agentType, setAgentType] = useState(convTypes[0].value);
   const [agentId, setAgentId] = useState('');
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     // 切換類型後自動清除 scriptId
     setAgentId('');
@@ -47,37 +49,48 @@ function ExportConvSection() {
   }, [agentType])
 
   const btnExportConvMessages = async () => {
-    const res = await apiGetConvLogs(agentType, agentId)
-    const datas = res.data.flatMap((conv) => {
-
-      const messages = conv.messages || []
-      return messages.map((msg) => {
-        return {
-          convId: conv.id,
-          agentId: conv.agentId,
-          email: conv.email,
-          name: conv.uname,
-
-          ai: msg.role === 'assistant' ? msg.content : '',
-          user: msg.role === 'user' ? msg.content : '',
-
-          createdAt: conv.createdAt,
-        }
-      })
-    })
-    const csvData = dataToCsv(datas);
-    if (!csvData) {
-      alert('沒有資料可以匯出');
+    if (loading) return;
+    if (!agentId) {
+      alert('請輸入或選擇 Agent ID');
       return;
     }
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.style.display = 'none';
-    link.href = url;
-    link.setAttribute('download', `conv_logs.tsv`);
-    link.click();
-    URL.revokeObjectURL(url);
+    setLoading(true);
+    const doDownload = async () => {
+      const res = await apiGetConvLogs(agentType, agentId)
+      const datas = res.data.flatMap((conv) => {
+
+        const messages = conv.messages || []
+        return messages.map((msg) => {
+          return {
+            convId: conv.id,
+            agentId: conv.agentId,
+            email: conv.email,
+            name: conv.uname,
+
+            ai: msg.role === 'assistant' ? msg.content : '',
+            user: msg.role === 'user' ? msg.content : '',
+
+            createdAt: conv.createdAt,
+          }
+        })
+      })
+      const csvData = dataToCsv(datas);
+      if (!csvData) {
+        alert('沒有資料可以匯出');
+        return;
+      }
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = url;
+      link.setAttribute('download', `conv_logs.tsv`);
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+    doDownload().finally(() => {
+      setLoading(false);
+    })
   };
 
   const dataToCsv = (data: any[]) => {
@@ -135,9 +148,10 @@ function ExportConvSection() {
         <div className="flex justify-end">
           <button
             onClick={btnExportConvMessages}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className={`px-4 py-2 rounded-md transition-colors text-white ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+            disabled={loading}
           >
-            下載
+            {loading ? '下載中...' : '下載'}
           </button>
         </div>
       </div>
