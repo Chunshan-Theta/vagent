@@ -99,6 +99,12 @@ export default function AgentsPage() {
                   >
                     Delete
                   </button>
+                  <Link
+                    href={`/dwd-report/${agent.id}`}
+                    className="text-blue-600 hover:text-blue-900 mr-4"
+                  >
+                    Agent Usage Report
+                  </Link>
                   
                 </td>
               </tr>
