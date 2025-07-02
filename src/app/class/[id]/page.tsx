@@ -14,6 +14,7 @@ import { getTranslation, Language } from "@/app/i18n/translations";
 import LanguageToggle from "@/app/components/LanguageToggle";
 import _, { get } from 'lodash'
 import { startAIMission } from '@/app/lib/ai-mission/missionAnalysis'
+import { LogService } from '@/app/lib/log-service';
 
 import { agentApi, convApi } from '@/app/lib/ai-chat'
 import useAgentSettings from "@/app/hooks/useAgentSettings";
@@ -129,6 +130,8 @@ function ClassChatPage() {
 
   const agentId = params.id as string;
 
+  const logService = useMemo(() => LogService.getInstance(), []);
+
   useEffect(() => {
     const lang = localStorage.getItem('client-language') as Language
 
@@ -141,26 +144,83 @@ function ClassChatPage() {
     }
   }, [])
 
+  // Helper function to add user info to metadata
+  const logWithUser = async (
+    step: string,
+    category: string,
+    metadata: Record<string, any>,
+    data: Record<string, any>,
+    isError: boolean,
+    errorMessage: string,
+    statusCode: number,
+    traceId: string
+  ) => {
+    const metadataWithUser = {
+      ...metadata,
+      email: userInfo.email,
+      uname: userInfo.uname,
+      agentId: agentId,
+    };
+    return logService.logStep(
+      step,
+      category,
+      metadataWithUser,
+      data,
+      isError,
+      errorMessage,
+      statusCode,
+      traceId
+    );
+  };
+
   useEffect(() => {
     if (!clientLanguage) {
-      // 正常情況下也會執行到這，因此只顯示 warn 作為提醒而不是 error
       console.warn('clientLanguage is not set');
       return;
     }
 
     const fetchAgentConfig = async () => {
       try {
+        await logWithUser(
+          'fetch_agent_config_start',
+          'agent',
+          {},
+          {},
+          false,
+          '',
+          200,
+          'fetch-agent-config'
+        );
         const response = await fetch(`/api/agents/${params.id}`);
         if (!response.ok) {
           throw new Error(getTranslation(clientLanguage, 'errors.failed_to_load'));
         }
         const data = await response.json();
-        console.log('fetchAgentConfig data', data);
         const agentConfig = await createAgentConfig(data.agent, clientLanguage);
-        console.log('agentConfig', agentConfig);
         setAgentConfig(agentConfig);
+        await logWithUser(
+          'fetch_agent_config_success',
+          'agent',
+          {},
+          { agent: data.agent },
+          false,
+          '',
+          200,
+          'fetch-agent-config'
+        );
       } catch (err) {
-        setError(err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load'));
+        const error = err instanceof Error ? err.message : getTranslation(clientLanguage, 'errors.failed_to_load');
+        setError(error);
+        await logWithUser(
+          'fetch_agent_config_error',
+          'agent',
+          {},
+          {},
+          true,
+          error,
+          500,
+          'fetch-agent-config'
+        );
       }
     };
 
@@ -265,25 +325,33 @@ function ClassChatPage() {
       return;
     }
 
+    await logWithUser(
+      'analysis_start',
+      'analysis',
+      { convId: convInfo.current?.convId },
+      { transcriptLength: transcriptItems.length },
+      false,
+      '',
+      200,
+      'analysis-start'
+    );
 
     await handleTalkOff();
-    await delay(700); // 等待幾秒，確保對話結束
+    await delay(700);
     await waitPostTask();
-    await delay(700); // 等待幾秒，確保對話結束
+    await delay(700);
     endConversation();
 
     await aiReport.waitReady(10000);
 
-    // Start a timer to increment progress over time
     progressTimerRef.current = setInterval(() => {
       setAnalysisProgress(prev => {
-        // Cap at 95% until we get the actual result
         if (prev < 95) {
           return prev + 0.3;
         }
         return prev;
       });
-    }, 300); // Increment every 300ms
+    }, 300);
 
     try {
       setAnalysisProgress(10);
@@ -304,16 +372,43 @@ function ClassChatPage() {
         keyPointAnalysis2: aiReport.getSetting('reportAnalyze.keyPointAnalysis2') || '分析 __role__ 表現不佳的部分，並列出可能存在的溝通問題或不足之處（請列出實際原句）',
         keyPointIcon2: aiReport.getSetting('reportAnalyze.keyPointIcon2') || '❌',
       }
+
+      await logWithUser(
+        'analysis_config_ready',
+        'analysis',
+        { convId: convInfo.current?.convId, agentId: agentId ,userInfo},
+        { config },
+        false,
+        '',
+        200,
+        'analysis-config'
+      );
+
       const chatHistory = getChatHistoryText({
         roleMap: {
           user: config.roleSelf,
           assistant: config.roleTarget,
         }
-      })
-      // 註：分析 Rubric 的時候優先使用 agentConfig 中的 criteria，其他的分析反之
-      const rubtic_analysis = analyzeChatHistoryByRubric(agentConfig?.criteria || config.criteria, config.roleSelf, chatHistory, clientLanguage || 'zh').then((analysis) => {
-        localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis))
-      })
+      });
+
+      const rubtic_analysis = analyzeChatHistoryByRubric(
+        agentConfig?.criteria || config.criteria, 
+        config.roleSelf, 
+        chatHistory, 
+        clientLanguage || 'zh'
+      ).then((analysis) => {
+        localStorage.setItem('analyzeChatHistoryByRubric', JSON.stringify(analysis));
+        logWithUser(
+          'rubric_analysis_complete',
+          'analysis',
+          { convId: convInfo.current?.convId },
+          { analysis },
+          false,
+          '',
+          200,
+          'rubric-analysis'
+        );
+      });
 
       const baseProgress = 30;
       setAnalysisProgress(baseProgress);
@@ -431,7 +526,6 @@ function ClassChatPage() {
         const item = timelineItems[index]
         const { aiSay, userSay } = item
 
-        const analysisRole = 'user'
         const chatHistory = [
           `${config.roleTarget}: ${parseHistoryContent(aiSay)}`,
           `${config.roleSelf}: ${userSay}`
@@ -555,14 +649,20 @@ function ClassChatPage() {
       localStorage.setItem('chatMessages', JSON.stringify(getChatHistory()));
 
       setAnalysisProgress(100);
+      await logWithUser(
+        'analysis_complete',
+        'analysis',
+        { convId: convInfo.current?.convId, agentId: agentId },
+        { timelineItemsCount: timelineItems.length },
+        false,
+        '',
+        200,
+        'analysis-complete'
+      );
 
-      // Navigate to report page
-      await Promise.all([
-        rubtic_analysis
-      ])
+      await Promise.all([rubtic_analysis]);
       router.push('/class/report');
     } catch (error) {
-      // Clear the progress timer on error
       if (progressTimerRef.current) {
         clearInterval(progressTimerRef.current);
         progressTimerRef.current = null;
@@ -571,6 +671,16 @@ function ClassChatPage() {
       console.error('Error analyzing conversation:', error);
       alert('Failed to analyze conversation. Please try again.');
       setIsAnalyzing(false);
+      await logWithUser(
+        'analysis_error',
+        'analysis',
+        { convId: convInfo.current?.convId, agentId: agentId },
+        {},
+        true,
+        error instanceof Error ? error.message : 'Unknown error',
+        500,
+        'analysis-error'
+      );
     }
   };
 
@@ -593,6 +703,16 @@ function ClassChatPage() {
     setIsUserInfoValid(true);
 
     try {
+      await logWithUser(
+        'conversation_start',
+        'conversation',
+        { },
+        { email: userInfo.email, uname: userInfo.uname },
+        false,
+        '',
+        200,
+        'conversation-start'
+      );
       clearHistory();
       await initConv({
         email: userInfo.email,
@@ -603,7 +723,18 @@ function ClassChatPage() {
       handleTalkOn();
     } catch (err) {
       console.error('Error initializing conversation:', err);
-      setError(getTranslation(clientLanguage || 'zh', 'errors.failed_to_load'));
+      const error = getTranslation(clientLanguage || 'zh', 'errors.failed_to_load');
+      setError(error);
+      await logWithUser(
+        'conversation_start_error',
+        'conversation',
+        {  },
+        { email: userInfo.email, uname: userInfo.uname },
+        true,
+        error,
+        500,
+        'conversation-start'
+      );
     }
   };
 

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { LogService } from '@/app/lib/log-service';
 
 import Image from "next/image";
 
@@ -98,6 +99,8 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   /** 記錄 session 連線到 realtime 的次數 */
   const [sessionStartTimes, setSessionStartTimes] = useState<number>(0);
 
+  const logService = useMemo(() => LogService.getInstance(), []);
+
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     if (dcRef.current && dcRef.current.readyState === "open") {
       logClientEvent(eventObj, eventNameSuffix);
@@ -118,7 +121,21 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     setSessionStatus,
     selectedAgentName,
     selectedAgentConfigSet,
-    sendClientEvent,
+    sendClientEvent: async (eventObj: any, eventNameSuffix = "") => {
+      if (dcRef.current && dcRef.current.readyState === "open") {
+        logClientEvent(eventObj, eventNameSuffix);
+        dcRef.current.send(JSON.stringify(eventObj));
+      } else {
+        logClientEvent(
+          { attemptedEvent: eventObj.type },
+          "error.data_channel_not_open"
+        );
+        console.error(
+          "Failed to send message - no data channel available",
+          eventObj
+        );
+      }
+    },
     setSelectedAgentName,
     hideLogs,
   });
@@ -259,9 +276,21 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
 
     triggerResponse?: boolean;
   }
-  const sendSimulatedUserMessage = (text: string, opts: sendSimulatedUserMessageOpts) => {
+  const sendSimulatedUserMessage = async (text: string, opts: sendSimulatedUserMessageOpts) => {
     const id = uuidv4().slice(0, 32);
     const role = opts.role || "user";
+
+    await logService.logEvent({
+      event_name: 'user_message',
+      action_category: 'conversation',
+      action_subtype: 'user_message',
+      action_properties: {
+        content: text,
+        itemId: id,
+        role: role,
+        isHidden: !!opts.hide
+      }
+    });
 
     if (!opts.noAppendToTranscript) {
       addTranscriptMessage(id, role as any, text, !!opts.hide);
@@ -288,7 +317,19 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     }
   };
 
-  const updateSession = (shouldTriggerResponse: boolean = false, voice: string = "echo", lang: Language = "zh") => {
+  const updateSession = async (shouldTriggerResponse: boolean = false, voice: string = "echo", lang: Language = "zh") => {
+    await logService.logEvent({
+      event_name: 'session_update',
+      action_category: 'session',
+      action_subtype: 'update',
+      action_properties: {
+        shouldTriggerResponse,
+        voice,
+        lang,
+        sessionStartTimes
+      }
+    });
+
     sendClientEvent(
       { type: "input_audio_buffer.clear" },
       "clear audio buffer on session update"
@@ -342,20 +383,20 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       .join('\n\n');
 
     if (chatHistory) {
-      sendSimulatedUserMessage(`${getTranslation(lang, 'ai_chatbot_action.chatHistory')}\n\n${chatHistory}\n\n${getTranslation(lang, 'ai_chatbot_action.assistantRole')}`, {
+      await sendSimulatedUserMessage(`${getTranslation(lang, 'ai_chatbot_action.chatHistory')}\n\n${chatHistory}\n\n${getTranslation(lang, 'ai_chatbot_action.assistantRole')}`, {
         hide: true,
         role: "system",
-      })
+      });
       console.log(`送出之前的對話紀錄:\n${chatHistory}`);
     }
 
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage(getTranslation(lang, 'ai_chatbot_action.startAsk'), { hide: true, triggerResponse: true, });
+      await sendSimulatedUserMessage(getTranslation(lang, 'ai_chatbot_action.startAsk'), { hide: true, triggerResponse: true, });
     }
     if (sessionStartTimes === 0) {
       onSessionOpen();
     } else {
-      sendSimulatedUserMessage(getTranslation(lang, 'ai_chatbot_action.sessionResume'), { hide: false, triggerResponse: false, });
+      await sendSimulatedUserMessage(getTranslation(lang, 'ai_chatbot_action.sessionResume'), { hide: false, triggerResponse: false, });
       onSessionResume();
     }
     setSessionStartTimes((prev) => prev + 1);
@@ -374,6 +415,17 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       console.log("No truncation needed, message is DONE");
       return;
     }
+
+    await logService.logEvent({
+      event_name: 'cancel_assistant_speech',
+      action_category: 'conversation',
+      action_subtype: 'cancel_response',
+      action_properties: {
+        messageId: mostRecentAssistantMessage.itemId,
+        messageStatus: mostRecentAssistantMessage.status,
+        cancelTime: Date.now() - mostRecentAssistantMessage.createdAtMs
+      }
+    });
 
     sendClientEvent({
       type: "conversation.item.truncate",

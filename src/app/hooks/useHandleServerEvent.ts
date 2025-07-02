@@ -3,7 +3,8 @@
 import { ServerEvent, SessionStatus, AgentConfig } from "@/app/types";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
+import { LogService } from '@/app/lib/log-service';
 
 export interface UseHandleServerEventParams {
   setSessionStatus: (status: SessionStatus) => void;
@@ -23,6 +24,7 @@ export function useHandleServerEvent({
   setSelectedAgentName,
   hideLogs = false,
 }: UseHandleServerEventParams) {
+  const logService = useMemo(() => LogService.getInstance(), []);
   const {
     transcriptItems,
     addTranscriptBreadcrumb,
@@ -146,7 +148,7 @@ export function useHandleServerEvent({
     }
   };
 
-  const handleServerEvent = (serverEvent: ServerEvent) => {
+  const handleServerEvent = async (serverEvent: ServerEvent) => {
     logServerEvent(serverEvent);
 
     switch (serverEvent.type) {
@@ -160,6 +162,15 @@ export function useHandleServerEvent({
               }\nStarted at: ${new Date().toLocaleString()}`
             );
           }
+          await logService.logEvent({
+            event_name: 'session_created',
+            action_category: 'session',
+            action_subtype: 'create',
+            action_properties: {
+              sessionId: serverEvent.session.id,
+              timestamp: new Date().toISOString()
+            }
+          });
         }
         break;
       }
@@ -178,7 +189,6 @@ export function useHandleServerEvent({
 
         if (itemId && role) {
           if (role === "user" && !text) {
-            // 這個字如果修改，updateTranscriptMessage 裡面的自動取代也要修改
             text = "[Transcribing...]\n";
           }
           addTranscriptMessage(itemId, role, text);
@@ -187,6 +197,19 @@ export function useHandleServerEvent({
               { type: "response.create" },
               "(trigger response after simulated user text message)"
             );
+          }
+
+          // Log AI responses
+          if (role === "assistant" && text) {
+            await logService.logEvent({
+              event_name: 'ai_response',
+              action_category: 'conversation',
+              action_subtype: 'assistant_message',
+              action_properties: {
+                content: text,
+                itemId: itemId
+              }
+            });
           }
         }
         break;
@@ -231,6 +254,15 @@ export function useHandleServerEvent({
 
       case "response.done": {
         if (serverEvent.response?.output) {
+          await logService.logEvent({
+            event_name: 'ai_response_complete',
+            action_category: 'conversation',
+            action_subtype: 'assistant_message_complete',
+            action_properties: {
+              output: serverEvent.response.output
+            }
+          });
+
           serverEvent.response.output.forEach((outputItem) => {
             if (
               outputItem.type === "function_call" &&
