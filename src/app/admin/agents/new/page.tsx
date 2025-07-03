@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Agent, Tool } from '@/app/types/agent';
 
 export default function NewAgentPage() {
@@ -13,6 +14,19 @@ export default function NewAgentPage() {
 
   useEffect(() => {
     fetchTools();
+    
+    // Load form data from localStorage if exists
+    const savedFormData = localStorage.getItem('new_agent_form_data');
+    if (savedFormData) {
+      try {
+        const parsedData = JSON.parse(savedFormData);
+        setFormData(parsedData);
+        // Clear the data from localStorage after loading
+        localStorage.removeItem('new_agent_form_data');
+      } catch (err) {
+        console.error('Error parsing saved form data:', err);
+      }
+    }
   }, []);
 
   const fetchTools = async () => {
@@ -85,7 +99,7 @@ export default function NewAgentPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Create New Agent</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Create New Agent</h1><Link href="/admin/agents/auto-gen">AI Helper</Link>
       </div>
       
       {error && (
@@ -174,7 +188,7 @@ export default function NewAgentPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700">Voice</label>
           <select
-            value={formData.voice || 'echo'}
+            value={formData.voice || 'shimmer'}
             onChange={e => setFormData({ ...formData, voice: e.target.value })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             required

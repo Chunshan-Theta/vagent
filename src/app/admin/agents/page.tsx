@@ -95,7 +95,7 @@ export default function AgentsPage() {
                   </Link>
                   <button
                     onClick={() => handleDelete(agent.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-red-600 hover:text-red-900 mr-4"
                   >
                     Delete
                   </button>
@@ -103,7 +103,7 @@ export default function AgentsPage() {
                     href={`/dwd-report/${agent.id}`}
                     className="text-blue-600 hover:text-blue-900 mr-4"
                   >
-                    Agent Usage Report
+                    Agent-Report
                   </Link>
                   
                 </td>
