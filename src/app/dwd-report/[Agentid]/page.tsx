@@ -18,11 +18,6 @@ interface UserStats {
   }[];
 }
 
-interface PageProps {
-  params: {
-    Agentid: string;
-  };
-}
 
 interface ElasticSearchResponse {
   hits: {
@@ -32,7 +27,7 @@ interface ElasticSearchResponse {
   };
 }
 
-export default function AgentReport({ params }: PageProps) {
+export default function AgentReport({ params }: any) {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

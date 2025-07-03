@@ -46,17 +46,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Webhook processed successfully',
-      data: {
-        ...data,
-        // Remove binary data from response
-        ...Object.fromEntries(
-          Object.entries(data).map(([k, v]) => [
-            k,
-            v?.fileBuffer ? { ...v, fileBuffer: undefined } : v
-          ])
-        )
-      }
+      data: Object.fromEntries(
+        Object.entries(data).map(([k, v]) => [
+          k,
+          v && typeof v === 'object' && 'fileBuffer' in v ? { ...v, fileBuffer: undefined } : v
+        ])
+      ),
     });
+    
+    
+    
 
   } catch (error) {
     console.error('Error processing webhook:', error);
