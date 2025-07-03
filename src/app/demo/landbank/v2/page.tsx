@@ -580,10 +580,15 @@ function LandbankChatV2Page() {
     return (
       <div style={bgStyles}>
         <div style={{ maxWidth: '400px', width: '100%' }}>
-          <AskForm
+          {/* <AskForm
             items={askItems.current}
             submitText="送出"
             onSubmit={onSubmitAskForm}
+            theme="landbank"
+          > */}
+          <AskForm
+            items={[]}
+            noSubmit={true}
             theme="landbank"
           >
             <div className="text-center text-white mt-4">
@@ -594,6 +599,7 @@ function LandbankChatV2Page() {
       </div>
     )
   }
+
 
   function chatScene() {
     return (
