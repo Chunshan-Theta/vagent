@@ -585,29 +585,11 @@ function LandbankChatV2Page() {
             submitText="送出"
             onSubmit={onSubmitAskForm}
             theme="landbank"
-          ></AskForm>
-        </div>
-      </div>
-    )
-  }
-
-  function prepareStart() {
-    const bgStyles = {
-      background: 'linear-gradient(135deg, rgb(26, 42, 52) 0%, rgb(46, 74, 63) 100%)',
-      minHeight: '100dvh',
-      display: 'flex',
-      justifyContent: 'center',
-      paddingTop: '20vh',
-    }
-    return (
-      <div style={bgStyles}>
-        <div style={{ maxWidth: '400px', width: '100%' }}>
-          <AskForm
-            items={[]}
-            submitText="開始通話"
-            onSubmit={onSubmitAskForm}
-            theme="landbank"
-          ></AskForm>
+          >
+            <div className="text-center text-white mt-4">
+              服務已暫停
+            </div>
+          </AskForm>
         </div>
       </div>
     )
