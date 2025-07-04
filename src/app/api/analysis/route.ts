@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     
     // Create language-specific instructions
     let languageInstruction = "";
-    if (detectedLanguage === "zh") {
+    if (detectedLanguage === "zh" || detectedLanguage === "zh-TW") {
       languageInstruction = "請用台灣繁體中文回答分析結果。";
     } else if (detectedLanguage === "ja") {
       languageInstruction = "分析結果を日本語で回答してください。";

@@ -217,6 +217,8 @@ function LandbankChatV2Page() {
       return;
     }
 
+    setIsAnalyzing(true);
+
     const config = {
       criteria: aiReport.getSetting('reportAnalyze.criteria') || 'user 本身是否是進行良性的溝通',
       context: aiReport.getSetting('reportAnalyze.context') || '以下是一份 user 和 assistant 的對話紀錄。',
@@ -293,6 +295,7 @@ function LandbankChatV2Page() {
 
     if (timelineItems.length < 1) {
       console.error('No timeline items found')
+      setIsAnalyzing(false);
       return
     }
     
@@ -582,20 +585,20 @@ function LandbankChatV2Page() {
     return (
       <div style={bgStyles}>
         <div style={{ maxWidth: '400px', width: '100%' }}>
-          {/* <AskForm
+          <AskForm
             items={askItems.current}
             submitText="送出"
             onSubmit={onSubmitAskForm}
             theme="landbank"
-          > */}
-          <AskForm
+          >
+          {/* <AskForm
             items={[]}
             noSubmit={true}
             theme="landbank"
           >
             <div className="text-center text-white mt-4">
               服務已暫停
-            </div>
+            </div> */}
           </AskForm>
         </div>
       </div>
