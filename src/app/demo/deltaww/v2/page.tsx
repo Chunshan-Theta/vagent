@@ -62,6 +62,7 @@ function DynamicAnalysisContent() {
 
     progressTimerRef,
 
+    setupAnalysisState,
     endConversation,
     getChatHistoryText,
     getChatHistory,
@@ -279,6 +280,7 @@ function DynamicAnalysisContent() {
       return
     }
 
+    setupAnalysisState(0);
     // 基本檢查都跑完之後再確定提交 endConversation
     await handleTalkOff();
     await delay(700); // 等待幾秒，確保對話結束

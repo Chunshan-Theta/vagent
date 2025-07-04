@@ -252,7 +252,10 @@ function ClassChatPage() {
     setAnalysisProgress,
     appRef,
     progressTimerRef,
+
+    setupAnalysisState,
     endConversation,
+    
     getChatHistoryText,
     getChatHistory,
     isLoading,
@@ -335,7 +338,8 @@ function ClassChatPage() {
       200,
       'analysis-start'
     );
-
+    
+    setupAnalysisState(0);
     await handleTalkOff();
     await delay(700);
     await waitPostTask();

@@ -60,6 +60,7 @@ function LandbankChatV2Page() {
 
     progressTimerRef,
 
+    setupAnalysisState,
     endConversation,
     waitPostTask,
     getMessagePairs,
@@ -246,6 +247,7 @@ function LandbankChatV2Page() {
       return
     }
 
+    setupAnalysisState(0);
     // 基本檢查都跑完之後再確定提交 endConversation
     await handleTalkOff();
     await delay(700); // 等待幾秒，確保對話結束

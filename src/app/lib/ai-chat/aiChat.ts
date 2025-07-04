@@ -534,6 +534,12 @@ export function useAiChat(){
     }
   };
 
+  const setupAnalysisState = (progress: number)=>{
+    setIsAnalyzing(true);
+    setIsCallEnded(true);
+    setAnalysisProgress(progress);
+  }
+
   const endConversation = ()=>{
     setIsAnalyzing(true);
     setIsCallEnded(true);
@@ -692,6 +698,7 @@ export function useAiChat(){
     isLoading: isLoading,
 
     waitPostTask,
+    setupAnalysisState,
     endConversation,
     showSystemToast,
 

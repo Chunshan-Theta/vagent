@@ -39,6 +39,7 @@ function DynamicAnalysisContent() {
 
     progressTimerRef,
 
+    setupAnalysisState,
     endConversation,
     getChatHistoryText,
     getChatHistory,
@@ -95,6 +96,8 @@ function DynamicAnalysisContent() {
       showSystemToast('wait_for_response');
       return;
     }
+
+    setupAnalysisState(0);
     await handleTalkOff();
     await delay(700); // 等待幾秒，確保對話結束
     await waitPostTask();
