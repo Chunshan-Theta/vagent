@@ -186,7 +186,7 @@ ${message}
     const analysis = JSON.parse(completion.choices[0].message.content || '{}') as AnalysisResponse;
     
     // Add the detected language to the response
-    analysis.language = detectedLanguage;
+    analysis.language = langAlias(detectedLanguage);
 
     // Apply weights if provided
     if (rubric.weights && rubric.weights.length === rubric.criteria.length) {
@@ -246,3 +246,12 @@ ${message}
     );
   }
 } 
+
+
+function langAlias(source: string){
+  source = source.toLowerCase().trim();
+  const map:{[lang:string]:string} = {
+    'zh-tw': 'zh'
+  }
+  return map[source] || source;
+}
