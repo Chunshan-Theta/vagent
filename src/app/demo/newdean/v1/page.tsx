@@ -436,16 +436,12 @@ function DynamicAnalysisContent() {
       <div style={bgStyles}>
         <div style={{ maxWidth: '400px', width: '100%' }}>
           <AskForm
-            items={[]}
+            items={askItems.current}
+            submitText="送出並開始"
             onSubmit={onSubmitAskForm}
-            noSubmit={true}
             theme="deltaww"
             loading={loading}
-          >
-            <div className="text-center text-white mt-4">
-              服務已暫停
-            </div>
-          </AskForm>
+          ></AskForm>
         </div>
       </div>
     )
