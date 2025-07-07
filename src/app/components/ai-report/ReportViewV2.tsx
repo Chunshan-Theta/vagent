@@ -5,6 +5,9 @@ import { FaChartBar, FaLightbulb, FaComments, FaHistory, FaArrowLeft, FaStar } f
 import confetti from 'canvas-confetti';
 import { AnalysisResponse } from '@/app/types/ai-report/common';
 
+/*
+  標準版分析報告
+*/
 
 interface Props {
   /**

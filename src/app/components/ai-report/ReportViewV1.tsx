@@ -8,6 +8,9 @@ import { ReportV1 } from '@/app/types/ai-report'
 // 自定義樣式
 import './report.scss'
 
+/*
+  時間線版本分析報告
+*/
 
 type ReportPageProps = {
   data?: ReportV1.ReportDatas

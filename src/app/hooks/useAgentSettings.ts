@@ -73,6 +73,11 @@ export function useAgentSettings(agentId: string, opts: useAgentSettingsOptions 
     });
   }
 
+  /**
+   * 確保沒有一些非同步操作還在處理中
+   * @param timeout 
+   * @returns 
+   */
   function waitReady(timeout = 10000): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       let timeoutTimerId: any = null;

@@ -8,6 +8,7 @@ import { iconExists } from "@/app/vendor/icon/tool";
 
 import _ from '@/app/vendor/lodash'
 import { FaPlay, FaStop } from "react-icons/fa";
+import { useSyncState } from "@/app/hooks/useSyncState";
 
 type TimelineData = ReportV1.TimelineData
 
@@ -43,12 +44,12 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
   const doUpdate = () => {
     setUpdate(prev => prev + 1);
   }
-  const playingAudioUrl = useRef<string | null>(null);
-  const [playingAudiosCount, setPlayingAudiosCount] = useState(0);
+  const playingAudioUrl = useSyncState<string | null>(null)
+  const playingAudiosCount = useSyncState(0);
+  const playingTarget = useSyncState<{ index: number, role: 'user' | 'ai' } | null>(null);
+  // const [playingAudiosCount, setPlayingAudiosCount] = useState(0);
   function updatePlayingAudiosCount() {
-    setPlayingAudiosCount(() => {
-      return playingAudios.current.length;
-    })
+    playingAudiosCount.set(playingAudios.current.length);
   }
 
   const playingAudios = useRef<{ index: number, audio: HTMLAudioElement }[]>([])
@@ -93,7 +94,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                         onClick={() => clickAudioBtn(index, 'ai')}
                         style={{ backgroundColor: item.mainColor || '#ffd166' }}
                       >
-                        {playingAudiosCount > 0 && playingAudioUrl.current === aiAudio.url ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
+                        {playingTarget.state?.role === 'ai' && playingTarget.state?.index === index ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
                       </button>
                     )}</p>
                   <p>「{item.aiSay}」</p>
@@ -108,7 +109,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
                         onClick={() => clickAudioBtn(index, 'user')}
                         style={{ backgroundColor: item.mainColor || '#ffd166' }}
                       >
-                        {playingAudiosCount > 0 && playingAudioUrl.current === userAudio.url ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
+                        {playingTarget.state?.role === 'user' && playingTarget.state?.index === index ? <FaStop {...playIconStyle.bind} /> : <FaPlay {...playIconStyle.bind} />}
                       </button>
                     )}</p>
                   <p>「{item.userSay}」</p>
@@ -153,7 +154,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
       }
     })
 
-  }, [timelineDatas, playingAudiosCount])
+  }, [timelineDatas, playingAudiosCount.state, playingAudioUrl.state, playingTarget.state])
 
   function trimText(text: string) {
     text = text || ''
@@ -177,37 +178,62 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
       return meta.userAudio;
     }
   }
+
+  function getContentText(index: number, role: 'user' | 'ai') {
+    const item = timelineDatas[index];
+    if (role === 'ai') {
+      return item.aiSay || '';
+    } else if (role === 'user') {
+      return item.userSay || '';
+    }
+    return '';
+  }
   function stopAllAudios() {
     for (const item of playingAudios.current) {
       item.audio.pause()
       item.audio.currentTime = 0
+      document.body.removeChild(item.audio);
     }
     playingAudios.current = []
     playingAudioUrl.current = null;
+    playingTarget.current = null;
     updatePlayingAudiosCount();
   }
   function playAudios(index: number, role: 'user' | 'ai') {
     const audio = getAudios(index, role);
     if (audio?.url) {
       const audioElement = new Audio(audio.url)
+      audioElement.className = 'report-timeline-audio';
+      audioElement.style.display = 'none';
       audioElement.currentTime = audio.startTime ?? 0
       if (role === 'user') {
-        audioElement.currentTime -= 2 // 用戶的語音要抓早一點
+        // 用戶的語音要抓早一點，因為完整講完話之後，AI還會延遲一下才回傳 user message 的轉錄結果
+        // 所以這裡最少要提前 3 秒開始播放
+        // 註1：還要根據內容長度來調整，如果內容很長，則提前的時間要更長
+        // 註2：另外也要避免 currentTime 小於 0 的情況
+        const base = 3; // 基本提前時間
+        const content = getContentText(index, 'user');
+        const predictionTime = 0.3 * content.length; // 假設每個字平均需要 0.3 秒來講
+        audioElement.currentTime = Math.max(0, audioElement.currentTime - predictionTime - base);
       }
       playingAudioUrl.current = audio.url;
       audioElement.play()
       audioElement.loop = false;
       playingAudios.current.push({ index, audio: audioElement })
+      playingTarget.current = { index, role };
       audioElement.onerror = (e) => {
         playingAudios.current = playingAudios.current.filter(item => item.audio !== audioElement);
         playingAudioUrl.current = null;
+        playingTarget.current = null;
         doUpdate();
       }
       audioElement.onended = () => {
         playingAudios.current = playingAudios.current.filter(item => item.audio !== audioElement);
         playingAudioUrl.current = null;
+        playingTarget.current = null;
         doUpdate();
       }
+      document.body.appendChild(audioElement);
       doUpdate();
       updatePlayingAudiosCount();
     }
@@ -215,8 +241,8 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
 
   function clickAudioBtn(index: number, role: 'user' | 'ai') {
     if (playingAudios.current.length > 0) {
-      const currentAudio = getAudios(index, role)?.url;
-      if (playingAudioUrl.current && currentAudio && playingAudioUrl.current === currentAudio) {
+      // const currentAudio = getAudios(index, role)?.url;
+      if (playingTarget.state?.role === role && playingTarget.state?.index === index) {
         // 如果點擊的音訊是正在播放的，則停止它
         stopAllAudios()
       } else {
@@ -243,7 +269,7 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
 
 
 function emojiOrIcon(icon: string) {
-  if(iconExists(icon)){
+  if (iconExists(icon)) {
     return <PIcon name={icon as any} size={14} />
   }
   return <span>{icon}</span>
