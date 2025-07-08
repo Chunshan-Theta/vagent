@@ -2,7 +2,7 @@ FROM node:20-alpine AS base
 COPY . /app
 
 WORKDIR /app
-RUN apk add --no-cache postgresql-client
+RUN apk add --no-cache postgresql-client ffmpeg
 # Set environment variables
 ENV NEXT_TELEMETRY_DISABLED 1
 ARG OPENAI_API_KEY
