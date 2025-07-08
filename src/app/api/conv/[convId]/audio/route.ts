@@ -86,6 +86,10 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
     }
 
     try{
+      const oldFile = {
+        mime: type as string, // 原始檔案的 MIME 類型
+        path: filePath // 原始檔案的路徑
+      }
       const newFile = {
         format: 'mp3', // 針對 ffmpeg 用的轉換格式名稱
         mime: 'audio/mpeg', // 保存用的 MIME 類型
@@ -93,22 +97,19 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
       }
       const newPath = newFile.path;
       // 嘗試將音訊轉換為 MP3 格式
-      await new Promise<void>((resolve, reject) => {
-        ffmpeg(filePath)
-          .toFormat('mp3')
-          .on('end', () => {
-            console.log('Audio conversion to MP3 completed');
-            resolve();
-          })
-          .on('error', (err) => {
-            console.error('Error during audio conversion:', err);
-            reject(err);
-          })
-          .save(newPath);
-      });
-      tmpFiles.push(newPath);
+      console.log('try parse to mp3:', path.basename(filePath), '->', path.basename(newPath));
+      const nowFile = await parseAudio(filePath, newPath)
+        .then(()=>{
+          console.log('audio file converted to MP3 successfully');
+          tmpFiles.push(newPath);
+          return newFile
+        })
+        .catch((err)=>{
+          console.error('audio conversion failed:', err);
+          return oldFile;
+        });
       // 開始上傳
-      const res = await convApi.uploadConvAudio(newPath, convId, name, newFile.mime, duration, analysisInfo);
+      const res = await convApi.uploadConvAudio(nowFile!.path, convId, name, nowFile!.mime, duration, analysisInfo);
       removeTmpFile();
       return NextResponse.json({
         item: {
@@ -192,6 +193,21 @@ export async function GET(req: Request, { params }: AsyncRouteContext<{ convId: 
   }
   
 
+}
+
+function parseAudio(filePath:string, newPath:string){
+  return new Promise<void>((resolve, reject) => {
+    ffmpeg(filePath)
+      .noVideo()
+      .toFormat('mp3')
+      .on('end', () => {
+        resolve();
+      })
+      .on('error', (err) => {
+        reject(err);
+      })
+      .save(newPath);
+  });
 }
 
 function getNumber(formData: FormData, key: string): number | undefined {

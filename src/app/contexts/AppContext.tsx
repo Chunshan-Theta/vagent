@@ -123,7 +123,9 @@ function useRecorderState() {
     }
   }
   const chunks = useRef({
+    lasType: '',
     las: [] as BlobPart[], // Local Audio Stream
+    rasType: '',
     ras: [] as BlobPart[], // Remote Audio Stream
   })
   const events = useRef(mitt());
@@ -168,7 +170,6 @@ function useRecorderState() {
       chunks.current.las.push(chunk);
       state.current.waitData.las = false;
       events.current.emit('las-chunk-added', chunk);
-
     } else if (type === 'ras') {
       chunks.current.ras.push(chunk);
       state.current.waitData.ras = false;
@@ -241,7 +242,7 @@ function useRecorderState() {
     if (mChunks.length === 0) {
       return null;
     }
-    const blob = new Blob(mChunks, { type: 'audio/wav' });
+    const blob = new Blob(mChunks, { type: type === 'las' ? chunks.current.lasType : chunks.current.rasType });
     return blob;
   }
 
@@ -275,17 +276,37 @@ function useRecorderState() {
     console.log('recorder.start')
     const Recorder = getRecorder();
     if (!Recorder) { return; }
+
+    // 優先選擇 mp4、mpeg、wav，最後才用 webm
+    let options = {};
+
+    if (MediaRecorder.isTypeSupported('audio/mp4')) {
+      options = { mimeType: 'audio/mp4' };
+    } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+      options = { mimeType: 'audio/mpeg' };
+    } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+      options = { mimeType: 'audio/wav' };
+    } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      options = { mimeType: 'audio/webm;codecs=opus' };
+    } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+      options = { mimeType: 'audio/webm' };
+    } else {
+      // fallback，讓瀏覽器自動決定
+      options = {};
+    }
     if (state.current.las && !state.current.lasRecorder) {
-      state.current.lasRecorder = new Recorder(state.current.las);
+      state.current.lasRecorder = new Recorder(state.current.las, options);
       state.current.lasRecorder.ondataavailable = (e) => {
+        chunks.current.lasType = e.data.type;
         addChunk('las', e.data);
       };
       state.current.lasRecorder.start();
     }
 
     if (state.current.ras && !state.current.rasRecorder) {
-      state.current.rasRecorder = new Recorder(state.current.ras);
+      state.current.rasRecorder = new Recorder(state.current.ras, options);
       state.current.rasRecorder.ondataavailable = (e) => {
+        chunks.current.rasType = e.data.type;
         addChunk('ras', e.data);
       };
       state.current.rasRecorder.start();
