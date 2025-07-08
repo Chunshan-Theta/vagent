@@ -29,7 +29,20 @@ function cleanupCache() {
 export async function analyzeAudioEmotion(
   buffer: Buffer, 
   mimeType: string, 
-  prompt: string = "Please transcribe the audio and label the emotion of each sentence. label the emotion example: [Emotion: Aggressive, Friendly]"
+  prompt: string = `Please analyze the audio and for each sentence:
+1. Transcribe the content
+2. Label the emotions in this format: [Emotion: emotion_name, emotion_name, ...]
+3. The emotion must be selected from the following list: 
+   Positive, Negative, Neutral, Questioning, Reassuring, Affirmative, Amused,
+   Empathetic, Appreciative, Hesitant, Assertive, Concerned, Frustrated,
+   Authoritative, Helpful, Aggressive, Lighthearted, Friendly, Understanding,
+   Acknowledging, Cooperative, Suggestive, Accommodating, Explanatory,
+   Practical, Encouraging, Considerate, Responsible, Informative, Thoughtful,
+   Agreeable, Curious, Inquisitive, Clarifying, Hopeful
+
+Example output:
+"Hello, how are you?" [Emotion: Friendly, Questioning]
+"I understand your concern." [Emotion: Empathetic, Understanding]`
 ) {
   // Check cache first
   const cacheKey = createCacheKey(buffer, mimeType);
@@ -100,7 +113,7 @@ export async function analyzeAudioEmotion(
       } else {
         emotions.push({
           sentence: line,
-          emotion: '未標記'  // or any default emotion you want to use
+          emotion: 'Neutral'  // or any default emotion you want to use
         });
       }
     }
