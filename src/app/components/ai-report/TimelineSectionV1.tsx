@@ -204,7 +204,9 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
     if (audio?.url) {
       const audioElement = new Audio(audio.url)
       audioElement.className = 'report-timeline-audio';
-      audioElement.style.display = 'none';
+      audioElement.style.width = '0';
+      audioElement.style.height = '0';
+      document.body.appendChild(audioElement);
       audioElement.currentTime = audio.startTime ?? 0
       if (role === 'user') {
         // 用戶的語音要抓早一點，因為完整講完話之後，AI還會延遲一下才回傳 user message 的轉錄結果
@@ -233,7 +235,6 @@ const ReportSection: React.FC<ReportSectionProps> = (props) => {
         playingTarget.current = null;
         doUpdate();
       }
-      document.body.appendChild(audioElement);
       doUpdate();
       updatePlayingAudiosCount();
     }

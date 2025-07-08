@@ -7,6 +7,8 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { analyzeAudioEmotion } from '@/lib/audio-emotion-analyzer';
 
+import ffmpeg from 'fluent-ffmpeg';
+
 import suuid from 'short-uuid'
 
 const tmpDir = './local/tmp';
@@ -32,18 +34,25 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
     if (!audioData) {
       return NextResponse.json({ error: 'No audio file provided' }, { status: 400 });
     }
+
+    // 建立暫存檔案列表，最後要一起清理
+    const tmpFiles = [] as string[];
+    const removeTmpFile = () => {
+      for(const tmpFile of tmpFiles) {
+        fs.unlink(tmpFile).catch(err => console.error('Error deleting temp file:', err));
+      }
+    }
+
+
     // 先暫存檔案到本地
     const filePath = path.join('./local/tmp', suuid.generate());
+    tmpFiles.push(filePath);
     await fs.mkdir(tmpDir, { recursive: true });
-
     // 將 audioData 寫入本地檔案
     const arrayBuffer = await audioData.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     await fs.writeFile(filePath, buffer);
 
-    const removeTmpFile = () => {
-      fs.unlink(filePath).catch(err => console.error('Error deleting temp file:', err));
-    }
     
     // 進行語音分析
     let analysisInfo: string | undefined;
@@ -77,7 +86,29 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
     }
 
     try{
-      const res = await convApi.uploadConvAudio(filePath, convId, name, type as string, duration, analysisInfo);
+      const newFile = {
+        format: 'mp3', // 針對 ffmpeg 用的轉換格式名稱
+        mime: 'audio/mpeg', // 保存用的 MIME 類型
+        path: filePath + '--processed.mp3'
+      }
+      const newPath = newFile.path;
+      // 嘗試將音訊轉換為 MP3 格式
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg(filePath)
+          .toFormat('mp3')
+          .on('end', () => {
+            console.log('Audio conversion to MP3 completed');
+            resolve();
+          })
+          .on('error', (err) => {
+            console.error('Error during audio conversion:', err);
+            reject(err);
+          })
+          .save(newPath);
+      });
+      tmpFiles.push(newPath);
+      // 開始上傳
+      const res = await convApi.uploadConvAudio(newPath, convId, name, newFile.mime, duration, analysisInfo);
       removeTmpFile();
       return NextResponse.json({
         item: {

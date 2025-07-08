@@ -92,6 +92,13 @@ services:
     networks:
       - vagent-network
 
+  ffmpeg:
+    image: jrottenberg/ffmpeg:latest
+    container_name: ffmpeg
+    command: -version
+    networks:
+      - vagent-network
+
 volumes:
   postgres_data:
   redis_data:
