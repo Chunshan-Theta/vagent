@@ -71,7 +71,7 @@ async function translateToLanguage(text: string, targetLang: Language): Promise<
   }
 }
 
-async function createAgentConfig(apiResult: any, lang: Language): Promise<AgentConfig> {
+export async function createAgentConfig(apiResult: any, lang: Language): Promise<AgentConfig> {
   // Convert tools to full Tool objects and build toolLogic
   const toolConfig = utils.handleApiTools(apiResult.tools)
 

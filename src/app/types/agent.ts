@@ -20,7 +20,9 @@ export const agentSchema = z.object({
   prompt_prohibited_phrases: z.string().optional(),
   criteria: z.string().optional(),
   tools: z.array(toolSchema).optional(),
-  voice: z.string().default('echo')
+  voice: z.string().default('echo'),
+  created_at: z.string(),
+  updated_at: z.string()
 });
 
 export type Agent = z.infer<typeof agentSchema>;
