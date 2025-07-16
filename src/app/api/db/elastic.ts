@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export const elasticService = new ElasticService(
   process.env.NEXT_PUBLIC_ELASTIC_URL || 'https://voiss-98689.zeabur.app',
-  'voiss-user-logs'
+  process.env.ELASTIC_LABEL || 'voiss-user-logs'
 );
 
 export const getDefaultEventContext = () => ({
