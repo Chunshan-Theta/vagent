@@ -11,28 +11,85 @@ type TabType = "chat" | "config" | "autotest";
 
 interface TestCase {
   input: string;
-  expectedOutputContains?: string[];
-  delay?: number;
+  comparisonMethod: "contains" | "similar";
+  parameters: string[];
 }
 
 const DEFAULT_TEST_CASES: TestCase[] = [
   {
     input: "你好",
-    expectedOutputContains: ["你好", "您好"],
-    delay: 1000
+    comparisonMethod: "contains",
+    parameters: ["你好", "您好"]
   },
   {
     input: "再見",
-    expectedOutputContains: ["再見", "掰掰"],
-    delay: 1000
+    comparisonMethod: "contains",
+    parameters: ["再見", "掰掰"]
   },
-
   {
     input: "你怎麼看",
-    expectedOutputContains: ["我也不知道"],
-    delay: 1000
+    comparisonMethod: "similar",
+    parameters: ["我也不知道"]
   }
 ];
+
+// Function to check similarity using LLM API
+async function checkSimilarity(actualResponse: string, expectedParameters: string[]): Promise<{similar: boolean, reason: string}> {
+  try {
+    const response = await fetch('/api/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `你是一個測試評估專家。你需要判斷實際回應是否與預期參數相似，並提供詳細的評估原因。
+
+請用以下格式回答：
+相似度：[是/否]
+原因：[詳細說明為什麼相似或不相似]
+
+評估標準：
+- 如果實際回應的含義與任何一個預期參數相似，相似度為"是"
+- 如果實際回應與所有預期參數都不相似，相似度為"否"
+- 相似性包括：同義詞、相近表達、相同意圖、語義相近等
+- 原因要詳細說明具體的相似點或差異點`
+          },
+          {
+            role: 'user',
+            content: `實際回應：${actualResponse}
+
+預期參數：${expectedParameters.join(', ')}
+
+請判斷實際回應是否與預期參數相似，並提供詳細原因。`
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const llmResponse = data.choices?.[0]?.message?.content?.trim();
+    
+    // Parse the response
+    const similarityMatch = llmResponse.match(/相似度[：:]\s*(是|否)/);
+    const reasonMatch = llmResponse.match(/原因[：:]\s*(.+)/);
+    
+    const similar = similarityMatch?.[1] === '是';
+    const reason = reasonMatch?.[1] || llmResponse;
+    
+    return { similar, reason };
+  } catch (error) {
+    console.error('Error in similarity check:', error);
+    return { similar: false, reason: `相似性檢查失敗: ${error}` };
+  }
+}
 
 export default function TestPage() {
   const params = useParams();
@@ -40,7 +97,7 @@ export default function TestPage() {
   const [agent, setAgent] = useState<AgentConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [testCases, setTestCases] = useState<TestCase[]>(DEFAULT_TEST_CASES);
-  const [testResults, setTestResults] = useState<{input: string, output: string, passed: boolean}[]>([]);
+  const [testResults, setTestResults] = useState<{input: string, output: string, passed: boolean, reason: string}[]>([]);
   const [isRunningTests, setIsRunningTests] = useState(false);
   const testAppRef = useRef<AppRef>(null);
   const { transcriptItems } = useTranscript();
@@ -205,7 +262,7 @@ export default function TestPage() {
         
         // If no response received, wait a bit more
         if (!assistantResponse) {
-          await new Promise(resolve => setTimeout(resolve, testCase.delay || 2000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
           const appTranscriptItems = testAppRef.current.getTranscriptItems();
           const finalAssistantMessages = appTranscriptItems
@@ -220,23 +277,47 @@ export default function TestPage() {
         await testAppRef.current.disconnectFromRealtime();
         await new Promise(resolve => setTimeout(resolve, 500)); // 等待斷線
         
-        // Check if response contains expected output
-        const passed = testCase.expectedOutputContains && testCase.expectedOutputContains.length > 0 ? 
-          testCase.expectedOutputContains.some(expected => assistantResponse.includes(expected)) :
-          true;
+        // Check if response matches expected output based on comparison method
+        let passed = true;
+        let reason = "";
+        
+        if (testCase.parameters && testCase.parameters.length > 0) {
+          if (testCase.comparisonMethod === "contains") {
+            const matchedParams = testCase.parameters.filter(param => assistantResponse.includes(param));
+            passed = matchedParams.length > 0;
+            reason = passed 
+              ? `回應包含預期參數: ${matchedParams.join(', ')}`
+              : `回應未包含任何預期參數: ${testCase.parameters.join(', ')}`;
+          } else if (testCase.comparisonMethod === "similar") {
+            // Use LLM API to check similarity
+            try {
+              const similarityResult = await checkSimilarity(assistantResponse, testCase.parameters);
+              passed = similarityResult.similar;
+              reason = similarityResult.reason;
+            } catch (error) {
+              console.error("Error checking similarity:", error);
+              passed = false;
+              reason = `相似性檢查失敗: ${error}`;
+            }
+          }
+        } else {
+          reason = "無預期參數，測試通過";
+        }
         
         setTestResults(prev => [...prev, {
           input: testCase.input,
           output: assistantResponse || "No response received",
-          passed
+          passed,
+          reason
         }]);
-      } catch (error) {
-        setTestResults(prev => [...prev, {
-          input: testCase.input,
-          output: `Error: ${error}`,
-          passed: false
-        }]);
-      }
+              } catch (error) {
+          setTestResults(prev => [...prev, {
+            input: testCase.input,
+            output: `Error: ${error}`,
+            passed: false,
+            reason: `測試執行失敗: ${error}`
+          }]);
+        }
     }
     
     setIsRunningTests(false);
@@ -278,6 +359,7 @@ export default function TestPage() {
                 {testCases.map((testCase, index) => (
                   <div key={index} className="flex gap-2 items-center p-2 border rounded">
                     <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">測試輸入</label>
                       <input
                         type="text"
                         placeholder="Input"
@@ -291,31 +373,35 @@ export default function TestPage() {
                       />
                     </div>
                     <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">比對方式</label>
+                      <select
+                        value={testCase.comparisonMethod}
+                        onChange={(e) => {
+                          const newTestCases = [...testCases];
+                          newTestCases[index].comparisonMethod = e.target.value as "contains" | "similar";
+                          setTestCases(newTestCases);
+                        }}
+                        className="w-full p-1 border rounded text-sm"
+                      >
+                        <option value="contains">包含</option>
+                        <option value="similar">相似</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">使用參數 (逗號分隔)</label>
                       <input
                         type="text"
-                        placeholder="Expected output (comma separated)"
-                        value={testCase.expectedOutputContains?.join(', ') || ''}
+                        placeholder="Parameters (comma separated)"
+                        value={testCase.parameters?.join(', ') || ''}
                         onChange={(e) => {
                           const newTestCases = [...testCases];
-                          newTestCases[index].expectedOutputContains = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                          newTestCases[index].parameters = e.target.value.split(',').map(s => s.trim()).filter(s => s);
                           setTestCases(newTestCases);
                         }}
                         className="w-full p-1 border rounded text-sm"
                       />
                     </div>
-                    <div className="w-20">
-                      <input
-                        type="number"
-                        placeholder="Delay (ms)"
-                        value={testCase.delay || 2000}
-                        onChange={(e) => {
-                          const newTestCases = [...testCases];
-                          newTestCases[index].delay = parseInt(e.target.value) || 2000;
-                          setTestCases(newTestCases);
-                        }}
-                        className="w-full p-1 border rounded text-sm"
-                      />
-                    </div>
+
                     <button
                       onClick={() => {
                         const newTestCases = testCases.filter((_, i) => i !== index);
@@ -328,7 +414,7 @@ export default function TestPage() {
                   </div>
                 ))}
                 <button
-                  onClick={() => setTestCases([...testCases, { input: '', expectedOutputContains: [], delay: 2000 }])}
+                  onClick={() => setTestCases([...testCases, { input: '', comparisonMethod: 'contains', parameters: [] }])}
                   className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
                 >
                   Add Test Case
@@ -353,6 +439,7 @@ export default function TestPage() {
                       <div key={index} className={`p-2 border rounded ${result.passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                         <div className="font-medium">Input: {result.input}</div>
                         <div className="text-sm text-gray-600">Output: {result.output}</div>
+                        <div className="text-sm text-gray-700 mt-1">Reason: {result.reason}</div>
                         <div className={`text-sm font-medium ${result.passed ? 'text-green-600' : 'text-red-600'}`}>
                           {result.passed ? '✓ PASSED' : '✗ FAILED'}
                         </div>
