@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { z } from 'zod';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Agent } from '@/app/types/agent';
@@ -41,8 +40,8 @@ export default function ViewAgentPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 max-w-4xl mx-auto p-6">
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900">Agent Details</h1>
         <div className="space-x-3">
           <Link
@@ -66,82 +65,107 @@ export default function ViewAgentPage() {
         </div>
       )}
 
-      <div className="bg-white shadow-sm rounded-lg p-6 space-y-6">
-        <div>
-          <h2 className="text-lg font-medium text-gray-900">Basic Information</h2>
-          <div className="mt-4 space-y-4">
+      <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
-              <div className="mt-1 text-sm text-gray-900">{agent.name}</div>
+              <label className="block text-sm font-medium text-gray-500">ID</label>
+              <div className="mt-1 text-base text-gray-900 break-all">{agent.id}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Agent  Description</label>
-              <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.public_description}</div>
+              <label className="block text-sm font-medium text-gray-500">Name</label>
+              <div className="mt-1 text-base text-gray-900">{agent.name}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Voice</label>
+              <div className="mt-1 text-base text-gray-900">{agent.voice}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Created At</label>
+              <div className="mt-1 text-base text-gray-900">{new Date(agent.created_at).toLocaleString()}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Updated At</label>
+              <div className="mt-1 text-base text-gray-900">{new Date(agent.updated_at).toLocaleString()}</div>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-500">Agent Description</label>
+              <div className="mt-1 text-base text-gray-900 whitespace-pre-wrap">{agent.public_description}</div>
             </div>
           </div>
         </div>
 
-        <div>
-          <h2 className="text-lg font-medium text-gray-900">Prompt Configuration</h2>
-          <div className="mt-4 space-y-4">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Prompt Configuration</h2>
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Agent  Name</label>
-              <div className="mt-1 text-sm text-gray-900">{agent.prompt_name}</div>
+              <label className="block text-sm font-medium text-gray-500">Agent Name</label>
+              <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md">{agent.prompt_name}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Agent  Describe</label>
-              <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_personas}</div>
+              <label className="block text-sm font-medium text-gray-500">Agent Description</label>
+              <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.prompt_personas}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Agent  Customers Describe</label>
-              <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_customers}</div>
+              <label className="block text-sm font-medium text-gray-500">Agent Customers Description</label>
+              <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.prompt_customers}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Agent  Tool Plugin Describe</label>
-              <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_tool_logics}</div>
+              <label className="block text-sm font-medium text-gray-500">Agent Tool Plugin Description</label>
+              <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.prompt_tool_logics}</div>
             </div>
             {agent.prompt_voice_styles && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Agent  Voice Styles</label>
-                <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_voice_styles}</div>
+                <label className="block text-sm font-medium text-gray-500">Agent Voice Styles</label>
+                <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.prompt_voice_styles}</div>
               </div>
             )}
             {agent.prompt_conversation_modes && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Agent  Conversation Modes</label>
-                <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_conversation_modes}</div>
+                <label className="block text-sm font-medium text-gray-500">Agent Conversation Modes</label>
+                <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.prompt_conversation_modes}</div>
               </div>
             )}
             {agent.prompt_prohibited_phrases && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Agent Prohibited Rules</label>
-                <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.prompt_prohibited_phrases}</div>
+                <label className="block text-sm font-medium text-gray-500">Agent Prohibited Rules</label>
+                <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.prompt_prohibited_phrases}</div>
               </div>
             )}
             {agent.criteria && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">Agent Criteria</label>
-                <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{agent.criteria}</div>
+                <label className="block text-sm font-medium text-gray-500">Agent Criteria</label>
+                <div className="mt-1 text-base text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{agent.criteria}</div>
               </div>
             )}
           </div>
         </div>
 
         {agent.tools && agent.tools.length > 0 && (
-          <div>
-            <h2 className="text-lg font-medium text-gray-900">Tools</h2>
-            <div className="mt-4 space-y-4">
+          <div className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tools</h2>
+            <div className="grid gap-4">
               {agent.tools.map((tool) => (
-                <div key={tool.id} className="border rounded p-4">
-                  <div className="font-medium">{tool.name}</div>
+                <div key={tool.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="font-medium text-gray-900">{tool.name}</div>
                   {tool.description && (
-                    <div className="mt-1 text-sm text-gray-500">{tool.description}</div>
+                    <div className="mt-2 text-sm text-gray-600">{tool.description}</div>
                   )}
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Raw JSON Data</h2>
+          <div className="overflow-hidden">
+            <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm">
+              {JSON.stringify(agent, null, 2)}
+            </pre>
+          </div>
+        </div>
       </div>
     </div>
   );
