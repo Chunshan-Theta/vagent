@@ -37,6 +37,14 @@ const languageOptions = [
 export interface AppRef {
   disconnectFromRealtime: () => void;
   connectToRealtime: () => Promise<void>;
+  sendSimulatedUserMessage: (text: string, opts: {
+    hide?: boolean;
+    role?: 'user' | 'assistant' | 'system';
+    noAppendToTranscript?: boolean;
+    triggerResponse?: boolean;
+  }) => Promise<void>;
+  getTranscriptItems: () => any[];
+  clearTranscript: () => void;
 }
 
 export type AppProps = {
@@ -48,6 +56,8 @@ export type AppProps = {
   onSessionResume?: () => void;
   /** 每次中斷 */
   onSessionClose?: () => void;
+  /** 測試模式 */
+  isTestMode?: boolean;
 };
 
 
@@ -62,7 +72,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const onSessionClose = props.onSessionClose ?? noop;
 
 
-  const { transcriptItems, addTranscriptMessage, updateTranscriptItemStatus, addTranscriptBreadcrumb } =
+  const { transcriptItems, addTranscriptMessage, updateTranscriptItemStatus, addTranscriptBreadcrumb, clearTranscript } =
     useTranscript();
 
   // Use a try-catch to handle the case when EventContext is not available
@@ -95,6 +105,9 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] =
     useState<boolean>(true);
+
+  /** 控制麥克風是否啟用 */
+  const [isMicrophoneEnabled, setIsMicrophoneEnabled] = useState<boolean>(true);
 
   /** 記錄 session 連線到 realtime 的次數 */
   const [sessionStartTimes, setSessionStartTimes] = useState<number>(0);
@@ -224,6 +237,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         getInfo().sampleRate,
         getInfo().channels
       )
+      
 
       dc.addEventListener("open", () => {
         logClientEvent({}, "data_channel.open");
@@ -239,6 +253,9 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       });
 
       setDataChannel(dc);
+      if (props.isTestMode) {
+        setIsPTTActive(true);
+      }
     } catch (err) {
       console.error("Error connecting to realtime:", err);
       setSessionStatus("DISCONNECTED");
@@ -339,7 +356,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       (a) => a.name === selectedAgentName
     );
 
-    const turnDetection = isPTTActive
+    const turnDetection = isPTTActive || !isMicrophoneEnabled
       ? null
       : {
         type: "server_vad",
@@ -360,7 +377,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     const sessionUpdateEvent = {
       type: "session.update",
       session: {
-        modalities: ["text", "audio"],
+        modalities: props.isTestMode ? ["text"] : ["text", "audio"],
         instructions,
         voice: agentVoice,
         input_audio_format: "pcm16",
@@ -382,7 +399,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
       .map(item => `${item.role}: ${item.title}`)
       .join('\n\n');
 
-    if (chatHistory) {
+    if (chatHistory && !props.isTestMode) {
       await sendSimulatedUserMessage(`${getTranslation(lang, 'ai_chatbot_action.chatHistory')}\n\n${chatHistory}\n\n${getTranslation(lang, 'ai_chatbot_action.assistantRole')}`, {
         hide: true,
         role: "system",
@@ -472,7 +489,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     if (
       sessionStatus !== "CONNECTED" ||
       dataChannel?.readyState !== "open" ||
-      !isPTTUserSpeaking
+      !isPTTUserSpeaking 
     )
       return;
 
@@ -510,6 +527,12 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
     if (storedAudioPlaybackEnabled) {
       setIsAudioPlaybackEnabled(storedAudioPlaybackEnabled === "true");
     }
+
+    // 麥克風是否啟用
+    if (props.isTestMode) {
+      // setIsMicrophoneEnabled(false);
+      //connectToRealtime();
+    }
   }, []);
 
   useEffect(() => {
@@ -546,7 +569,10 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
   // expose 給父元件
   useImperativeHandle(ref, () => ({
     disconnectFromRealtime,
-    connectToRealtime
+    connectToRealtime,
+    sendSimulatedUserMessage,
+    getTranscriptItems: () => transcriptItems,
+    clearTranscript,
   }));
 
   return (
