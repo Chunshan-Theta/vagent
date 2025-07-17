@@ -10,26 +10,35 @@ import { useTranscript } from "../../../../contexts/TranscriptContext";
 type TabType = "chat" | "config" | "autotest";
 
 interface TestCase {
-  input: string;
-  comparisonMethod: "contains" | "similar";
-  parameters: string[];
+  id?: number;
+  agent_id?: string;
+  name: string;
+  input_text: string;
+  comparison_method: "contains" | "similar";
+  expected_parameters: string[];
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const DEFAULT_TEST_CASES: TestCase[] = [
   {
-    input: "你好",
-    comparisonMethod: "contains",
-    parameters: ["你好", "您好"]
+    name: "Greeting Test",
+    input_text: "你好",
+    comparison_method: "contains",
+    expected_parameters: ["你好", "您好"]
   },
   {
-    input: "再見",
-    comparisonMethod: "contains",
-    parameters: ["再見", "掰掰"]
+    name: "Farewell Test", 
+    input_text: "再見",
+    comparison_method: "contains",
+    expected_parameters: ["再見", "掰掰"]
   },
   {
-    input: "你怎麼看",
-    comparisonMethod: "similar",
-    parameters: ["我也不知道"]
+    name: "Opinion Test",
+    input_text: "你怎麼看",
+    comparison_method: "similar",
+    expected_parameters: ["我也不知道"]
   }
 ];
 
@@ -99,6 +108,10 @@ export default function TestPage() {
   const [testCases, setTestCases] = useState<TestCase[]>(DEFAULT_TEST_CASES);
   const [testResults, setTestResults] = useState<{input: string, output: string, passed: boolean, reason: string}[]>([]);
   const [isRunningTests, setIsRunningTests] = useState(false);
+  const [isLoadingTestCases, setIsLoadingTestCases] = useState(false);
+  const [isSavingTestCases, setIsSavingTestCases] = useState(false);
+  const [isDeletingTestCase, setIsDeletingTestCase] = useState<number | null>(null);
+  const [selectedTestCases, setSelectedTestCases] = useState<Set<number>>(new Set());
   const testAppRef = useRef<AppRef>(null);
   const { transcriptItems } = useTranscript();
 
@@ -119,7 +132,182 @@ export default function TestPage() {
 
   useEffect(() => {
     fetchAgent();
+    loadTestCases();
   }, [params.id]);
+
+  const loadTestCases = async () => {
+    if (!params.id) return;
+    
+    setIsLoadingTestCases(true);
+    try {
+      const response = await fetch(`/api/test_case?agent_id=${params.id}`);
+      if (!response.ok) throw new Error('Failed to fetch test cases');
+      const data = await response.json();
+      if (data.success && data.testCases.length > 0) {
+        setTestCases(data.testCases);
+      }
+    } catch (error) {
+      console.error('Error loading test cases:', error);
+    } finally {
+      setIsLoadingTestCases(false);
+    }
+  };
+
+  const saveTestCases = async () => {
+    if (!params.id) return;
+    
+    setIsSavingTestCases(true);
+    try {
+      // Filter out test cases without required fields
+      const validTestCases = testCases.filter(tc => 
+        tc.name && tc.input_text && tc.expected_parameters.length > 0
+      );
+
+      if (validTestCases.length === 0) {
+        alert('Please add at least one valid test case');
+        return;
+      }
+
+      // Separate new test cases from existing ones
+      const newTestCases = validTestCases.filter(tc => !tc.id);
+      const existingTestCases = validTestCases.filter(tc => tc.id);
+
+      let success = true;
+      let errorMessage = '';
+
+      // Update existing test cases
+      if (existingTestCases.length > 0) {
+        const updateResponse = await fetch('/api/test_case/bulk', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ updates: existingTestCases }),
+        });
+
+        if (!updateResponse.ok) {
+          success = false;
+          errorMessage = 'Failed to update existing test cases';
+        }
+      }
+
+      // Create new test cases
+      if (success && newTestCases.length > 0) {
+        const testCasesWithAgentId = newTestCases.map(tc => ({
+          ...tc,
+          agent_id: params.id
+        }));
+
+        const createResponse = await fetch('/api/test_case/bulk', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ testCases: testCasesWithAgentId }),
+        });
+
+        if (!createResponse.ok) {
+          success = false;
+          errorMessage = 'Failed to create new test cases';
+        }
+      }
+
+      if (success) {
+        alert('Test cases saved successfully!');
+        // Reload test cases to get the updated data with IDs
+        await loadTestCases();
+      } else {
+        alert(`Failed to save test cases: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('Error saving test cases:', error);
+      alert(`Error saving test cases: ${error}`);
+    } finally {
+      setIsSavingTestCases(false);
+    }
+  };
+
+  const deleteTestCase = async (testCaseId: number) => {
+    if (!testCaseId) {
+      // If no ID, just remove from local state (for unsaved test cases)
+      setTestCases(prev => prev.filter(tc => tc.id !== testCaseId));
+      return;
+    }
+    
+    setIsDeletingTestCase(testCaseId);
+    try {
+      const response = await fetch(`/api/test_case/${testCaseId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete test case');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Remove from local state
+        setTestCases(prev => prev.filter(tc => tc.id !== testCaseId));
+      } else {
+        alert(`Failed to delete test case: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting test case:', error);
+      alert(`Error deleting test case: ${error}`);
+    } finally {
+      setIsDeletingTestCase(null);
+    }
+  };
+
+  const bulkDeleteTestCases = async () => {
+    if (selectedTestCases.size === 0) {
+      alert('Please select test cases to delete');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedTestCases.size} test case(s)?`)) {
+      return;
+    }
+
+    try {
+      const ids = Array.from(selectedTestCases).join(',');
+      const response = await fetch(`/api/test_case/bulk?ids=${ids}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete test cases');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Remove from local state
+        setTestCases(prev => prev.filter(tc => !selectedTestCases.has(tc.id || 0)));
+        setSelectedTestCases(new Set());
+        alert(`Successfully deleted ${data.testCases.length} test case(s)`);
+      } else {
+        alert(`Failed to delete test cases: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting test cases:', error);
+      alert(`Error deleting test cases: ${error}`);
+    }
+  };
+
+  const toggleTestCaseSelection = (testCaseId: number) => {
+    const newSelected = new Set(selectedTestCases);
+    if (newSelected.has(testCaseId)) {
+      newSelected.delete(testCaseId);
+    } else {
+      newSelected.add(testCaseId);
+    }
+    setSelectedTestCases(newSelected);
+  };
+
+  const selectAllTestCases = () => {
+    const allIds = testCases.map(tc => tc.id || 0).filter(id => id !== 0);
+    setSelectedTestCases(new Set(allIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedTestCases(new Set());
+  };
 
   const runTests = async () => {
     if (!testAppRef.current || !agent) return;
@@ -128,7 +316,7 @@ export default function TestPage() {
     setTestResults([]);
     
     for (const testCase of testCases) {
-      if (!testCase.input.trim()) continue;
+      if (!testCase.input_text.trim()) continue;
       
       try {
         // 每個測資都開新連線
@@ -196,7 +384,7 @@ export default function TestPage() {
         const transcriptLengthBefore = testAppRef.current.getTranscriptItems().length;
         
         // Send test input
-        await testAppRef.current.sendSimulatedUserMessage(testCase.input, {
+        await testAppRef.current.sendSimulatedUserMessage(testCase.input_text, {
           hide: false,
           role: 'user',
           triggerResponse: true
@@ -281,17 +469,17 @@ export default function TestPage() {
         let passed = true;
         let reason = "";
         
-        if (testCase.parameters && testCase.parameters.length > 0) {
-          if (testCase.comparisonMethod === "contains") {
-            const matchedParams = testCase.parameters.filter(param => assistantResponse.includes(param));
+        if (testCase.expected_parameters && testCase.expected_parameters.length > 0) {
+          if (testCase.comparison_method === "contains") {
+            const matchedParams = testCase.expected_parameters.filter((param: string) => assistantResponse.includes(param));
             passed = matchedParams.length > 0;
             reason = passed 
               ? `回應包含預期參數: ${matchedParams.join(', ')}`
-              : `回應未包含任何預期參數: ${testCase.parameters.join(', ')}`;
-          } else if (testCase.comparisonMethod === "similar") {
+              : `回應未包含任何預期參數: ${testCase.expected_parameters.join(', ')}`;
+          } else if (testCase.comparison_method === "similar") {
             // Use LLM API to check similarity
             try {
-              const similarityResult = await checkSimilarity(assistantResponse, testCase.parameters);
+              const similarityResult = await checkSimilarity(assistantResponse, testCase.expected_parameters);
               passed = similarityResult.similar;
               reason = similarityResult.reason;
             } catch (error) {
@@ -305,14 +493,14 @@ export default function TestPage() {
         }
         
         setTestResults(prev => [...prev, {
-          input: testCase.input,
+          input: testCase.input_text,
           output: assistantResponse || "No response received",
           passed,
           reason
         }]);
               } catch (error) {
           setTestResults(prev => [...prev, {
-            input: testCase.input,
+            input: testCase.input_text,
             output: `Error: ${error}`,
             passed: false,
             reason: `測試執行失敗: ${error}`
@@ -354,19 +542,83 @@ export default function TestPage() {
         return (
           <div className="p-4">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-2">Test Cases</h3>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">Test Cases</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={loadTestCases}
+                    disabled={isLoadingTestCases}
+                    className="px-3 py-1 bg-blue-500 text-white rounded text-sm disabled:bg-gray-400"
+                  >
+                    {isLoadingTestCases ? 'Loading...' : 'Load'}
+                  </button>
+                  <button
+                    onClick={saveTestCases}
+                    disabled={isSavingTestCases}
+                    className="px-3 py-1 bg-green-500 text-white rounded text-sm disabled:bg-gray-400"
+                  >
+                    {isSavingTestCases ? 'Saving...' : 'Save'}
+                  </button>
+                  {selectedTestCases.size > 0 && (
+                    <button
+                      onClick={bulkDeleteTestCases}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+                    >
+                      Delete Selected ({selectedTestCases.size})
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="space-y-2">
+                {testCases.length > 0 && (
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={selectAllTestCases}
+                      className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={clearSelection}
+                      className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                )}
                 {testCases.map((testCase, index) => (
                   <div key={index} className="flex gap-2 items-center p-2 border rounded">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedTestCases.has(testCase.id || 0)}
+                        onChange={() => toggleTestCaseSelection(testCase.id || 0)}
+                        className="mr-2"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">測試名稱</label>
+                      <input
+                        type="text"
+                        placeholder="Test Name"
+                        value={testCase.name}
+                        onChange={(e) => {
+                          const newTestCases = [...testCases];
+                          newTestCases[index].name = e.target.value;
+                          setTestCases(newTestCases);
+                        }}
+                        className="w-full p-1 border rounded text-sm"
+                      />
+                    </div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">測試輸入</label>
                       <input
                         type="text"
                         placeholder="Input"
-                        value={testCase.input}
+                        value={testCase.input_text}
                         onChange={(e) => {
                           const newTestCases = [...testCases];
-                          newTestCases[index].input = e.target.value;
+                          newTestCases[index].input_text = e.target.value;
                           setTestCases(newTestCases);
                         }}
                         className="w-full p-1 border rounded text-sm"
@@ -375,10 +627,10 @@ export default function TestPage() {
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">比對方式</label>
                       <select
-                        value={testCase.comparisonMethod}
+                        value={testCase.comparison_method}
                         onChange={(e) => {
                           const newTestCases = [...testCases];
-                          newTestCases[index].comparisonMethod = e.target.value as "contains" | "similar";
+                          newTestCases[index].comparison_method = e.target.value as "contains" | "similar";
                           setTestCases(newTestCases);
                         }}
                         className="w-full p-1 border rounded text-sm"
@@ -392,10 +644,10 @@ export default function TestPage() {
                       <input
                         type="text"
                         placeholder="Parameters (comma separated)"
-                        value={testCase.parameters?.join(', ') || ''}
+                        value={testCase.expected_parameters?.join(', ') || ''}
                         onChange={(e) => {
                           const newTestCases = [...testCases];
-                          newTestCases[index].parameters = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                          newTestCases[index].expected_parameters = e.target.value.split(',').map(s => s.trim()).filter(s => s);
                           setTestCases(newTestCases);
                         }}
                         className="w-full p-1 border rounded text-sm"
@@ -403,18 +655,16 @@ export default function TestPage() {
                     </div>
 
                     <button
-                      onClick={() => {
-                        const newTestCases = testCases.filter((_, i) => i !== index);
-                        setTestCases(newTestCases);
-                      }}
-                      className="px-2 py-1 bg-red-500 text-white rounded text-sm"
+                      onClick={() => deleteTestCase(testCase.id || 0)}
+                      disabled={isDeletingTestCase === testCase.id}
+                      className="px-2 py-1 bg-red-500 text-white rounded text-sm disabled:bg-gray-400"
                     >
-                      Remove
+                      {isDeletingTestCase === testCase.id ? 'Deleting...' : 'Remove'}
                     </button>
                   </div>
                 ))}
                 <button
-                  onClick={() => setTestCases([...testCases, { input: '', comparisonMethod: 'contains', parameters: [] }])}
+                  onClick={() => setTestCases([...testCases, { name: '', input_text: '', comparison_method: 'contains', expected_parameters: [] }])}
                   className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
                 >
                   Add Test Case
