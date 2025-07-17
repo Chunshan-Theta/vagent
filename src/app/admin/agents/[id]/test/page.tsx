@@ -111,7 +111,6 @@ export default function TestPage() {
   const [isLoadingTestCases, setIsLoadingTestCases] = useState(false);
   const [isSavingTestCases, setIsSavingTestCases] = useState(false);
   const [isDeletingTestCase, setIsDeletingTestCase] = useState<number | null>(null);
-  const [selectedTestCases, setSelectedTestCases] = useState<Set<number>>(new Set());
   const testAppRef = useRef<AppRef>(null);
   const { transcriptItems } = useTranscript();
 
@@ -257,57 +256,7 @@ export default function TestPage() {
     }
   };
 
-  const bulkDeleteTestCases = async () => {
-    if (selectedTestCases.size === 0) {
-      alert('Please select test cases to delete');
-      return;
-    }
 
-    if (!confirm(`Are you sure you want to delete ${selectedTestCases.size} test case(s)?`)) {
-      return;
-    }
-
-    try {
-      const ids = Array.from(selectedTestCases).join(',');
-      const response = await fetch(`/api/test_case/bulk?ids=${ids}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete test cases');
-      const data = await response.json();
-      
-      if (data.success) {
-        // Remove from local state
-        setTestCases(prev => prev.filter(tc => !selectedTestCases.has(tc.id || 0)));
-        setSelectedTestCases(new Set());
-        alert(`Successfully deleted ${data.testCases.length} test case(s)`);
-      } else {
-        alert(`Failed to delete test cases: ${data.error}`);
-      }
-    } catch (error) {
-      console.error('Error deleting test cases:', error);
-      alert(`Error deleting test cases: ${error}`);
-    }
-  };
-
-  const toggleTestCaseSelection = (testCaseId: number) => {
-    const newSelected = new Set(selectedTestCases);
-    if (newSelected.has(testCaseId)) {
-      newSelected.delete(testCaseId);
-    } else {
-      newSelected.add(testCaseId);
-    }
-    setSelectedTestCases(newSelected);
-  };
-
-  const selectAllTestCases = () => {
-    const allIds = testCases.map(tc => tc.id || 0).filter(id => id !== 0);
-    setSelectedTestCases(new Set(allIds));
-  };
-
-  const clearSelection = () => {
-    setSelectedTestCases(new Set());
-  };
 
   const runTests = async () => {
     if (!testAppRef.current || !agent) return;
@@ -542,60 +491,9 @@ export default function TestPage() {
         return (
           <div className="p-4">
             <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">Test Cases</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={loadTestCases}
-                    disabled={isLoadingTestCases}
-                    className="px-3 py-1 bg-blue-500 text-white rounded text-sm disabled:bg-gray-400"
-                  >
-                    {isLoadingTestCases ? 'Loading...' : 'Load'}
-                  </button>
-                  <button
-                    onClick={saveTestCases}
-                    disabled={isSavingTestCases}
-                    className="px-3 py-1 bg-green-500 text-white rounded text-sm disabled:bg-gray-400"
-                  >
-                    {isSavingTestCases ? 'Saving...' : 'Save'}
-                  </button>
-                  {selectedTestCases.size > 0 && (
-                    <button
-                      onClick={bulkDeleteTestCases}
-                      className="px-3 py-1 bg-red-500 text-white rounded text-sm"
-                    >
-                      Delete Selected ({selectedTestCases.size})
-                    </button>
-                  )}
-                </div>
-              </div>
               <div className="space-y-2">
-                {testCases.length > 0 && (
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      onClick={selectAllTestCases}
-                      className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
-                    >
-                      Select All
-                    </button>
-                    <button
-                      onClick={clearSelection}
-                      className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
-                    >
-                      Clear Selection
-                    </button>
-                  </div>
-                )}
                 {testCases.map((testCase, index) => (
                   <div key={index} className="flex gap-2 items-center p-2 border rounded">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedTestCases.has(testCase.id || 0)}
-                        onChange={() => toggleTestCaseSelection(testCase.id || 0)}
-                        className="mr-2"
-                      />
-                    </div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">測試名稱</label>
                       <input
@@ -669,6 +567,14 @@ export default function TestPage() {
                 >
                   Add Test Case
                 </button>
+                <button
+                    onClick={saveTestCases}
+                    disabled={isSavingTestCases}
+                    className="px-3 py-1 bg-green-500 text-white rounded text-sm disabled:bg-gray-400"
+                    style={{ marginLeft: '10px' }}
+                  >
+                    {isSavingTestCases ? 'Saving...' : 'Save'}
+                  </button>
               </div>
               
               <div className="mt-4">

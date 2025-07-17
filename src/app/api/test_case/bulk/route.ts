@@ -160,7 +160,7 @@ export async function PUT(request: Request) {
         let paramIndex = 1;
 
         Object.entries(fields).forEach(([key, value]) => {
-          if (value !== undefined) {
+          if (value !== undefined && key !== 'updated_at') { // Skip updated_at from input
             updateFields.push(`${key} = $${paramIndex}`);
             values.push(value);
             paramIndex++;
