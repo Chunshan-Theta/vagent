@@ -21,100 +21,13 @@ import useAgentSettings from "@/app/hooks/useAgentSettings";
 import type { TimelineData } from "@/app/types/ai-report/report-v1";
 
 import * as utils from '../utils'
+import { createAgentConfig } from '../utils'
 import { delay } from "@/app/lib/utils";
 
 type TimelineItem = TimelineData
 interface UserInfo {
   email: string;
   uname: string;
-}
-
-async function translateToLanguage(text: string, targetLang: Language): Promise<string> {
-  // Only use cache in browser environment
-  const isBrowser = typeof window !== 'undefined';
-  // Generate a cache key based on text and target language
-  const cacheKey = `translation_${targetLang}_${encodeURIComponent(text)}`;
-
-  if (isBrowser) {
-    // Check cache first
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      return cached;
-    }
-  }
-
-  try {
-    const response = await fetch('/api/translate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text,
-        targetLang,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Translation failed');
-    }
-
-    const result = await response.json();
-    // Cache the result only in browser
-    if (isBrowser) {
-      localStorage.setItem(cacheKey, result.translatedText);
-    }
-    return result.translatedText;
-  } catch (error) {
-    console.error('Translation error:', error);
-    return text; // Fallback to original text if translation fails
-  }
-}
-
-export async function createAgentConfig(apiResult: any, lang: Language): Promise<AgentConfig> {
-  // Convert tools to full Tool objects and build toolLogic
-  const toolConfig = utils.handleApiTools(apiResult.tools)
-
-  const promptName = apiResult.prompt_name;
-  const promptPersonas = apiResult.prompt_personas;
-  const promptCustomers = apiResult.prompt_customers;
-  const promptToolLogics = apiResult.prompt_tool_logics;
-  const promptVoiceStyles = apiResult.prompt_voice_styles;
-  const promptConversationModes = apiResult.prompt_conversation_modes;
-  const promptProhibitedPhrases = apiResult.prompt_prohibited_phrases;
-
-  let instructions = `
-  Now, please play the role of ${promptName}, here are your role and more details:
-  ## Your Role: ${promptName}
-  ${promptPersonas}
-  ## Your Conversation Partner
-  ${promptCustomers}
-  ## Your Tool Usage Rules and Instructions
-  ${promptToolLogics}
-  ## Your Voice Style
-  ${promptVoiceStyles}
-  ## Your Conversation Mode
-  ${promptConversationModes}
-  ## Your Prohibited Phrases
-  ${promptProhibitedPhrases}
-
-  !Note: You will speak in ${lang} language, please respond in ${lang} language.
-  `;
-  console.log('instructions source', instructions);
-
-  instructions = await translateToLanguage(instructions, lang);
-  console.log('instructions translated', instructions);
-
-
-  return {
-    ...apiResult,
-    name: apiResult.name,
-    publicDescription: apiResult.public_description,
-    instructions,
-    tools: toolConfig.tools,
-    toolLogic: toolConfig.toolLogic,
-    lang: lang || "zh",
-  };
 }
 
 function ClassChatPage() {
@@ -846,7 +759,7 @@ function ClassChatPage() {
       {chatScene()}
       <div style={{ display: 'none' }}>
         <App
-          ref={appRef}
+          ref={appRef as any}
           agentConfig={agentConfig}
           onSessionOpen={onSessionOpen}
           onSessionResume={onSessionResume}

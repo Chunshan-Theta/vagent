@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import App, { AppRef } from "../../../../class/[id]/App";
 import { AgentConfig } from "../../../../types";
-import { createAgentConfig } from "../../../../class/[id]/page";
+import { createAgentConfig } from "../../../../class/utils";
 import { useTranscript } from "../../../../contexts/TranscriptContext";
 
 type TabType = "chat" | "config" | "autotest";
