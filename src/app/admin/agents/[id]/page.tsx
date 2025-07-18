@@ -51,6 +51,12 @@ export default function ViewAgentPage() {
             Edit
           </Link>
           <Link
+            href={`/admin/agents/${params.id}/test`}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            Testing
+          </Link>
+          <Link
             href="/admin/agents"
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >

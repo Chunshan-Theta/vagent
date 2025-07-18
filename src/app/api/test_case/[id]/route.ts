@@ -6,7 +6,7 @@ const pool = getPool();
 // GET /api/test_case/[id] - Get a specific test case
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: any }
 ) {
   try {
     const { id } = params;
@@ -36,7 +36,7 @@ export async function GET(
 // PUT /api/test_case/[id] - Update a test case
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: any }
 ) {
   try {
     const { id } = params;
@@ -137,7 +137,7 @@ export async function PUT(
 // DELETE /api/test_case/[id] - Delete a test case
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: any }
 ) {
   try {
     const { id } = params;
