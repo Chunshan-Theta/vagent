@@ -5,8 +5,8 @@ export class KeyQuota extends Model {
 
   group!: string;
   key!: string;
-  usage!: number;
-  quota!: number;
+  usage!: string;
+  quota!: string;
   createdAt?: string;
   updatedAt?: string;
 
@@ -25,8 +25,8 @@ export class KeyQuota extends Model {
       properties: {
         group: { type: 'string', maxLength: 64 },
         key: { type: 'string', maxLength: 128 },
-        usage: { type: 'number' },
-        quota: { type: 'number' },
+        usage: { type: 'string' },
+        quota: { type: 'string' },
         createdAt: { type: 'string', format: 'date-time' },
         updatedAt: { type: 'string', format: 'date-time' },
       },

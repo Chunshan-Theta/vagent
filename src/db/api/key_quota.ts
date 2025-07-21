@@ -6,15 +6,24 @@ export function createKeyQuota(group:string, key:string, quota:number) {
   return M.KeyQuota.query().insert({
     group: group,
     key: key,
-    usage: 0,
-    quota: quota,
+    usage: '0',
+    quota: quota.toString(),
     createdAt: orm.fn.now(),
     updatedAt: orm.fn.now(),
   });
 }
 
-export function getKeyQuota(group:string, key:string) {
-  return M.KeyQuota.query().where('group', group).where('key', key).first();
+export async function getKeyQuota(group:string, key:string) {
+  const data = await M.KeyQuota.query().where('group', group).where('key', key).first();
+  if (!data) {
+    return null;
+  }
+  const nData = {
+    ...data,
+    usage: parseInt(data.usage, 10),
+    quota: parseInt(data.quota, 10),
+  }
+  return nData
 }
 
 export function checkKeyQuota(group:string, key:string) {
@@ -25,11 +34,14 @@ export function checkKeyQuota(group:string, key:string) {
         avaiable: false,
       }
     }
+
+    const usage = parseInt(quota.usage, 10);
+    const quotaValue = parseInt(quota.quota, 10);
     
     return {
       // 是否存在
       exists: true,
-      avaiable: quota.usage >= quota.quota,
+      avaiable: quotaValue > usage,
     }
   });
 }
