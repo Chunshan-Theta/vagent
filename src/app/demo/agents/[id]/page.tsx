@@ -465,7 +465,7 @@ function LandbankChatV2Page() {
       {/* App Component - properly initialized */}
       <div style={{ display: 'none' }}>
         <App
-          ref={appRef}
+          ref={appRef as any}
           agentConfig={agentConfig}
           onSessionOpen={onSessionOpen}
           onSessionResume={onSessionResume}

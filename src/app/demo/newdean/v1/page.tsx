@@ -475,7 +475,7 @@ function DynamicAnalysisContent() {
       <div style={{ display: 'none' }}>
         {agentConfig && (
           <App
-            ref={appRef}
+            ref={appRef as any}
             agentConfig={agentConfig}
             onSessionOpen={onSessionOpen}
             onSessionResume={onSessionResume}

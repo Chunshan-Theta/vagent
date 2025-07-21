@@ -243,7 +243,8 @@ export function useHandleServerEvent({
         break;
       }
 
-      case "response.audio_transcript.delta": {
+      case "response.audio_transcript.delta":
+      case "response.text.delta": {
         const itemId = serverEvent.item_id;
         const deltaText = serverEvent.delta || "";
         if (itemId) {

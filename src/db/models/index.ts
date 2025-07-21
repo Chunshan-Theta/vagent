@@ -6,6 +6,7 @@ import ConvAudio from "./ConvAudio";
 import AgentSettings from "./AgentSettings";
 
 import KeyQuota from "./KeyQuota";
+import { TestCase } from "./TestCase";
 
 export {
   Conv,
@@ -15,5 +16,6 @@ export {
 
   AgentSettings,
 
-  KeyQuota
+  KeyQuota,
+  TestCase
 };
