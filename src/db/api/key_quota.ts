@@ -62,7 +62,11 @@ export function increaseKeyQuotaUsage(group:string, key:string, usage:number) {
     if (!quota) {
       throw new Error('KeyQuota not found');
     }
-    if (quota.usage < quota.quota) {
+
+    const usage = parseInt(quota.usage, 10);
+    const quotaValue = parseInt(quota.quota, 10);
+
+    if (usage < quotaValue) {
       return quota.$query(trx).patchAndFetch({
         usage: orm.fn.raw('usage + ?', usage),
         updatedAt: orm.fn.now(),
