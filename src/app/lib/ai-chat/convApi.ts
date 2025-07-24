@@ -59,6 +59,17 @@ export async function createConv(params: CreateConvParams): Promise<Conv> {
   return await res.json();
 }
 
+export async function getConvById(convId: string): Promise<Conv | null> {
+  const res = await fetch(`/api/conv/${convId}`, {
+    method: 'GET',
+  });
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
 export interface UploadConvAudioResult {
   item: {
     id: string;
@@ -129,6 +140,27 @@ export async function updateConvMessageContent(convId: string, msgId: string, co
   return await res.json();
 }
 
+export async function setConvAnalysis(convId: string, name: string, data: any): Promise<any> {
+  const res = await fetch(`/api/conv/${convId}/analysis/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+export async function getConvAnalysis(convId: string, name: string): Promise<any> {
+  const res = await fetch(`/api/conv/${convId}/analysis/${name}`, {
+    method: 'GET',
+  });
+  if (res.status === 404) {
+    return null; // 如果找不到分析結果，返回 null
+  }
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
 /**
  * 取得對話訊息列表
  */
@@ -159,18 +191,18 @@ type getAudioByRefStringOptions = {
   name?: string;
 };
 export async function getAudioUrlByRefString(ref: string, opts: getAudioByRefStringOptions = {}): Promise<string | null> {
-  if(!ref) {
+  if (!ref) {
     return null
   }
-  if(ref.startsWith('http://') || ref.startsWith('https://')) {
+  if (ref.startsWith('http://') || ref.startsWith('https://')) {
     return ref; // 如果已經是完整的 URL，直接返回
   }
-  if(ref.startsWith('conv:')) {
+  if (ref.startsWith('conv:')) {
     const m = ref.match(/^conv:(\d+)$/);
-    if(m){
+    if (m) {
       const indexStr = m[1];
       const index = parseInt(indexStr, 10);
-      if(!opts.convId || !opts.name){
+      if (!opts.convId || !opts.name) {
         throw new Error('convId and name are required for conv audio reference');
       }
       const convId = opts.convId;
@@ -182,12 +214,12 @@ export async function getAudioUrlByRefString(ref: string, opts: getAudioByRefStr
 }
 
 export async function getAudioInfoByRefString(ref: string, opts: getAudioByRefStringOptions = {}): Promise<string | null> {
-  if(ref.startsWith('conv:')) {
+  if (ref.startsWith('conv:')) {
     const m = ref.match(/^conv:(\d+)$/);
-    if(m){
+    if (m) {
       const indexStr = m[1];
       const index = parseInt(indexStr, 10);
-      if(!opts.convId || !opts.name){
+      if (!opts.convId || !opts.name) {
         throw new Error('convId and name are required for conv audio reference');
       }
       const convId = opts.convId;

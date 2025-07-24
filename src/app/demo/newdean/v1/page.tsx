@@ -347,47 +347,48 @@ function DynamicAnalysisContent() {
     setAnalysisProgress(30);
 
 
-    const config = {
-      criteria: getAgentConfig().criteria,
-      roleSelf: 'user',
-      roleTarget: 'assistant',
-    };
+    // const config = {
+    //   criteria: getAgentConfig().criteria,
+    //   roleSelf: 'user',
+    //   roleTarget: 'assistant',
+    // };
 
-    const userInputHistory = getChatHistoryText({
-      items: transcriptItems
-        .filter(item => item.type === 'MESSAGE')
-        .filter(item => item.role === 'user')
-        .filter(item => {
-          // Skip messages that should be hidden
-          const content = item.title || '';
-          return sttTextValidEx(content);
-        }),
-      roleMap: {
-        user: config.roleSelf,
-        assistant: config.roleTarget,
-      }
-    })
-    const chatHistory = getChatHistoryText({
-      roleMap: {
-        user: config.roleSelf,
-        assistant: config.roleTarget,
-      }
-    })
-    setAnalysisProgress(40);
-    await delay(500);
+    // const userInputHistory = getChatHistoryText({
+    //   items: transcriptItems
+    //     .filter(item => item.type === 'MESSAGE')
+    //     .filter(item => item.role === 'user')
+    //     .filter(item => {
+    //       // Skip messages that should be hidden
+    //       const content = item.title || '';
+    //       return sttTextValidEx(content);
+    //     }),
+    //   roleMap: {
+    //     user: config.roleSelf,
+    //     assistant: config.roleTarget,
+    //   }
+    // })
+    // const chatHistory = getChatHistoryText({
+    //   roleMap: {
+    //     user: config.roleSelf,
+    //     assistant: config.roleTarget,
+    //   }
+    // })
+    // setAnalysisProgress(40);
+    // await delay(500);
 
-    const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, config.roleSelf, userInputHistory, 'zh')
-    const progress = simProgressUp(40, 100, 30000).start();
+    // const rubricAnalysisP = analyzeChatHistoryByRubric(config.criteria, config.roleSelf, userInputHistory, 'zh')
+    // const progress = simProgressUp(40, 100, 30000).start();
 
-    const rubricAnalysis = await rubricAnalysisP;
+    // const rubricAnalysis = await rubricAnalysisP;
 
 
-    localStorage.setItem(`newdean/${vv}/analysis`, JSON.stringify(rubricAnalysis));
-    localStorage.setItem(`newdean/${vv}/messages`, JSON.stringify(getFullChatHistory()));
+    // localStorage.setItem(`newdean/${vv}/analysis`, JSON.stringify(rubricAnalysis));
+    // localStorage.setItem(`newdean/${vv}/messages`, JSON.stringify(getFullChatHistory()));
 
-    progress.complete();
+    // progress.complete();
 
-    router.push(`${reportUrl}?back=${encodeURIComponent(nowPageUrl)}`);
+    // router.push(`${reportUrl}?back=${encodeURIComponent(nowPageUrl)}`);
+    router.push('/conv-report/' + nowConvId + '?reportName=analysis-v1');
   }
 
   /** 處理要放在對話紀錄裡面的  */

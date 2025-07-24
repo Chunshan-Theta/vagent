@@ -21,3 +21,14 @@ export async function POST(req: Request, { params }: AsyncRouteContext<{ convId:
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function GET(req: Request, { params }: AsyncRouteContext<{ convId: string }>) {
+  try {
+    const { convId } = await params;
+    const messages = await convApi.getConvMessages(convId);
+    return NextResponse.json(messages);
+  } catch (error: any) {
+    console.error('Error fetching conv messages:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

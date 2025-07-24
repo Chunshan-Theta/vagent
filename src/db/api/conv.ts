@@ -35,6 +35,19 @@ export async function createConv(opts: createConvOptions) {
   return res;
 }
 
+type SearchConvOptions = {
+  ids?: string[];
+}
+export async function searchConv(opts: SearchConvOptions) {
+  const builder = M.Conv.query()
+
+  if (opts.ids) {
+    builder.whereIn('id', opts.ids || [])
+  }
+  const items = await builder.orderBy('created_at', 'asc')
+  return items;
+}
+
 type addConvMessageOpts = {
 
   convId: string,
@@ -58,6 +71,11 @@ export async function addConvMessage(opts: addConvMessageOpts) {
   return res;
 }
 
+export async function getConvMessages(convId: string) {
+  const res = await M.ConvMessage.query().where('conv_id', convId).orderBy('created_at', 'asc');
+  return res;
+}
+
 type searchConvLogsOptions = {
   agentType?: string; // 例如 'static'
   agentIds?: string[];
@@ -71,16 +89,16 @@ export async function searchConvLogs(opts: searchConvLogsOptions = {}) {
     convIds.push(...uniq(opts.convIds));
   }
   const builder = M.Conv.query()
-  if(opts.agentType){
+  if (opts.agentType) {
     builder.where('agent_type', opts.agentType);
   }
-  if(Array.isArray(opts.agentIds)){
+  if (Array.isArray(opts.agentIds)) {
     builder.whereIn('agent_id', opts.agentIds);
   }
-  const convList =  await builder.withGraphFetched('messages')
-  
+  const convList = await builder.withGraphFetched('messages')
+
   return convList
-    
+
 }
 
 export async function patchConvMessageContent(messageId: string, content: string) {
@@ -90,13 +108,17 @@ export async function patchConvMessageContent(messageId: string, content: string
   return res;
 }
 
-export async function setConvAnalysis(convId: string, name: string, analysis: string) {
+export async function setConvAnalysis(convId: string, name: string, type: string, analysis: string) {
   // insert or update conv analysis
+  const analysisJSON = JSON.stringify(analysis);
   const res = await M.ConvAnalysis.query().insert({
     convId: convId,
     name: name,
-    analysis: analysis
-  })
+    type: type,
+    analysis: analysisJSON,
+  }).onConflict(['conv_id', 'name']).merge({
+    analysis: analysisJSON,
+  });
   return res;
 }
 
