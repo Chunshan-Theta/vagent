@@ -22,6 +22,7 @@ export default function ConvReport() {
   const [conv, setConv] = useState<convApi.Conv | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
   /** 0 ~ 100 */
@@ -53,6 +54,12 @@ export default function ConvReport() {
       window.alert(error.message);
     });
   }, [conv, reportName]);
+
+  useEffect(() => {
+    if (reportName === 'analysis-v1') {
+      setBackground('#173944')
+    }
+  }, [reportName]);
 
   async function initConv() {
     console.log('init conv', convId)
@@ -118,8 +125,10 @@ export default function ConvReport() {
         console.error('Error running analysis:', err);
         if (err instanceof Error) {
           window.alert(err.message);
+          setErrorMsg(err.message);
         } else {
           window.alert('An unknown error occurred while running the analysis.');
+          setErrorMsg('An unknown error occurred while running the analysis.');
         }
       })
       .finally(() => {
@@ -150,7 +159,6 @@ export default function ConvReport() {
       return <div></div>;
     }
     if (reportName === 'analysis-v1') {
-      setBackground('#173944');
       return (
         <div>
           <ReportViewV2
@@ -167,18 +175,24 @@ export default function ConvReport() {
 
   return (
     <>
-      {(loading || isAnalysisRunning) && LoadingUI({ loading, progress, isAnalysisRunning })}
+      {(errorMsg || loading || isAnalysisRunning) && LoadingUI({ loading, progress, isAnalysisRunning, errorMsg })}
       {renderReport()}
     </>
   );
 }
 
-
-function LoadingUI({ loading, progress, isAnalysisRunning }: { loading: boolean, progress: number, isAnalysisRunning: boolean }) {
+type LoadingUIProps = {
+  loading: boolean;
+  progress: number;
+  isAnalysisRunning: boolean;
+  errorMsg?: string | null;
+};
+function LoadingUI(props: LoadingUIProps) {
+  const { loading, progress, isAnalysisRunning, errorMsg } = props;
   const loadingText = isAnalysisRunning ? '分析中，請稍候…' : '載入中，請稍候…';
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white bg-opacity-80 z-50">
-      <div className="mb-4 text-lg font-semibold text-gray-700">{loadingText}</div>
+      <div className="mb-4 text-lg font-semibold text-gray-700">{errorMsg || loadingText}</div>
       {progress > 0 &&
         (
           <>
