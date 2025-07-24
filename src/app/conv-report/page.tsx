@@ -1,9 +1,17 @@
 'use client';
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 
 export default function ConvReportPageContainer() {
+  return (
+    <Suspense>
+      <CheckPage />
+    </Suspense>
+  )
+}
+
+function CheckPage() {
   const query = useSearchParams();
   const canOpen = useMemo(() => {
     return query.get('dev') === 'voiss';
@@ -14,7 +22,7 @@ export default function ConvReportPageContainer() {
   return <ConvReportPage />;
 }
 
-export function ConvReportPage() {
+function ConvReportPage() {
   const [convId, setConvId] = useState("");
   const [reportName, setReportName] = useState("");
   const router = useRouter();
