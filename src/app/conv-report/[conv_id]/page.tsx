@@ -26,6 +26,7 @@ export default function ConvReport() {
   const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
   /** 0 ~ 100 */
   const [progress, setProgress] = useState(0);
+  const [background, setBackground] = useState('#fff');
 
   const [report, setReport] = useState<{ status: string, data: any } | null>(null)
 
@@ -40,6 +41,10 @@ export default function ConvReport() {
       window.alert(error.message);
     });
   }, [])
+
+  useEffect(() => {
+    changeRootCssVar('--background', background)
+  }, [background])
 
   useEffect(() => {
     // 裡面會自動檢查狀態，只在可以開始分析時才會呼叫
@@ -124,6 +129,13 @@ export default function ConvReport() {
       });
   }
 
+
+  /** 修改 :root 內的 css var */
+  function changeRootCssVar(key: string, value: string) {
+    const root = document.documentElement
+    root.style.setProperty(key, value)
+  }
+
   async function getAnalysisData() {
     if (!reportName) {
       return;
@@ -132,11 +144,13 @@ export default function ConvReport() {
     return JSON.parse(analysis?.analysis || 'null') as { status: string, data: any } | null;
   }
 
+
   function renderReport() {
     if (!reportName || !report) {
       return <div></div>;
     }
     if (reportName === 'analysis-v1') {
+      setBackground('#173944');
       return (
         <div>
           <ReportViewV2
