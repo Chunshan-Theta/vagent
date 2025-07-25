@@ -28,8 +28,7 @@ export async function runAnalysis(name: string, convId: string, opts: T.runAnaly
       if (!stopSignal()) {
         onEvent('progress', { progress });
       }
-    },
-    datas: {}
+    }
   }
 
   const handler = reportHandlerMap[analysisName];

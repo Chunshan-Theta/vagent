@@ -1,7 +1,6 @@
 'use client';
 
 import { useParams, useSearchParams } from 'next/navigation';
-import axios from 'axios';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as convApi from '@/app/lib/ai-chat/convApi';

@@ -1,4 +1,6 @@
 import * as convApi from '../../convApi';
+import * as agentApi from '../../agentApi';
+import { fetchAllAgentSettings } from '../../reportHelper';
 import type * as T from '../types';
 
 
@@ -14,7 +16,7 @@ export async function runAnalysis(ctx: T.AnalysisContext) {
     return { status: 'cancel' };
   }
 
-  const { criteria, context, role } = await getSettings(agentId, agentType)
+  const { criteria, context, role, weights } = await getSettings(agentId, agentType)
 
   const state = {
     progress: 0
@@ -41,8 +43,8 @@ export async function runAnalysis(ctx: T.AnalysisContext) {
       clearInterval(timer);
     }
   }, 500)
-  const res = await analyzeChatHistoryByRubric(criteria, role, messages.map(m => m.content).join('\n'), 'zh-TW')
-  
+  const res = await analyzeChatHistoryByRubric(criteria, weights, context, role, messages.map(m => m.content).join('\n'), 'zh-TW')
+
   timer && clearInterval(timer);
   updateProgress(100);
 
@@ -53,13 +55,16 @@ export async function runAnalysis(ctx: T.AnalysisContext) {
 }
 
 
-async function analyzeChatHistoryByRubric(criteria: string | undefined, role: string, chatHistory: string, clientLanguage: string) {
+async function analyzeChatHistoryByRubric(criteria: string | undefined, weights: number[] | undefined, context: string, role: string, chatHistory: string, clientLanguage: string) {
   if (!criteria) {
     criteria = '使用者本身是否是進行良性的溝通';
   }
-
-  const weights = [0.5, 0.5, 0.5, 0.5];
-
+  if (!weights || weights.length !== 4) {
+    weights = [0.5, 0.5, 0.5, 0.5];
+  }
+  if (!context) {
+    context = '以下是一份 user 和 assistant 的對話紀錄。';
+  }
   const response = await fetch('/api/analysis', {
     method: 'POST',
     headers: {
@@ -68,8 +73,7 @@ async function analyzeChatHistoryByRubric(criteria: string | undefined, role: st
     body: JSON.stringify({
       message: chatHistory,
       role,
-      // context: `對話紀錄中 user 的角色是主管，assistant 扮演部門溝通的角色。請根據對話紀錄來分析主管和部門溝通的情況。`,
-      context: `對話紀錄中 user 的角色是主管，而對方是部門內的成員的角色。請根據 user 說的話來分析部門溝通的情況。`,
+      context,
       rubric: {
         criteria,
         weights,
@@ -81,13 +85,26 @@ async function analyzeChatHistoryByRubric(criteria: string | undefined, role: st
   return response.json();
 }
 
+/**
+ * 取得評分用的參數
+ * @param agentId 
+ * @param agentType 
+ * @returns 
+ */
 async function getSettings(agentId: string, agentType: string) {
 
   const results = {
     criteria: '',
     context: '',
     role: '',
+    weights: [0.5, 0.5, 0.5, 0.5]
   }
+  // 如果是一般 Agent，可直接從資料庫中取得設定
+  // 這種狀況可以直接使用 applySettings() 來套用設定
+
+  // 如果要套用特定 agent 的設定可以參考 landbank-v2 的寫法
+
+  // 如果是直接靜態資料可以參考 newdean-v1 的做法
 
   if (agentType === 'static') {
     if (agentId === 'newdean-v1') {
@@ -96,8 +113,79 @@ async function getSettings(agentId: string, agentType: string) {
       results.criteria = res.criteria;
       results.context = res.context;
       results.role = res.role;
+    } else if (agentId === 'landbank') {
+      const m = await import('./landbank.data')
+      const res = await m.getSettings()
+      results.criteria = res.criteria;
+      results.context = res.context;
+      results.role = res.role;
+    } else if (agentId === 'landbank-v2') {
+      await applySettings({
+        agentId: '2ab59d3f-e096-4d82-8a99-9db513c04ca1',
+      })
+    } else if (agentId === 'deltaww-v1') {
+      const m = await import('./deltaww-v1.data')
+      const res = await m.getSettings()
+      results.criteria = res.criteria;
+      results.context = res.context;
+      results.role = res.role;
+    } else if (agentId === 'deltaww-v3') {
+      const m = await import('./deltaww-v3.data')
+      const res = await m.getSettings()
+      results.criteria = res.criteria;
+      results.context = res.context;
+      results.role = res.role;
+    } else if (false) {
+      // 其他靜態 Agent 的設定可在此手動添加
+    } else {
+      throw new Error(`Unknown static agent ID: ${agentId}`);
     }
+
+  } else if (agentType === 'agent') {
+    await applySettings()
+  } else {
+    throw new Error(`Unknown agent type: ${agentType}`);
   }
 
   return results
+
+  // --- utils ---
+
+  async function getInfo(agentId: string) {
+    const agent = await agentApi.getAgent(agentId).catch((err) => {
+      console.warn('getAgent error', err);
+      return null;
+    });
+    const res = await fetchAllAgentSettings(agentId)
+    const settings = res.values || {};
+    return {
+      agent,
+      settings
+    }
+  }
+  type useSettingsOptions = {
+    agentId?: string,
+    /** 影響 criteria 會優先使用 agent.criteria 還是 settings 裡面的 criteria */
+    criteriaPrefer?: 'agent' | 'settings'
+  }
+  /**
+   * 直接套用某個 Agent 的評分設定
+   * @param opts 
+   * @returns 
+   */
+  async function applySettings(opts: useSettingsOptions = {}) {
+    const criteriaPrefer = opts.criteriaPrefer || 'agent';
+    const mAgentId = opts.agentId || agentId;
+    const { agent, settings } = await getInfo(mAgentId);
+    const obj = {
+      criteria: agent?.criteria || settings['reportAnalyze.criteria'] || 'user 本身是否是進行良性的溝通',
+      context: settings['reportAnalyze.context'] || '以下是一份 user 和 assistant 的對話紀錄。',
+      roleSelf: settings['reportAnalyze.roleSelf'] || 'user',
+    }
+    if (criteriaPrefer === 'settings') {
+      obj.criteria = settings['reportAnalyze.criteria'] || agent?.criteria || 'user 本身是否是進行良性的溝通';
+    }
+    Object.assign(results, obj);
+    return obj;
+  }
 }

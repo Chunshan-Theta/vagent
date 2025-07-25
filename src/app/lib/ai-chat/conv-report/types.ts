@@ -16,10 +16,4 @@ export type AnalysisContext = {
   /** progress 0 ~ 100 */
   updateProgress: (progress: number) => void;
   stopSignal: () => boolean
-
-  /** 分析中額外生成的資料 */
-  datas: {
-    [x: string]: any;
-  }
-
 }

@@ -24,6 +24,18 @@ export async function setAgentSettings(agentId:string, keyVal: Record<string, st
   }
 }
 
+export async function getAgent(agentId: string): Promise<AgentConfig | null> {
+  const response = await fetch(`/api/agents/${agentId}`);
+  if (!response.ok) {
+    throw new Error(getTranslation('en', 'errors.failed_to_load_agent'));
+  }
+  const data = await response.json();
+  if (!data || !data.agent) {
+    return null;
+  }
+  return data.agent;
+}
+
 export async function getAgentSettings(agentId: string, keys:string[]): Promise<{ success:boolean, values: Record<string, string> }> {
   const _get = async (mKeys: string[])=>{
     const response = await fetch(`/api/agents/${agentId}/settings?keys=${mKeys.join(',')}`);
