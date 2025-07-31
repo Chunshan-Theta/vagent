@@ -53,21 +53,6 @@ export async function POST(request: Request) {
     const roleDesc1 =  roleName === 'user' ? '分析對象為 user。' : `分析對象為 user 且其扮演角色為 ${roleName}。`;
     const roleDesc2 =  roleName === 'user' ? '分析對象為 user，而不是其他角色' : `分析對象為 user ，user 在對話中扮演的角色為 ${roleName}，其他角色僅為對話情境參考。`;
 
-    // Detect the language of the conversation
-    // const languageDetectionPrompt = `Detect the primary language of the following text. Respond with only the language code (e.g., "en", "zh", "ja", "ko", "es", "fr", "de"). If you're unsure, respond with "en".
-
-    // Text: "${message.substring(0, 500)}..."`;
-
-    // const languageDetection = await openai.chat.completions.create({
-    //   messages: [{ role: "user", content: languageDetectionPrompt }],
-    //   model: "gpt-4-turbo-preview",
-    //   response_format: { type: "text" },
-    // });
-
-    // const detectedLanguage = languageDetection.choices[0].message.content?.trim() || "en";
-    // const detectedLanguage = "zh";
-    
-    // Create language-specific instructions
     let languageInstruction = "";
     if (detectedLanguage === "zh" || detectedLanguage === "zh-TW") {
       languageInstruction = "請用台灣繁體中文回答分析結果。";

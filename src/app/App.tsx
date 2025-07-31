@@ -346,7 +346,7 @@ const App = forwardRef<AppRef, AppProps>((props, ref) => {
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: {
-          model: "gpt-4o-transcribe",
+          model:  process.env.NEXT_PUBLIC_OPENAI_STT_MODEL || "gpt-4o-transcribe",
           language: "zh",
           prompt: sttPrompt,
         },
