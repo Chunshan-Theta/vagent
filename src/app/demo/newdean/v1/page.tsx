@@ -336,7 +336,7 @@ function DynamicAnalysisContent() {
       });
     }
 
-    
+
     setupAnalysisState(15);
     // 基本檢查都跑完之後再確定提交 endConversation
     await handleTalkOff();
@@ -436,13 +436,23 @@ function DynamicAnalysisContent() {
     return (
       <div style={bgStyles}>
         <div style={{ maxWidth: '400px', width: '100%' }}>
-          <AskForm
+          {/* <AskForm
             items={askItems.current}
             submitText="送出並開始"
             onSubmit={onSubmitAskForm}
             theme="deltaww"
             loading={loading}
-          ></AskForm>
+          ></AskForm> */}
+
+          <AskForm
+            items={[]}
+            noSubmit={true}
+            theme="landbank"
+          >
+            <div className="text-center text-white mt-4">
+              服務已暫停
+            </div>
+          </AskForm>
         </div>
       </div>
     )
